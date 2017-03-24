@@ -1,13 +1,15 @@
-# AudioPlayer Add-on for Vaadin 7
+# AudioPlayer Add-on for Vaadin
 
-${ComponentClassName} is an add-on for Vaadin that aims to allow playback of server-side audio streams on the client.
+AudioPlayer is an add-on for Vaadin that aims to allow playback of server-side audio streams on the client.
 
 ## Building and running demo
 
-git clone <url of the AudioPlayer repository>
+~~~~
+git clone https://github.com/thinwire/VaadinAudioPlayer.git
 mvn clean install
-cd demo
+cd AudioPlayer-demo
 mvn jetty:run
+~~~~
 
 To see the demo, navigate to http://localhost:8080/
 
