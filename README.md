@@ -1,14 +1,6 @@
 # AudioPlayer Add-on for Vaadin 7
 
-${ComponentClassName} is a UI component add-on for Vaadin 7.
-
-## Online demo
-
-Try the add-on demo at <url of the online demo>
-
-## Download release
-
-Official releases of this add-on are available at Vaadin Directory. For Maven instructions, download and reviews, go to http://vaadin.com/addon/AudioPlayer
+${ComponentClassName} is an add-on for Vaadin that aims to allow playback of server-side audio streams on the client.
 
 ## Building and running demo
 
@@ -49,62 +41,9 @@ Debugging client side code in the AudioPlayer-demo project:
   - activate Super Dev Mode in the debug window of the application or by adding ?superdevmode to the URL
   - You can access Java-sources and set breakpoints inside Chrome if you enable source maps from inspector settings.
  
-## Release notes
-
-### Version 1.0-SNAPSHOT
-- ...
-- ...
-
-## Roadmap
-
-This component is developed as a hobby with no public roadmap or any guarantees of upcoming releases. That said, the following features are planned for upcoming releases:
-- ...
-- ...
-
-## Issue tracking
-
-The issues for this add-on are tracked on its github.com page. All bug reports and feature requests are appreciated. 
-
-## Contributions
-
-Contributions are welcome, but there are no guarantees that they are accepted as such. Process for contributing is the following:
-- Fork this project
-- Create an issue to this project about the contribution (bug or feature) if there is no such issue about it already. Try to keep the scope minimal.
-- Develop and test the fix or functionality carefully. Only include minimum amount of code needed to fix the issue.
-- Refer to the fixed issue in commit
-- Send a pull request for the original project
-- Comment on the original issue that you have implemented a fix for it
-
-## License & Author
+## License & Authors
 
 Add-on is distributed under Apache License 2.0. For license terms, see LICENSE.txt.
 
-AudioPlayer is written by <...>
+AudioPlayer is written by Patrik Lindström and Drew Harvey of Vaadin Ltd.
 
-# Developer Guide
-
-## Getting started
-
-Here is a simple example on how to try out the add-on component:
-
-<...>
-
-For a more comprehensive example, see src/test/java/org/vaadin/template/demo/DemoUI.java
-
-## Features
-
-### Feature A
-
-<...>
-
-### Feature B
-
-<...>
-
-### Feature C
-
-<...>
-
-## API
-
-AudioPlayer JavaDoc is available online at <...>
