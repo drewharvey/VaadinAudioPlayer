@@ -1,0 +1,11 @@
+<module>
+
+	<!-- WS Compiler: manually edited -->
+	
+	<inherits name="com.vaadin.DefaultWidgetSet" />
+	<inherits name="elemental.Elemental" /> 
+
+	<source path="shared/" />
+	<source path="client/" />
+
+</module>
