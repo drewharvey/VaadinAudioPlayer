@@ -98,6 +98,16 @@ public class BufferPlayer {
 		return speed;
 	}
 
+	// Should we use the audio api effects interfaces in the elemental.html package
+	// instead of our own Effects class?
+	// example: elemental.html.BiquadFilterNode
+	// The effects are also audio nodes which connect in a chain
+	// source -> effect -> effect... -> output
+	//
+	// Seems like we may want a List of AudioNodes as the effects, because in order
+	// to remove an effect, we need access to the effect to remove, as well as the previous
+	// and next effect in the chain.  When the effects list changes, we can either update 
+	// the state object or call down to the client to add/remove effects
 	public void addEffect(Effect effect) {
 		Log.message(this, "add effect " + effect);
 		effect.setPlayer(this);
