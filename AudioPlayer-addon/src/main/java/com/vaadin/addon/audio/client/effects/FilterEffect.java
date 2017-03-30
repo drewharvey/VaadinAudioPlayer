@@ -1,12 +1,10 @@
 package com.vaadin.addon.audio.client.effects;
 
-import com.vaadin.addon.audio.client.AudioParamImpl;
 import com.vaadin.addon.audio.client.Effect;
 import com.vaadin.addon.audio.client.effects.nodes.BiquadFilterNodeImpl;
 import com.vaadin.addon.audio.client.util.Log;
 
 import elemental.html.AudioContext;
-import elemental.html.AudioParam;
 import elemental.html.BiquadFilterNode;
 
 public class FilterEffect extends Effect {
@@ -26,9 +24,7 @@ public class FilterEffect extends Effect {
 	}
 	
 	public void setQ(float q) {
-		AudioParam param = new AudioParamImpl();
-		param.setValue(q);
-		((BiquadFilterNodeImpl) getAudioNode()).setQ(param);
+		((BiquadFilterNodeImpl) getAudioNode()).getQ().setValue(q);
 	}
 	
 	public float getFrequency() {
@@ -36,9 +32,7 @@ public class FilterEffect extends Effect {
 	}
 	
 	public void setFrequency(float frequency) {
-		AudioParam param = new AudioParamImpl();
-		param.setValue(frequency);
-		((BiquadFilterNodeImpl) getAudioNode()).setFrequency(param);
+		((BiquadFilterNodeImpl) getAudioNode()).getFrequency().setValue(frequency);
 	}
 	
 	public float getGain() {
@@ -46,9 +40,7 @@ public class FilterEffect extends Effect {
 	}
 	
 	public void setGain(float gain) {
-		AudioParam param = new AudioParamImpl();
-		param.setValue(gain);
-		((BiquadFilterNodeImpl) getAudioNode()).setGain(param);
+		((BiquadFilterNodeImpl) getAudioNode()).getGain().setValue(gain);
 	}
 	
 	public Type getType() {
