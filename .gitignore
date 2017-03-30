@@ -6,3 +6,7 @@ AudioPlayer-addon/.settings/
 AudioPlayer-demo/.classpath
 AudioPlayer-demo/.project
 AudioPlayer-demo/.settings/
+
+AudioPlayer-demo/src/main/webapp/VAADIN/themes/demo/styles.scss.cache
+
+*.cache

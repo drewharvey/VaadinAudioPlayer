@@ -47,14 +47,15 @@ public class BufferPlayer {
 			Log.message(this, "marked as dirty, reconfigure output");
 			// TODO: build audio processing chain
 			AudioNode current = source;
+			AudioNode prev = null;
 			for(Effect e : effects) {
-				// TODO: Connect from current to next
-				
-				
+				prev = current;
 				current = e.getAudioNode();
+				prev.connect(current, 0, 0);
 			}
-			
-			// TODO: Connect to current to output
+			// do we need to connect to the context destination here or somewhere else?
+			output = AudioPlayerConnector.getContext().getDestination();
+			current.connect(output, 0, 0);
 			dirty = false;
 		}
 		return output;
@@ -112,11 +113,13 @@ public class BufferPlayer {
 		Log.message(this, "add effect " + effect);
 		effect.setPlayer(this);
 		effects.add(effect);
+		dirty = true;
 	}
 
 	public void removeEffect(Effect effect) {
 		Log.message(this, "remove effect " + effect);
 		effects.remove(effect);
+		dirty = true;
 	}
 	
 }
