@@ -146,6 +146,11 @@ public class AudioPlayer extends AbstractExtension {
 	public boolean isStopped() {
 		return playbackState == PlaybackState.STOPPED;
 	}
+	
+	public void setVolume(double volume) {
+		getClientRPC().setVolume(volume);
+		trace("setting volume to " + volume);
+	}
 
 	protected ChunkDescriptor getChunkDescriptor(int chunkId) {
 		// TODO: return chunk descriptor

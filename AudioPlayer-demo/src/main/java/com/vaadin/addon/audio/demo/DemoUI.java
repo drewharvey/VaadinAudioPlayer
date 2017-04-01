@@ -134,6 +134,10 @@ public class DemoUI extends UI
     		volumeSlider.setValue(80d);
     		volumeSlider.setWidth("150px");
     		// TODO: connect volume slider to player
+    		volumeSlider.addValueChangeListener(e -> {
+    			final double volume = volumeSlider.getValue();
+    			player.setVolume(volume);
+    		});
     		
     		sliderLayout.addComponent(
     			balanceSlider = new Slider("Balance")

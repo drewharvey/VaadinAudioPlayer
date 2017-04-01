@@ -22,4 +22,6 @@ public interface AudioPlayerClientRpc extends ClientRpc {
 
 	void setPlaybackSpeed(double speed_multiplier);
 	
+	void setVolume(double volume);
+	
 }
