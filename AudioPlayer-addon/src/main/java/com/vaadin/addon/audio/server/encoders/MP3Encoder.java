@@ -1,7 +1,5 @@
 package com.vaadin.addon.audio.server.encoders;
 
-import java.nio.ByteBuffer;
-
 import com.vaadin.addon.audio.server.Encoder;
 
 /**
@@ -11,8 +9,8 @@ import com.vaadin.addon.audio.server.Encoder;
  */
 public class MP3Encoder extends Encoder {
 
-	public MP3Encoder(ByteBuffer pcmData) {
-		super(pcmData);
+	public MP3Encoder() {
+		
 	}
 
 	@Override

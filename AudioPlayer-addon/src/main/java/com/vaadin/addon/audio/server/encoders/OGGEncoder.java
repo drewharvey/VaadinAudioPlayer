@@ -1,7 +1,5 @@
 package com.vaadin.addon.audio.server.encoders;
 
-import java.nio.ByteBuffer;
-
 import com.vaadin.addon.audio.server.Encoder;
 
 /**
@@ -11,8 +9,8 @@ import com.vaadin.addon.audio.server.Encoder;
  */
 public class OGGEncoder extends Encoder {
 
-	public OGGEncoder(ByteBuffer pcmData) {
-		super(pcmData);
+	public OGGEncoder() {
+		
 	}
 
 	@Override

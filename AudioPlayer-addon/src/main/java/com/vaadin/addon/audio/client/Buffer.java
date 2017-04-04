@@ -16,6 +16,7 @@ public class Buffer {
 	
 	public Buffer(AudioContext context, byte[] b) {
 		Log.message(this, "create");
+		
 	}
 	
 	public AudioBuffer getAudioBuffer() {
