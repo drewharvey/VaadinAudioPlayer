@@ -26,14 +26,7 @@ public class AudioStreamPlayer {
 	
 	public void setPosition(int millis) {
 		Log.message(this, "set position to " + millis);
-		// Are we going to use native JS functions here to handle these?
-		// Such as the method below?
 	}
-	
-	// Like this for example?  
-	//private native void setPositionJsExample(int millis) /*-{
-	//	$wnd.player.setPosition(millis);
-	//}-*/;
 	
 	public int getPosition() {
 		return position;

@@ -1,8 +1,6 @@
 package com.vaadin.addon.audio.client.effects;
 
 import com.vaadin.addon.audio.client.Effect;
-import com.vaadin.addon.audio.client.effects.nodes.BiquadFilterNodeImpl;
-import com.vaadin.addon.audio.client.util.Log;
 
 import elemental.html.AudioContext;
 import elemental.html.BiquadFilterNode;
@@ -16,43 +14,42 @@ public class FilterEffect extends Effect {
 
 	@Override
 	public void init(AudioContext context) {
-		setAudioNode(new BiquadFilterNodeImpl());
+		setAudioNode(context.createBiquadFilter());
 	}
 	
 	public float getQ() {
-		return ((BiquadFilterNodeImpl) getAudioNode()).getQ().getValue();
+		return ((BiquadFilterNode) getAudioNode()).getQ().getValue();
 	}
 	
 	public void setQ(float q) {
-		((BiquadFilterNodeImpl) getAudioNode()).getQ().setValue(q);
+		((BiquadFilterNode) getAudioNode()).getQ().setValue(q);
 	}
 	
 	public float getFrequency() {
-		return ((BiquadFilterNodeImpl) getAudioNode()).getFrequency().getValue();
+		return ((BiquadFilterNode) getAudioNode()).getFrequency().getValue();
 	}
 	
 	public void setFrequency(float frequency) {
-		((BiquadFilterNodeImpl) getAudioNode()).getFrequency().setValue(frequency);
+		((BiquadFilterNode) getAudioNode()).getFrequency().setValue(frequency);
 	}
 	
 	public float getGain() {
-		return ((BiquadFilterNodeImpl) getAudioNode()).getGain().getValue();
+		return ((BiquadFilterNode) getAudioNode()).getGain().getValue();
 	}
 	
 	public void setGain(float gain) {
-		((BiquadFilterNodeImpl) getAudioNode()).getGain().setValue(gain);
+		((BiquadFilterNode) getAudioNode()).getGain().setValue(gain);
 	}
 	
 	public Type getType() {
-		 return typeIntToEnum(((BiquadFilterNodeImpl) getAudioNode()).getType());
+		 return typeIntToEnum(((BiquadFilterNode) getAudioNode()).getType());
 	}
 	
 	public void setType(Type type) {
-		((BiquadFilterNodeImpl) getAudioNode()).setType(typeEnumToInt(type));
+		((BiquadFilterNode) getAudioNode()).setType(typeEnumToInt(type));
 	}
 	
 	private int typeEnumToInt(Type type) {
-		// TODO: better way to map this?
 		if (type == Type.HIGHPASS) {
 			return BiquadFilterNode.HIGHPASS;
 		}
@@ -71,9 +68,5 @@ public class FilterEffect extends Effect {
 		}
 		return null;
 	}
-
-	// Figure out how to implement high/lowpass filter
-	// Use something like a BiquadFilterNode
-	// See https://developer.mozilla.org/en-US/docs/Web/API/BiquadFilterNode
 	
 }

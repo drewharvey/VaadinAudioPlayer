@@ -7,6 +7,7 @@ import com.vaadin.addon.audio.client.util.Log;
 
 import elemental.html.AudioBufferSourceNode;
 import elemental.html.AudioContext;
+import elemental.html.AudioGainNode;
 import elemental.html.AudioNode;
 import elemental.html.AudioParam;
 
@@ -53,9 +54,9 @@ public class BufferPlayer {
 				current = e.getAudioNode();
 				prev.connect(current, 0, 0);
 			}
-			// do we need to connect to the context destination here or somewhere else?
-			output = AudioPlayerConnector.getContext().getDestination();
 			current.connect(output, 0, 0);
+			// do we need to connect to the context destination here or somewhere else?
+			output.connect(AudioPlayerConnector.getContext().getDestination(), 0, 0);
 			dirty = false;
 		}
 		return output;
@@ -75,6 +76,7 @@ public class BufferPlayer {
 	public void setVolume(double volume) {
 		Log.message(this, "set volume to " + volume);
 		this.volume = volume;
+		((AudioGainNode) output).getGain().setValue((float) volume);
 	}
 	
 	public double getVolume() {
@@ -93,22 +95,15 @@ public class BufferPlayer {
 	public void setSpeed(double speed_scale) {
 		Log.message(this, "set speed scale " + speed_scale);
 		speed = speed_scale;
+		source.getPlaybackRate().setValue((float) speed_scale);
+		// TODO: keep normal pitch if speed is changed, normally the pitch also changes
+		// when the speed is changed
 	}
 	
 	public double getSpeed() {
 		return speed;
 	}
-
-	// Should we use the audio api effects interfaces in the elemental.html package
-	// instead of our own Effects class?
-	// example: elemental.html.BiquadFilterNode
-	// The effects are also audio nodes which connect in a chain
-	// source -> effect -> effect... -> output
-	//
-	// Seems like we may want a List of AudioNodes as the effects, because in order
-	// to remove an effect, we need access to the effect to remove, as well as the previous
-	// and next effect in the chain.  When the effects list changes, we can either update 
-	// the state object or call down to the client to add/remove effects
+	
 	public void addEffect(Effect effect) {
 		Log.message(this, "add effect " + effect);
 		effect.setPlayer(this);

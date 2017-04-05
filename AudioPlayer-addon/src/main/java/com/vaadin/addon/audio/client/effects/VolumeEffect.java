@@ -1,7 +1,6 @@
 package com.vaadin.addon.audio.client.effects;
 
 import com.vaadin.addon.audio.client.Effect;
-import com.vaadin.addon.audio.client.effects.nodes.AudioGainNodeImpl;
 import com.vaadin.addon.audio.client.util.Log;
 
 import elemental.html.AudioContext;
@@ -14,14 +13,17 @@ public class VolumeEffect extends Effect {
 	
 	@Override
 	public void init(AudioContext context) {
-		setAudioNode(new AudioGainNodeImpl());
+		Log.message(this, "init");
+		this.setAudioNode(context.createGainNode());
 	}
 	
 	public float getGain() {
+		Log.message(this, "getting gain");
 		return ((AudioGainNode) getAudioNode()).getGain().getValue();
 	}
 	
 	public void setGain(float gain) {
+		Log.message(this, "setting gain to " + gain);
 		((AudioGainNode) getAudioNode()).getGain().setValue(gain);
 	}
 
