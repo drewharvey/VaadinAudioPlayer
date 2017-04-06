@@ -113,11 +113,11 @@ public class BufferPlayer {
 	
 	// should we offer this method or make the AudioStreamPlayer use addEffect?
 	public void setBalance(double balance) {
-		balanceEffect.setPosition(balance);
+		balanceEffect.setBalance(balance);
 	}
 	
 	public double getBalance() {
-		return balanceEffect.getPosition();
+		return balanceEffect.getBalance();
 	}
 	
 	public void addEffect(Effect effect) {

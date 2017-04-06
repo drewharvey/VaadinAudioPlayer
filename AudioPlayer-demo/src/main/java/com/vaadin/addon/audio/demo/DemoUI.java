@@ -146,11 +146,8 @@ public class DemoUI extends UI
     		balanceSlider.setMax(1);
     		balanceSlider.setValue(0d);
     		balanceSlider.addValueChangeListener(e -> {
-    			// TODO: connect stereo balance slider to player
     			final double balance = balanceSlider.getValue();
-    			// Would we create a BalanceEffect object and add to 
-    			// the player like player.addEffect(BalanceEffect)?  Or do we want
-    			// something like player.setBalance(balance)?
+    			player.setBalance(balance);
     		});
 
     		

@@ -24,12 +24,12 @@ public class BalanceEffect extends Effect {
 	 * To only play the right use 1.
 	 * @param pos
 	 */
-	public void setPosition(double pos) {
+	public void setBalance(double pos) {
 		position = pos;
 		((AudioPannerNode) getAudioNode()).setPosition((float) pos, 0, 0);
 	}
 	
-	public double getPosition() {
+	public double getBalance() {
 		return position;
 	}
 }
