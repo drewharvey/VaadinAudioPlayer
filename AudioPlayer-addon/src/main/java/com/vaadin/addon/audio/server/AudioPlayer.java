@@ -1,5 +1,7 @@
 package com.vaadin.addon.audio.server;
 
+import java.util.ArrayList;
+
 import com.vaadin.addon.audio.shared.AudioPlayerClientRpc;
 import com.vaadin.addon.audio.shared.AudioPlayerServerRpc;
 import com.vaadin.addon.audio.shared.AudioPlayerState;
@@ -27,6 +29,7 @@ public class AudioPlayer extends AbstractExtension {
 	private PlaybackState playbackState = PlaybackState.STOPPED;
 	private int currentPosition = 0;
 	
+	private ArrayList<Effect> effects = new ArrayList<Effect>();
 	
     public AudioPlayer(Stream stream) {
     	
@@ -158,6 +161,14 @@ public class AudioPlayer extends AbstractExtension {
 	
 	public void setBalance(double balance) {
 		getClientRPC().setBalance(balance);
+	}
+	
+	public void addEffect(Effect effect) {
+		effects.add(effect);
+	}
+	
+	public void removeEffect(Effect effect) {
+		effects.remove(effect);
 	}
 
 	protected ChunkDescriptor getChunkDescriptor(int chunkId) {
