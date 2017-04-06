@@ -155,6 +155,10 @@ public class AudioPlayer extends AbstractExtension {
 	public void setPlaybackSpeed(double playbackSpeed) {
 		getClientRPC().setPlaybackSpeed(playbackSpeed);
 	}
+	
+	public void setBalance(double balance) {
+		getClientRPC().setBalance(balance);
+	}
 
 	protected ChunkDescriptor getChunkDescriptor(int chunkId) {
 		// TODO: return chunk descriptor

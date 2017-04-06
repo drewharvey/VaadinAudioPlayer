@@ -24,4 +24,6 @@ public interface AudioPlayerClientRpc extends ClientRpc {
 	
 	void setVolume(double volume);
 	
+	void setBalance(double balance);
+	
 }

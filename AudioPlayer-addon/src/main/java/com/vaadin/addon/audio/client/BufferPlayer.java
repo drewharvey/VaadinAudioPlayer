@@ -3,6 +3,7 @@ package com.vaadin.addon.audio.client;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import com.vaadin.addon.audio.client.effects.BalanceEffect;
 import com.vaadin.addon.audio.client.util.Log;
 
 import elemental.html.AudioBufferSourceNode;
@@ -22,6 +23,7 @@ public class BufferPlayer {
 	private Set<Effect> effects;
 	private AudioBufferSourceNode source;
 	private AudioNode output;
+	private BalanceEffect balanceEffect;
 	private Buffer buffer;
 	
 	private double speed;
@@ -35,6 +37,8 @@ public class BufferPlayer {
 		source = context.createBufferSource();
 		source.setBuffer(buffer.getAudioBuffer());
 		output = context.createGainNode();
+		balanceEffect = new BalanceEffect();
+		balanceEffect.init(context);
 		dirty = true;
 	}
 	
@@ -53,6 +57,10 @@ public class BufferPlayer {
 				current = e.getAudioNode();
 				prev.connect(current, 0, 0);
 			}
+			// connect predefined balance node
+			current.connect(balanceEffect.getAudioNode(), 0, 0);
+			current = balanceEffect.getAudioNode();
+			// connect predefined gain node
 			current.connect(output, 0, 0);
 			// do we need to connect to the context destination here or somewhere else?
 			output.connect(AudioPlayerConnector.getContext().getDestination(), 0, 0);
@@ -101,6 +109,15 @@ public class BufferPlayer {
 	
 	public double getPlaybackSpeed() {
 		return speed;
+	}
+	
+	// should we offer this method or make the AudioStreamPlayer use addEffect?
+	public void setBalance(double balance) {
+		balanceEffect.setPosition(balance);
+	}
+	
+	public double getBalance() {
+		return balanceEffect.getPosition();
 	}
 	
 	public void addEffect(Effect effect) {

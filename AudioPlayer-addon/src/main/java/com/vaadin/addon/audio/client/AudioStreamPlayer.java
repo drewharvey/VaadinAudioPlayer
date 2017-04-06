@@ -64,4 +64,12 @@ public class AudioStreamPlayer {
 		return currentPlayer.getPlaybackSpeed();
 	}
 	
+	public void setBalance(double balance) {
+		currentPlayer.setBalance(balance);
+	}
+	
+	public double getBalance() {
+		return currentPlayer.getBalance();
+	}
+	
 }

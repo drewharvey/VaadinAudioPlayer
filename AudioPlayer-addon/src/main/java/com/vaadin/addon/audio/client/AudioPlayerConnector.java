@@ -128,8 +128,14 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 			
 			@Override
 			public void setVolume(double volume) {
-				Log.message(this, "setting volume to " + volume);
+				Log.message(this, "set volume to " + volume);
 				player.setVolume(volume);
+			}
+			
+			@Override
+			public void setBalance(double balance) {
+				Log.message(this, "set balance to " + balance);
+				player.setBalance(balance);
 			}
 
         });		
