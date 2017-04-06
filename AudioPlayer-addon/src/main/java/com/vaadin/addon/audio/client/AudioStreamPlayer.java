@@ -48,4 +48,20 @@ public class AudioStreamPlayer {
 		Log.message(this, "stop");
 	}
 	
+	public void setVolume(double volume) {
+		currentPlayer.setVolume(volume);
+	}
+	
+	public double getVolume() {
+		return currentPlayer.getVolume();
+	}
+	
+	public void setPlaybackSpeed(double playbackSpeed) {
+		currentPlayer.setPlaybackSpeed(playbackSpeed);
+	}
+	
+	public double getPlaybackSpeed() {
+		return currentPlayer.getPlaybackSpeed();
+	}
+	
 }

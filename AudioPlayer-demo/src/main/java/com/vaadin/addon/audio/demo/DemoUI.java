@@ -133,7 +133,6 @@ public class DemoUI extends UI
     		volumeSlider.setMax(100);
     		volumeSlider.setValue(80d);
     		volumeSlider.setWidth("150px");
-    		// TODO: connect volume slider to player
     		volumeSlider.addValueChangeListener(e -> {
     			final double volume = volumeSlider.getValue();
     			player.setVolume(volume);
@@ -143,10 +142,16 @@ public class DemoUI extends UI
     			balanceSlider = new Slider("Balance")
 			);
     		balanceSlider.setWidth("150px");
-    		balanceSlider.setMin(-100);
-    		balanceSlider.setMax(100);
+    		balanceSlider.setMin(-1);
+    		balanceSlider.setMax(1);
     		balanceSlider.setValue(0d);
-    		// TODO: connect stereo balance slider to player
+    		balanceSlider.addValueChangeListener(e -> {
+    			// TODO: connect stereo balance slider to player
+    			final double balance = balanceSlider.getValue();
+    			// Would we create a BalanceEffect object and add to 
+    			// the player like player.addEffect(BalanceEffect)?  Or do we want
+    			// something like player.setBalance(balance)?
+    		});
 
     		
     		sliderLayout.addComponent(
@@ -156,7 +161,10 @@ public class DemoUI extends UI
     		speedSlider.setMin(-4);
     		speedSlider.setMax(4);
     		speedSlider.setValue(0d);
-    		// TODO: connect speed slider to player
+    		speedSlider.addValueChangeListener(e -> {
+    			final double playbackSpeed = speedSlider.getValue();
+    			player.setPlaybackSpeed(playbackSpeed);
+    		});
     		
     		innerContainer.addComponent(sliderLayout);
     		innerContainer.setComponentAlignment(sliderLayout, Alignment.MIDDLE_CENTER);

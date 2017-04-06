@@ -9,7 +9,6 @@ import elemental.html.AudioBufferSourceNode;
 import elemental.html.AudioContext;
 import elemental.html.AudioGainNode;
 import elemental.html.AudioNode;
-import elemental.html.AudioParam;
 
 /**
  * Actual player component, plays a single Buffer.
@@ -92,7 +91,7 @@ public class BufferPlayer {
 		Log.message(this, "stop playback");
 	}
 	
-	public void setSpeed(double speed_scale) {
+	public void setPlaybackSpeed(double speed_scale) {
 		Log.message(this, "set speed scale " + speed_scale);
 		speed = speed_scale;
 		source.getPlaybackRate().setValue((float) speed_scale);
@@ -100,7 +99,7 @@ public class BufferPlayer {
 		// when the speed is changed
 	}
 	
-	public double getSpeed() {
+	public double getPlaybackSpeed() {
 		return speed;
 	}
 	

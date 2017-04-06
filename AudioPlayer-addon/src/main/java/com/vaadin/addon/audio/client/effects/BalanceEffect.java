@@ -4,15 +4,32 @@ import com.vaadin.addon.audio.client.Effect;
 import com.vaadin.addon.audio.client.util.Log;
 
 import elemental.html.AudioContext;
+import elemental.html.AudioPannerNode;
 
 public class BalanceEffect extends Effect {
+	
+	private double position = 0;
 
 	@Override
 	public void init(AudioContext context) {
-		// TODO Auto-generated method stub
-		Log.message(this, "init");
+		Log.message(this, "Creating AudioPannerNode");
+		setAudioNode(context.createPanner());
 	}
 	
-	// Use an AudioPannerNode to create a balance control
+	/**
+	 * Sets the left/right position of the audio. 
+	 * The value range is from -1 to 1.
+	 * To play equal between left and right use 0.
+	 * To only play the left use -1.
+	 * To only play the right use 1.
+	 * @param pos
+	 */
+	public void setPosition(double pos) {
+		position = pos;
+		((AudioPannerNode) getAudioNode()).setPosition((float) pos, 0, 0);
+	}
 	
+	public double getPosition() {
+		return position;
+	}
 }

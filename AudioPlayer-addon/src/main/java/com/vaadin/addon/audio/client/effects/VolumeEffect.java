@@ -13,7 +13,7 @@ public class VolumeEffect extends Effect {
 	
 	@Override
 	public void init(AudioContext context) {
-		Log.message(this, "init");
+		Log.message(this, "Creating AudioGainNode");
 		this.setAudioNode(context.createGainNode());
 	}
 	

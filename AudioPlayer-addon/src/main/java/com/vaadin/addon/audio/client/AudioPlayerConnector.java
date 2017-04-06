@@ -123,12 +123,13 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 			@Override
 			public void setPlaybackSpeed(double speed_multiplier) {
 				Log.message(this, "set playback speed to " + speed_multiplier);
-				// TODO: implement speed control
+				player.setPlaybackSpeed(speed_multiplier);
 			}
 			
 			@Override
 			public void setVolume(double volume) {
 				Log.message(this, "setting volume to " + volume);
+				player.setVolume(volume);
 			}
 
         });		
