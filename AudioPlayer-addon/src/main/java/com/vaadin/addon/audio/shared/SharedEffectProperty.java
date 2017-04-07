@@ -3,6 +3,8 @@ package com.vaadin.addon.audio.shared;
 public class SharedEffectProperty {
 
 	public enum PropertyName {
+		// Balance Effect props
+		Balance,
 		// Filter Effect props
 		FilterType,
 		Q,
