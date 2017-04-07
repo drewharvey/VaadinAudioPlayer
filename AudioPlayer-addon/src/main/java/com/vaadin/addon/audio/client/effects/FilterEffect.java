@@ -1,7 +1,11 @@
 package com.vaadin.addon.audio.client.effects;
 
+import java.util.List;
+
 import com.vaadin.addon.audio.client.Effect;
 import com.vaadin.addon.audio.client.util.Log;
+import com.vaadin.addon.audio.shared.SharedEffectProperty;
+import com.vaadin.addon.audio.shared.SharedEffectProperty.PropertyName;
 
 import elemental.html.AudioContext;
 import elemental.html.BiquadFilterNode;
@@ -11,6 +15,24 @@ public class FilterEffect extends Effect {
 	public enum Type {
 		LOWPASS,
 		HIGHPASS
+	}
+	
+	public FilterEffect() {
+		
+	}
+	
+	public FilterEffect(List<SharedEffectProperty> props) {
+		for (SharedEffectProperty prop : props) {
+			if (prop.getProperty() == PropertyName.FilterType) {
+				
+			} else if (prop.getProperty() == PropertyName.Frequency) {
+				setFrequency(Float.parseFloat(prop.getValue()));
+			} else if (prop.getProperty() == PropertyName.Gain) {
+				setGain(Float.parseFloat(prop.getValue()));
+			} else if (prop.getProperty() == PropertyName.Q) {
+				setQ(Float.parseFloat(prop.getValue()));
+			}
+		}
 	}
 
 	@Override
@@ -49,6 +71,14 @@ public class FilterEffect extends Effect {
 	
 	public void setType(Type type) {
 		((BiquadFilterNode) getAudioNode()).setType(typeEnumToInt(type));
+	}
+	
+	public void setType(String type) {
+		type = type.toUpperCase();
+		Type typeEnum = Type.valueOf(type);
+		if (typeEnum != null) {
+			setType(typeEnum);
+		}
 	}
 	
 	private int typeEnumToInt(Type type) {

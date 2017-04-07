@@ -29,8 +29,6 @@ public class AudioPlayer extends AbstractExtension {
 	private PlaybackState playbackState = PlaybackState.STOPPED;
 	private int currentPosition = 0;
 	
-	private ArrayList<Effect> effects = new ArrayList<Effect>();
-	
     public AudioPlayer(Stream stream) {
     	
     	registerRpc(new AudioPlayerServerRpc() {
@@ -157,6 +155,7 @@ public class AudioPlayer extends AbstractExtension {
 	
 	public void setPlaybackSpeed(double playbackSpeed) {
 		getClientRPC().setPlaybackSpeed(playbackSpeed);
+		trace("setting playback speed to " + playbackSpeed);
 	}
 	
 	public void setBalance(double balance) {
@@ -164,11 +163,12 @@ public class AudioPlayer extends AbstractExtension {
 	}
 	
 	public void addEffect(Effect effect) {
-		effects.add(effect);
+		getState().effects.add(effect.getSharedEffectObject());
 	}
 	
 	public void removeEffect(Effect effect) {
-		effects.remove(effect);
+		getState().effects.remove(effect);
+		trace("removing effect");
 	}
 
 	protected ChunkDescriptor getChunkDescriptor(int chunkId) {

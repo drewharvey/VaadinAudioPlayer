@@ -1,10 +1,18 @@
 package com.vaadin.addon.audio.client;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import com.vaadin.addon.audio.client.effects.BalanceEffect;
+import com.vaadin.addon.audio.client.effects.FilterEffect;
 import com.vaadin.addon.audio.client.util.Log;
 import com.vaadin.addon.audio.server.AudioPlayer;
 import com.vaadin.addon.audio.shared.AudioPlayerClientRpc;
 import com.vaadin.addon.audio.shared.AudioPlayerServerRpc;
 import com.vaadin.addon.audio.shared.AudioPlayerState;
+import com.vaadin.addon.audio.shared.SharedEffect;
+import com.vaadin.addon.audio.shared.SharedEffect.EffectName;
+import com.vaadin.addon.audio.shared.SharedEffectProperty;
 import com.vaadin.client.ServerConnector;
 import com.vaadin.client.annotations.OnStateChange;
 import com.vaadin.client.communication.RpcProxy;
@@ -43,6 +51,31 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
     @OnStateChange("chunks")
     private void updateChunks() {
     	 
+    }
+    
+    @OnStateChange("effects")
+    private void updateEffects() {
+    	Log.message(this, "shared state effects list changed");
+    	// TODO: don't rebuild list every time
+		List<Effect> effects = new ArrayList<Effect>();
+    	for (SharedEffect e : getState().effects) {
+    		Log.message(this, "adding " + e.getName().name());
+    		for (SharedEffectProperty prop : e.getProperties()) {
+    			Log.message(this, prop.getProperty().name() + " : " + prop.getValue());
+    		}
+    		effects.add(getEffectFromSharedEffect(e));
+    	}
+    	player.setEffects(effects);
+    }
+    
+    private Effect getEffectFromSharedEffect(SharedEffect sharedEffect) {
+    	// TODO: add properties to each effect
+    	if (sharedEffect.getName() == EffectName.BalanceEffect) {
+    		return new BalanceEffect();
+    	} else if (sharedEffect.getName() == EffectName.FilterEffect) {
+    		return new FilterEffect(sharedEffect.getProperties());
+    	}
+    	return null;
     }
 
     

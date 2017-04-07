@@ -1,6 +1,8 @@
 package com.vaadin.addon.audio.client;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import com.vaadin.addon.audio.client.effects.BalanceEffect;
@@ -20,7 +22,7 @@ import elemental.html.AudioNode;
  */
 public class BufferPlayer {
 
-	private Set<Effect> effects;
+	private List<Effect> effects;
 	private AudioBufferSourceNode source;
 	private AudioNode output;
 	private BalanceEffect balanceEffect;
@@ -32,7 +34,7 @@ public class BufferPlayer {
 	
 	public BufferPlayer(AudioContext context, Buffer buffer) {
 		Log.message(this, "create");
-		effects = new LinkedHashSet<Effect>();
+		effects = new ArrayList<Effect>();
 		this.buffer = buffer;
 		source = context.createBufferSource();
 		source.setBuffer(buffer.getAudioBuffer());
@@ -111,13 +113,23 @@ public class BufferPlayer {
 		return speed;
 	}
 	
-	// should we offer this method or make the AudioStreamPlayer use addEffect?
 	public void setBalance(double balance) {
 		balanceEffect.setBalance(balance);
 	}
 	
 	public double getBalance() {
 		return balanceEffect.getBalance();
+	}
+	
+	public void setEffects(List<Effect> effects) {
+		// TODO: only replace/remove effects based on if there are matching IDs
+		this.effects.clear();
+		this.effects.addAll(effects);
+		for (Effect e : effects) {
+			e.setPlayer(this);
+			Log.message(this, "BufferPlayer adding effect " + e.getClass().getName());
+		}
+		dirty = true;
 	}
 	
 	public void addEffect(Effect effect) {

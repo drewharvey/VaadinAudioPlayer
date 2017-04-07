@@ -1,5 +1,7 @@
 package com.vaadin.addon.audio.client;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Stack;
 
 import com.vaadin.addon.audio.client.util.Log;
@@ -12,6 +14,8 @@ public class AudioStreamPlayer {
 	private Stack<BufferPlayer> prevPlayers = new Stack<>();
 	private Stack<BufferPlayer> nextPlayers = new Stack<>();
 	private BufferPlayer currentPlayer = null;
+	
+	private List<Effect> effects = new ArrayList<Effect>();
 	
 	private int duration = 0;
 	private int position = 0;
@@ -70,6 +74,18 @@ public class AudioStreamPlayer {
 	
 	public double getBalance() {
 		return currentPlayer.getBalance();
+	}
+	
+	public void setEffects(List<Effect> effects) {
+		Log.message(this, "AudioStreamPlayer adding effects");
+		this.effects.clear();
+		this.effects.addAll(effects);
+		currentPlayer.setEffects(effects);
+		
+	}
+	
+	public List<Effect> getEffects() {
+		return effects;
 	}
 	
 }

@@ -7,6 +7,7 @@ import java.util.Set;
 import javax.servlet.annotation.WebServlet;
 
 import com.vaadin.addon.audio.server.AudioPlayer;
+import com.vaadin.addon.audio.server.effects.FilterEffect;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
 import com.vaadin.annotations.VaadinServletConfiguration;
@@ -166,7 +167,18 @@ public class DemoUI extends UI
     		innerContainer.addComponent(sliderLayout);
     		innerContainer.setComponentAlignment(sliderLayout, Alignment.MIDDLE_CENTER);
     		
+    		// Button to add lowpass at 500hz
+    		Button addEffect = new Button("Add Low Pass");
+    		addEffect.addClickListener(e -> {
+    			FilterEffect filterEffect = new FilterEffect();
+    			filterEffect.setType(FilterEffect.Type.LOWPASS);
+    			filterEffect.setFrequency(500);
+    			player.addEffect(filterEffect);
+    		});
+    		innerContainer.addComponent(addEffect);
+    		
     		layout.addComponent(innerContainer);
+    		
     		setContent(layout);
     	}
     	
