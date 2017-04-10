@@ -5,11 +5,6 @@ import java.io.Serializable;
 @SuppressWarnings("serial")
 public class ChunkDescriptor implements Serializable {
 
-	// TODO: we might need to add a lot more data here
-	// This may be a problem as we don't necessarily want to pass in everything
-	// in the constructor
-	// Maybe just generate setters for everything?
-
 	// Common chunk ID
 	private int id;
 

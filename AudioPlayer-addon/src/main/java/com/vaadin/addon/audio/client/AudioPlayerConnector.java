@@ -40,11 +40,11 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 	
 
 	private AudioStreamPlayer player;
-	private StreamReceiver stream;
+	private ClientStream stream;
 	
     public AudioPlayerConnector() {
     	// TODO: don't init the stream here! Also the stream needs to be able to update
-    	stream = new StreamReceiver(this, getState().chunks);
+    	stream = new ClientStream(this, getState().chunks);
     	player = new AudioStreamPlayer(stream);
     }
     
@@ -103,8 +103,8 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 
 			@Override
 			public void dataAvailable(int chunkId) {
-				// TODO: do something with this
 				Log.message(this, "data available for chunk " + chunkId);
+				stream.notifyChunkLoaded(chunkId);
 			}
 
 			@Override

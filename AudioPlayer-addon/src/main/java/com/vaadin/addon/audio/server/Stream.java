@@ -9,7 +9,8 @@ import com.vaadin.addon.audio.shared.ChunkDescriptor;
 public class Stream {
 	
 	private List<ChunkDescriptor> chunks = new ArrayList<ChunkDescriptor>();
-	private ByteBuffer sourceData = null;
+	private ByteBuffer buffer = null;
+	private Encoder encoder = null;
 
 	private int chunkCount = 0;
 	private int duration = 0;
@@ -21,8 +22,9 @@ public class Stream {
 	 * @param pcmBuffer Buffer containing PCM data
 	 * @param encoder 
 	 */
-	public Stream(ByteBuffer pcmBuffer, Encoder encoder, int duration) {
-		
+	public Stream(ByteBuffer pcmBuffer, Encoder encoder) {
+		this.buffer = pcmBuffer;
+		this.encoder = encoder;
 	}
 	
 	/**

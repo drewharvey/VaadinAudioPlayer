@@ -1,7 +1,5 @@
 package com.vaadin.addon.audio.server.encoders;
 
-import java.nio.ByteBuffer;
-
 import com.vaadin.addon.audio.server.Encoder;
 
 /**
@@ -10,9 +8,10 @@ import com.vaadin.addon.audio.server.Encoder;
  */
 public class NullEncoder extends Encoder {
 
-	public NullEncoder(ByteBuffer pcmData) {
-		super(pcmData);
+	public NullEncoder() {
 	}
+	
+	
 	
 	// TODO: maybe we should just keep a static buffer of bytes?
 	// TODO: run a performance profile on this and see if we're clogging up the heap

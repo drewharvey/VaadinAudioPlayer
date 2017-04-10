@@ -82,10 +82,56 @@
 			<version>4.8.1</version>
 			<scope>test</scope>
 		</dependency>
+		
+		<!-- For Vorbis encoding support -->
+		<dependency>
+		    <groupId>org.gagravarr</groupId>
+		    <artifactId>vorbis-java-core</artifactId>
+		    <version>0.8</version>
+		</dependency>		
 	</dependencies>
 
 	<build>
 		<plugins>
+		    <!-- vaadin update widgetset -->
+			<plugin>
+				<groupId>com.vaadin</groupId>
+				<artifactId>vaadin-maven-plugin</artifactId>
+				<version>7.7.7</version>
+				<configuration>
+					<extraJvmArgs>-Xmx2048M -Xss2048k</extraJvmArgs>
+					<webappDirectory>${basedir}/target/VAADIN/widgetsets</webappDirectory>
+					<hostedWebapp>${basedir}/target/VAADIN/widgetsets</hostedWebapp>
+					<force>false</force>
+					<strict>true</strict>
+					<noServer>true</noServer>
+					<compileReport>true</compileReport>
+					<style>pretty</style>
+					<lifecycleMappingMetadata>
+						<pluginExecutions>
+							<pluginExecution>
+								<pluginExecutionFilter>
+									<goals>
+										<goal>resources</goal>
+										<goal>update-widgetset</goal>
+										<goal>compile</goal>
+									</goals>
+								</pluginExecutionFilter>
+								<action>
+									<ignore />
+								</action>
+							</pluginExecution>
+						</pluginExecutions>
+					</lifecycleMappingMetadata>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>compile</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>

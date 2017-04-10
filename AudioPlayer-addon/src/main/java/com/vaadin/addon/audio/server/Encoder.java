@@ -13,8 +13,12 @@ public abstract class Encoder {
 	
 	private ByteBuffer buffer;
 	
-	public Encoder(ByteBuffer pcmData) {
-		buffer = pcmData;
+	public Encoder() {
+		buffer = null;
+	}
+	
+	public void setBuffer(ByteBuffer buf) {
+		buffer = buf;
 	}
 	
 	public ByteBuffer getBuffer() {

@@ -3,16 +3,23 @@ package com.vaadin.addon.audio.client;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.vaadin.addon.audio.client.util.Log;
-import com.vaadin.addon.audio.shared.ChunkDescriptor;
 
+/**
+ * Player controls for a stream.
+ */
 public class AudioStreamPlayer {
 
-	private StreamReceiver stream;
+	private static final int MAX_PLAYERS = 3;	// Maximum number of players
 	
-	private Stack<BufferPlayer> prevPlayers = new Stack<>();
-	private Stack<BufferPlayer> nextPlayers = new Stack<>();
+	private ClientStream stream;
+	
+	private final Set<BufferPlayer> players = new HashSet<BufferPlayer>();
 	private BufferPlayer currentPlayer = null;
 	
 	private List<Effect> effects = new ArrayList<Effect>();
@@ -20,7 +27,7 @@ public class AudioStreamPlayer {
 	private int duration = 0;
 	private int position = 0;
 	
-	public AudioStreamPlayer(StreamReceiver stream) {
+	public AudioStreamPlayer(ClientStream stream) {
 		Log.message(this, "create");
 	}
 	
@@ -56,26 +63,50 @@ public class AudioStreamPlayer {
 	}
 	
 	public void setVolume(double volume) {
+		if(currentPlayer == null) {
+			logError("current player is null");
+			return;
+		}
 		currentPlayer.setVolume(volume);
 	}
 	
 	public double getVolume() {
+		if(currentPlayer == null) {
+			logError("current player is null");
+			return 0;
+		}
 		return currentPlayer.getVolume();
 	}
 	
 	public void setPlaybackSpeed(double playbackSpeed) {
+		if(currentPlayer == null) {
+			logError("current player is null");
+			return;
+		}
 		currentPlayer.setPlaybackSpeed(playbackSpeed);
 	}
 	
 	public double getPlaybackSpeed() {
+		if(currentPlayer == null) {
+			logError("current player is null");
+			return 0;
+		}
 		return currentPlayer.getPlaybackSpeed();
 	}
 	
 	public void setBalance(double balance) {
+		if(currentPlayer == null) {
+			logError("current player is null");
+			return;
+		}
 		currentPlayer.setBalance(balance);
 	}
 	
 	public double getBalance() {
+		if(currentPlayer == null) {
+			logError("current player is null");
+			return 0;
+		}
 		return currentPlayer.getBalance();
 	}
 	
@@ -89,6 +120,12 @@ public class AudioStreamPlayer {
 	
 	public List<Effect> getEffects() {
 		return effects;
+	}
+
+	private static Logger logger = Logger.getLogger("AudioStreamPlayer");
+	
+	private static void logError(String msg) {
+		logger.log(Level.SEVERE, msg);
 	}
 	
 }
