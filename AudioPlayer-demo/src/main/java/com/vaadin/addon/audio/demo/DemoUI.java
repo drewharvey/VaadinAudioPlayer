@@ -178,11 +178,11 @@ public class DemoUI extends UI {
     			balanceSlider = new Slider("Balance")
 			);
     		balanceSlider.setWidth("150px");
-    		balanceSlider.setMin(-1);
-    		balanceSlider.setMax(1);
+    		balanceSlider.setMin(-100);
+    		balanceSlider.setMax(100);
     		balanceSlider.setValue(0d);
     		balanceSlider.addValueChangeListener(e -> {
-    			final double balance = balanceSlider.getValue();
+    			final double balance = balanceSlider.getValue() / 10d;
     			player.setBalance(balance);
     		});
 

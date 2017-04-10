@@ -9,7 +9,7 @@ public abstract class Effect {
 	private UUID id;
 	
 	public Effect() {
-		UUID.randomUUID();
+		id = UUID.randomUUID();
 	}
 	
 	public String getID() {
