@@ -7,7 +7,9 @@ import java.util.Set;
 import javax.servlet.annotation.WebServlet;
 
 import com.vaadin.addon.audio.server.AudioPlayer;
+import com.vaadin.addon.audio.server.effects.BalanceEffect;
 import com.vaadin.addon.audio.server.effects.FilterEffect;
+import com.vaadin.addon.audio.server.effects.VolumeEffect;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
 import com.vaadin.annotations.VaadinServletConfiguration;
@@ -167,15 +169,36 @@ public class DemoUI extends UI
     		innerContainer.addComponent(sliderLayout);
     		innerContainer.setComponentAlignment(sliderLayout, Alignment.MIDDLE_CENTER);
     		
-    		// Button to add lowpass at 500hz
-    		Button addEffect = new Button("Add Low Pass");
-    		addEffect.addClickListener(e -> {
+    		HorizontalLayout effectsLayout = new HorizontalLayout();
+    		effectsLayout.setSpacing(true);
+    		// add lowpass at 500hz
+    		Button lowPass = new Button("Low Pass");
+    		lowPass.addClickListener(e -> {
     			FilterEffect filterEffect = new FilterEffect();
     			filterEffect.setType(FilterEffect.Type.LOWPASS);
     			filterEffect.setFrequency(500);
     			player.addEffect(filterEffect);
     		});
-    		innerContainer.addComponent(addEffect);
+    		effectsLayout.addComponent(lowPass);
+    		// balance to left ear only
+    		Button balance = new Button("Balance Left");
+    		balance.addClickListener(e -> {
+    			BalanceEffect balanceEffect = new BalanceEffect();
+    			balanceEffect.setBalance(-1);
+    			player.addEffect(balanceEffect);
+    		});
+    		effectsLayout.addComponent(balance);
+    		// Button to add lowpass at 500hz
+    		Button volume = new Button("Half Volume");
+    		lowPass.addClickListener(e -> {
+    			VolumeEffect volumeEffect = new VolumeEffect();
+    			volumeEffect.setGain(0.5);
+    			player.addEffect(volumeEffect);
+    		});
+    		effectsLayout.addComponent(volume);
+    		// TODO: add pitch filter
+    		innerContainer.addComponent(effectsLayout);
+    		innerContainer.setComponentAlignment(effectsLayout, Alignment.MIDDLE_CENTER);
     		
     		layout.addComponent(innerContainer);
     		

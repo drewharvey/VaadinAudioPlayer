@@ -13,6 +13,10 @@ public class BalanceEffect extends Effect {
 	
 	private double position;
 	
+	public BalanceEffect() {
+		super();
+	}
+	
 	public void setBalance(double position) {
 		this.position = position;
 	}
@@ -23,7 +27,7 @@ public class BalanceEffect extends Effect {
 
 	@Override
 	public SharedEffect getSharedEffectObject() {
-		SharedEffect shared = new SharedEffect(EffectName.BalanceEffect);
+		SharedEffect shared = new SharedEffect(getID(), EffectName.BalanceEffect);
 		List<SharedEffectProperty> props = new ArrayList<SharedEffectProperty>();
 		props.add(new SharedEffectProperty(PropertyName.Balance, getBalance() + ""));
 		shared.setProperties(props);

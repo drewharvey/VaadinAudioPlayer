@@ -6,6 +6,7 @@ import com.vaadin.addon.audio.shared.AudioPlayerClientRpc;
 import com.vaadin.addon.audio.shared.AudioPlayerServerRpc;
 import com.vaadin.addon.audio.shared.AudioPlayerState;
 import com.vaadin.addon.audio.shared.ChunkDescriptor;
+import com.vaadin.addon.audio.shared.SharedEffect;
 import com.vaadin.server.AbstractExtension;
 import com.vaadin.ui.UI;
 
@@ -163,12 +164,19 @@ public class AudioPlayer extends AbstractExtension {
 	}
 	
 	public void addEffect(Effect effect) {
+		// TODO: update effect if it already exists
 		getState().effects.add(effect.getSharedEffectObject());
 	}
 	
 	public void removeEffect(Effect effect) {
-		getState().effects.remove(effect);
-		trace("removing effect");
+		// TODO: optimize removing effects so we don't have to loop
+		getState().effects.remove(effect.getSharedEffectObject());
+		for (SharedEffect e : getState().effects) {
+			if (effect.getID().equals(e.getID())) {
+				getState().effects.remove(e);
+				trace("removing effect: " + e.getName().name());
+			}
+		}
 	}
 
 	protected ChunkDescriptor getChunkDescriptor(int chunkId) {

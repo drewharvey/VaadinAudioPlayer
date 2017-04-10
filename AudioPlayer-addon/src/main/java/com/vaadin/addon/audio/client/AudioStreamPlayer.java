@@ -38,6 +38,9 @@ public class AudioStreamPlayer {
 	
 	public void play() {
 		Log.message(this, "play");
+		if (currentPlayer != null) {
+			
+		}
 	}
 	
 	public void pause() {

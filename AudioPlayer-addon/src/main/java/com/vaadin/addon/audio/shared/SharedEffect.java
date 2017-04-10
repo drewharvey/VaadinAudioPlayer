@@ -12,6 +12,7 @@ public class SharedEffect {
 		VolumeEffect
 	}
 	
+	private String id;
 	private EffectName name;
 	private List<SharedEffectProperty> properties = new ArrayList<SharedEffectProperty>();
 	
@@ -19,8 +20,17 @@ public class SharedEffect {
 		
 	}
 	
-	public SharedEffect(EffectName name) {
+	public SharedEffect(String id, EffectName name) {
+		this.id = id;
 		this.name = name;
+	}
+	
+	public String getID() {
+		return id;
+	}
+	
+	public void setID(String id) {
+		this.id = id;
 	}
 	
 	public EffectName getName() {

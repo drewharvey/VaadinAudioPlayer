@@ -21,6 +21,10 @@ public class FilterEffect extends Effect {
 	private double gain;
 	private Type type = Type.LOWPASS;
 	
+	public FilterEffect() {
+		super();
+	}
+	
 	public double getQ() {
 		return q;
 	}
@@ -55,7 +59,7 @@ public class FilterEffect extends Effect {
 	
 	@Override
 	public SharedEffect getSharedEffectObject() {
-		SharedEffect sharedEffect = new SharedEffect(EffectName.FilterEffect);
+		SharedEffect sharedEffect = new SharedEffect(getID(), EffectName.FilterEffect);
 		List<SharedEffectProperty> props = new ArrayList<SharedEffectProperty>();
 		props.add(new SharedEffectProperty(PropertyName.Q, getQ() + ""));
 		props.add(new SharedEffectProperty(PropertyName.Frequency, getFrequency() + ""));
