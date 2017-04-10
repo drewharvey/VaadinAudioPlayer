@@ -8,8 +8,17 @@ import elemental.html.AudioNode;
  */
 public abstract class Effect {
 
+	private String id;
 	private BufferPlayer player;
 	private AudioNode node;
+	
+	public void setID(String id) {
+		this.id = id;
+	}
+	
+	public String getID() {
+		return id;
+	}
 
 	protected void setPlayer(BufferPlayer p) {
 		if(player != null) {

@@ -6,7 +6,7 @@ import com.vaadin.addon.audio.client.util.Log;
 import elemental.html.AudioContext;
 
 public class PitchEffect extends Effect {
-
+	
 	@Override
 	public void init(AudioContext context) {
 		// TODO Auto-generated method stub

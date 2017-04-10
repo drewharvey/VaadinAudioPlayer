@@ -17,7 +17,7 @@ public class SharedEffect {
 	private List<SharedEffectProperty> properties = new ArrayList<SharedEffectProperty>();
 	
 	public SharedEffect() {
-		
+		// for gwt
 	}
 	
 	public SharedEffect(String id, EffectName name) {

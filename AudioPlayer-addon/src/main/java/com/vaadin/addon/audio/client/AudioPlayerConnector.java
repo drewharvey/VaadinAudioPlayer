@@ -5,6 +5,8 @@ import java.util.List;
 
 import com.vaadin.addon.audio.client.effects.BalanceEffect;
 import com.vaadin.addon.audio.client.effects.FilterEffect;
+import com.vaadin.addon.audio.client.effects.PitchEffect;
+import com.vaadin.addon.audio.client.effects.VolumeEffect;
 import com.vaadin.addon.audio.client.util.Log;
 import com.vaadin.addon.audio.server.AudioPlayer;
 import com.vaadin.addon.audio.shared.AudioPlayerClientRpc;
@@ -71,9 +73,21 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
     private Effect getEffectFromSharedEffect(SharedEffect sharedEffect) {
     	// TODO: add properties to each effect
     	if (sharedEffect.getName() == EffectName.BalanceEffect) {
-    		return new BalanceEffect();
+    		BalanceEffect effect = new BalanceEffect();
+    		effect.setID(sharedEffect.getID());
+    		return effect;
     	} else if (sharedEffect.getName() == EffectName.FilterEffect) {
-    		return new FilterEffect(sharedEffect.getProperties());
+    		FilterEffect effect = new FilterEffect(sharedEffect.getProperties());
+    		effect.setID(sharedEffect.getID());
+    		return effect;
+    	} else if (sharedEffect.getName() == EffectName.PitchEffect) {
+    		PitchEffect effect = new PitchEffect();
+    		effect.setID(sharedEffect.getID());
+    		return effect;
+    	} else if (sharedEffect.getName() == EffectName.VolumeEffect) {
+    		VolumeEffect effect = new VolumeEffect();
+    		effect.setID(sharedEffect.getID());
+    		return effect;
     	}
     	return null;
     }

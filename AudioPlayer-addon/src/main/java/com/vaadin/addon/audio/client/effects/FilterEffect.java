@@ -17,7 +17,7 @@ public class FilterEffect extends Effect {
 		HIGHPASS
 	}
 	
-	public FilterEffect() {
+	public FilterEffect(String id) {
 		
 	}
 	
