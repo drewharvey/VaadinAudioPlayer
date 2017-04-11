@@ -32,6 +32,7 @@ import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.OptionGroup;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Slider;
 import com.vaadin.ui.UI;
@@ -244,40 +245,41 @@ public class DemoUI extends UI {
 		
 		protected static HorizontalLayout createEffectContainer(String label) {
 			HorizontalLayout effectUi = new HorizontalLayout();
-			effectUi.setMargin(true);
 			effectUi.setSpacing(true);
+			effectUi.setSizeFull();
 			effectUi.setDefaultComponentAlignment(Alignment.MIDDLE_LEFT);
-			effectUi.addComponent(new Label(label));
+			effectUi.setCaption(label);
 			return effectUi;
 		}
 		
 		protected static HorizontalLayout createFilterEffectElement(AudioPlayer player, FilterEffect filterEffect) {
-    		filterEffect.setType(FilterEffect.Type.LOWPASS);
-    		filterEffect.setFrequency(10000);
+    		// set filter defaults
+			filterEffect.setType(FilterEffect.Type.HIGHPASS);
+    		filterEffect.setFrequency(0);
     		player.addEffect(filterEffect);
-    		
-    		HorizontalLayout effectUi = createEffectContainer("Filter");
-    		Button highPassBtn = new Button("High Pass");
-    		effectUi.addComponent(highPassBtn);
-    		highPassBtn.addClickListener(e -> {
-    			Log.message(player, "Set filter to high pass");
-    			filterEffect.setType(FilterEffect.Type.HIGHPASS);
-    		});
-    		Button lowPassBtn = new Button("Low Pass");
-    		effectUi.addComponent(lowPassBtn);
-    		lowPassBtn.addClickListener(e -> {
-    			Log.message(player, "Set filter to low pass");
-    			filterEffect.setType(FilterEffect.Type.LOWPASS);
+    		// build filter ui component
+    		HorizontalLayout effectUi = createEffectContainer("Filter Effect");
+    		OptionGroup typeSelector = new OptionGroup();
+    		effectUi.addComponent(typeSelector);
+    		typeSelector.addItems(FilterEffect.Type.HIGHPASS, FilterEffect.Type.LOWPASS);
+    		typeSelector.setItemCaption(FilterEffect.Type.HIGHPASS, "HP");
+    		typeSelector.setItemCaption(FilterEffect.Type.LOWPASS, "LP");
+    		typeSelector.select(FilterEffect.Type.HIGHPASS);
+    		typeSelector.addValueChangeListener(e -> {
+    			Log.message(player, "Set filter to " + ((FilterEffect.Type) typeSelector.getValue()));
+    			filterEffect.setType((FilterEffect.Type) typeSelector.getValue());
     		});
     		Slider frequency = new Slider();
     		effectUi.addComponent(frequency);
     		frequency.setMax(10000);
     		frequency.setMin(0);
+    		frequency.setSizeFull();
     		frequency.addValueChangeListener(e -> {
     			double freqVal = frequency.getValue();
     			filterEffect.setFrequency(freqVal);
     			Log.message(player, "Frequency set to " + freqVal);
     		});
+    		effectUi.setExpandRatio(frequency, 1);
     		return effectUi;
 		}
 	}
