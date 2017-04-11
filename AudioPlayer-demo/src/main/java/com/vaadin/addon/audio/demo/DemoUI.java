@@ -12,12 +12,15 @@ import java.util.Set;
 
 import javax.servlet.annotation.WebServlet;
 
+import com.vaadin.addon.audio.client.util.Log;
 import com.vaadin.addon.audio.server.AudioPlayer;
-import com.vaadin.addon.audio.server.effects.BalanceEffect;
+import com.vaadin.addon.audio.server.Encoder;
 import com.vaadin.addon.audio.server.effects.FilterEffect;
-import com.vaadin.addon.audio.server.effects.VolumeEffect;
 import com.vaadin.addon.audio.server.Stream;
+import com.vaadin.addon.audio.server.encoders.MP3Encoder;
 import com.vaadin.addon.audio.server.encoders.NullEncoder;
+import com.vaadin.addon.audio.server.encoders.OGGEncoder;
+import com.vaadin.addon.audio.server.util.FeatureSupport;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
 import com.vaadin.annotations.VaadinServletConfiguration;
@@ -28,6 +31,7 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Slider;
 import com.vaadin.ui.UI;
@@ -200,36 +204,10 @@ public class DemoUI extends UI {
     		innerContainer.addComponent(sliderLayout);
     		innerContainer.setComponentAlignment(sliderLayout, Alignment.MIDDLE_CENTER);
     		
-    		HorizontalLayout effectsLayout = new HorizontalLayout();
-    		effectsLayout.setSpacing(true);
-    		// add lowpass at 500hz
-    		Button lowPass = new Button("Low Pass");
-    		lowPass.addClickListener(e -> {
-    			FilterEffect filterEffect = new FilterEffect();
-    			filterEffect.setType(FilterEffect.Type.LOWPASS);
-    			filterEffect.setFrequency(500);
-    			player.addEffect(filterEffect);
-    		});
-    		effectsLayout.addComponent(lowPass);
-    		// balance to left ear only
-    		Button balance = new Button("Balance Left");
-    		balance.addClickListener(e -> {
-    			BalanceEffect balanceEffect = new BalanceEffect();
-    			balanceEffect.setBalance(-1);
-    			player.addEffect(balanceEffect);
-    		});
-    		effectsLayout.addComponent(balance);
-    		// Button to add lowpass at 500hz
-    		Button volume = new Button("Half Volume");
-    		lowPass.addClickListener(e -> {
-    			VolumeEffect volumeEffect = new VolumeEffect();
-    			volumeEffect.setGain(0.5);
-    			player.addEffect(volumeEffect);
-    		});
-    		effectsLayout.addComponent(volume);
-    		// TODO: add pitch filter
-    		innerContainer.addComponent(effectsLayout);
-    		innerContainer.setComponentAlignment(effectsLayout, Alignment.MIDDLE_CENTER);
+    		FilterEffect filterEffect = new FilterEffect();
+    		HorizontalLayout filterEffectUi = createFilterEffectElement(player, filterEffect);
+    		innerContainer.addComponent(filterEffectUi);
+    		
     		
     		layout.addComponent(innerContainer);
     		
@@ -262,6 +240,45 @@ public class DemoUI extends UI {
 
 		public Button getFwdButton() {
 			return fwdButton;
+		}
+		
+		protected static HorizontalLayout createEffectContainer(String label) {
+			HorizontalLayout effectUi = new HorizontalLayout();
+			effectUi.setMargin(true);
+			effectUi.setSpacing(true);
+			effectUi.setDefaultComponentAlignment(Alignment.MIDDLE_LEFT);
+			effectUi.addComponent(new Label(label));
+			return effectUi;
+		}
+		
+		protected static HorizontalLayout createFilterEffectElement(AudioPlayer player, FilterEffect filterEffect) {
+    		filterEffect.setType(FilterEffect.Type.LOWPASS);
+    		filterEffect.setFrequency(10000);
+    		player.addEffect(filterEffect);
+    		
+    		HorizontalLayout effectUi = createEffectContainer("Filter");
+    		Button highPassBtn = new Button("High Pass");
+    		effectUi.addComponent(highPassBtn);
+    		highPassBtn.addClickListener(e -> {
+    			Log.message(player, "Set filter to high pass");
+    			filterEffect.setType(FilterEffect.Type.HIGHPASS);
+    		});
+    		Button lowPassBtn = new Button("Low Pass");
+    		effectUi.addComponent(lowPassBtn);
+    		lowPassBtn.addClickListener(e -> {
+    			Log.message(player, "Set filter to low pass");
+    			filterEffect.setType(FilterEffect.Type.LOWPASS);
+    		});
+    		Slider frequency = new Slider();
+    		effectUi.addComponent(frequency);
+    		frequency.setMax(10000);
+    		frequency.setMin(0);
+    		frequency.addValueChangeListener(e -> {
+    			double freqVal = frequency.getValue();
+    			filterEffect.setFrequency(freqVal);
+    			Log.message(player, "Frequency set to " + freqVal);
+    		});
+    		return effectUi;
 		}
 	}
 
@@ -334,7 +351,16 @@ public class DemoUI extends UI {
 			@Override
 			public void onSelected(String itemName) {
 				// TODO: use OGGEncoder instead of NullEncoder to save bandwidth
-				// TODO: select encoder based on client capabilities. Drew: try to implement feature probes!
+				// choose encoder based on support
+				Encoder encoder = null;
+				if (FeatureSupport.isMp3Supported()) {
+					encoder = new MP3Encoder();
+				} else if(FeatureSupport.isOggSupported()) {
+					encoder = new OGGEncoder();
+				} else {
+					encoder = new NullEncoder();
+				}
+				// Stream stream = new Stream(readFile(itemName, TEST_FILE_PATH), encoder);
 				Stream stream = new Stream(readFile(itemName, TEST_FILE_PATH), new NullEncoder());
 				AudioPlayer audio = new AudioPlayer(stream);
 				Controls controls = new Controls(audio, itemName);
