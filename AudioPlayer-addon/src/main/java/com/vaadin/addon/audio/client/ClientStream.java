@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import com.vaadin.addon.audio.client.util.Log;
 import com.vaadin.addon.audio.shared.ChunkDescriptor;
@@ -92,17 +93,31 @@ public class ClientStream {
 	
 	
 	/**
+	 * Receive notification about a chunk having data made available, i.e.
+	 * the server has finished transmitting data for the requested chunk.
+	 * 
 	 * XXX: called from AudioPlayerConnector - we'd want to wrap this in a prettier fashion 
 	 */
-	protected void notifyChunkLoaded(int chunkId) {
+	protected void notifyChunkLoaded(int chunkId, Buffer buffer) {
 
 		// If there's more than MAX_BUFFER_RETAIN_COUNT buffers retained, free the first one
-		
+		if(buffers.size() > MAX_BUFFER_RETAIN_COUNT) {
+			Entry<ChunkDescriptor, Buffer> it = buffers.entrySet().iterator().next();
+			
+			buffers.remove(it.getKey());
+		}
 		
 		// Once we have data for a chunk, store it in the buffers
-		
-
-		// TODO: argh, gotta go!
-		
+		ChunkDescriptor chunk = findChunkById(chunkId);
+		buffers.put(chunk, buffer);
+	
+		// Notify of chunk being received
+		DataCallback cb = requests.get(chunk);
+		cb.onDataReceived(chunk);
 	}
+	
+	public String toString() {
+		return "ClientStream";
+	}
+
 }

@@ -14,13 +14,23 @@ public class Buffer {
 	private AudioBuffer buffer;
 	private Uint8Array data;
 	
-	public Buffer(AudioContext context, byte[] b) {
+	/**
+	 * Create a new WebAudio buffer using a 
+	 * 
+	 * @param context
+	 * @param encodedData
+	 */
+	public Buffer(AudioContext context, boolean compressedData, String encodedData) {
 		Log.message(this, "create");
 		
 	}
 	
 	public AudioBuffer getAudioBuffer() {
 		return buffer;
+	}
+	
+	public String toString() {
+		return "Buffer";
 	}
 	
 }

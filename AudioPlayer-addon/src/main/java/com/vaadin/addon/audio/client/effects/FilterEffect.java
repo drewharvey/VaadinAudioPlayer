@@ -101,4 +101,8 @@ public class FilterEffect extends Effect {
 		return null;
 	}
 	
+	public String toString() {
+		return "FilterEffect";
+	}
+
 }

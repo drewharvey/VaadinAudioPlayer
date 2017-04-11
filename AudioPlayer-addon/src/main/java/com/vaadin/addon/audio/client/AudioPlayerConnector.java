@@ -14,6 +14,7 @@ import com.vaadin.addon.audio.shared.AudioPlayerServerRpc;
 import com.vaadin.addon.audio.shared.AudioPlayerState;
 import com.vaadin.addon.audio.shared.SharedEffect;
 import com.vaadin.addon.audio.shared.SharedEffect.EffectName;
+import com.vaadin.annotations.JavaScript;
 import com.vaadin.addon.audio.shared.SharedEffectProperty;
 import com.vaadin.client.ServerConnector;
 import com.vaadin.client.annotations.OnStateChange;
@@ -24,11 +25,17 @@ import com.vaadin.shared.ui.Connect;
 import elemental.html.AudioContext;
 import elemental.js.JsBrowser;
 
+//
+// TODO: get the JavaScript inflate library to load - this is required
+// in order to get the client to receive compressed audio chunks
+//
+
 // Connector binds client-side widget class to server-side component class
 // Connector lives in the client and the @Connect annotation specifies the
 // corresponding server-side component
 @Connect(AudioPlayer.class)
 @SuppressWarnings("serial")
+@JavaScript({ "AudioPlayer/pako_inflate.min.js" })
 public class AudioPlayerConnector extends AbstractExtensionConnector {
 
 	// For now, we're going with a simple singleton
@@ -52,7 +59,7 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
     
     @OnStateChange("chunks")
     private void updateChunks() {
-    	 
+    	 Log.message(this, "chunk table updated");
     }
     
     @OnStateChange("effects")
@@ -116,9 +123,9 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
         registerRpc(AudioPlayerClientRpc.class, new AudioPlayerClientRpc() {
 
 			@Override
-			public void dataAvailable(int chunkId) {
+			public void sendData(int chunkId, boolean compressed, String data) {
 				Log.message(this, "data available for chunk " + chunkId);
-				stream.notifyChunkLoaded(chunkId);
+				stream.notifyChunkLoaded(chunkId, new Buffer(context, compressed, data));
 			}
 
 			@Override
@@ -131,14 +138,14 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 			@Override
 			public void skipPosition(int delta_millis) {
 				Log.message(this, "skip by " + delta_millis);
-				// TODO: do something with this
+				player.setPosition(player.getPosition() + delta_millis);
 				setPlaybackPosition(player.getPosition() + delta_millis);
 			}
 
 			@Override
 			public void startPlayback() {
 				Log.message(this, "start playback");
-				// TODO: do something with this
+				player.play();
 				getServerRPC().reportPlaybackStarted();
 				getServerRPC().reportPlaybackPosition(player.getPosition());
 			}
@@ -146,24 +153,21 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 			@Override
 			public void pausePlayback() {
 				Log.message(this, "pause playback");
-				// TODO: do something with this
-
+				player.pause();
 				getServerRPC().reportPlaybackPaused();
 			}
 
 			@Override
 			public void resumePlayback() {
 				Log.message(this, "resume playback");
-				// TODO: do something with this
-
+				player.resume();
 				getServerRPC().reportPlaybackStarted();
 			}
 
 			@Override
 			public void stopPlayback() {
 				Log.message(this, "stop playback");
-				// TODO: do something with this
-
+				player.stop();
 				getServerRPC().reportPlaybackStopped();
 			}
 
@@ -187,4 +191,9 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 
         });		
 	}
+	
+	public String toString() {
+		return "AudioPlayerConnector";
+	}
+
 }

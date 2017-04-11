@@ -41,9 +41,8 @@ public abstract class Effect {
 	
 	public abstract void init(AudioContext context);
 	
-	@Override
 	public String toString() {
-		return this.getClass().getSimpleName() + " @" + this.hashCode();
+		return "Effect";
 	}
 	
 }

@@ -32,4 +32,9 @@ public class BalanceEffect extends Effect {
 	public double getBalance() {
 		return position;
 	}
+	
+	public String toString() {
+		return "BalanceEffect";
+	}
+
 }

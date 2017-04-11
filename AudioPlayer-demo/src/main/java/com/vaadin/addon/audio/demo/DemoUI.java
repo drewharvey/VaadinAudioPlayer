@@ -4,10 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -335,7 +333,8 @@ public class DemoUI extends UI {
 		final FileSelector fileSelector = new FileSelector(new FileSelector.SelectionCallback() {
 			@Override
 			public void onSelected(String itemName) {
-				// TODO: create and attach a stream to the audio player...
+				// TODO: use OGGEncoder instead of NullEncoder to save bandwidth
+				// TODO: select encoder based on client capabilities. Drew: try to implement feature probes!
 				Stream stream = new Stream(readFile(itemName, TEST_FILE_PATH), new NullEncoder());
 				AudioPlayer audio = new AudioPlayer(stream);
 				Controls controls = new Controls(audio, itemName);
@@ -355,6 +354,10 @@ public class DemoUI extends UI {
 	@VaadinServletConfiguration(productionMode = false, ui = DemoUI.class)
 	public static class Servlet extends VaadinServlet {
 	}
+	
+	//
+	// File I/O routines require "new" Java features.
+	//
 	
 	public static ByteBuffer readFile(String fname, String dir) {
 		System.out.print("Reading file " + fname + " in " + dir + "... ");

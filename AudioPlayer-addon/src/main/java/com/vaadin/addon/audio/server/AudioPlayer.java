@@ -7,6 +7,7 @@ import com.vaadin.addon.audio.shared.AudioPlayerServerRpc;
 import com.vaadin.addon.audio.shared.AudioPlayerState;
 import com.vaadin.addon.audio.shared.ChunkDescriptor;
 import com.vaadin.addon.audio.shared.SharedEffect;
+import com.vaadin.annotations.JavaScript;
 import com.vaadin.server.AbstractExtension;
 import com.vaadin.ui.UI;
 
@@ -35,7 +36,7 @@ public class AudioPlayer extends AbstractExtension {
     	registerRpc(new AudioPlayerServerRpc() {
 			@Override
 			public void requestChunk(int chunkID) {
-				
+				String data = stream.getChunkData(stream.getChunkById(chunkID));
 				trace("received request for chunk");
 			}
 			

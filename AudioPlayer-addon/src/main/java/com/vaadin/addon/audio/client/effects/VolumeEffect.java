@@ -26,5 +26,9 @@ public class VolumeEffect extends Effect {
 		Log.message(this, "setting gain to " + gain);
 		((AudioGainNode) getAudioNode()).getGain().setValue(gain);
 	}
+	
+	public String toString() {
+		return "VolumeEffect";
+	}
 
 }

@@ -13,26 +13,26 @@ import java.util.logging.Logger;
  *  TODO: figure out some better way to log stuff. Perhaps a direct call to console.log? Always log a warning? What?
  */
 public class Log {
-	private static final Map<Class<?>, Logger> loggers = new HashMap<Class<?>, Logger>();
+	private static final Map<String, Logger> loggers = new HashMap<String, Logger>();
 	
-	private static Logger getLogger(Class<?> cls) {
+	private static Logger getLogger(String cls) {
 		if(loggers.containsKey(cls)) {
 			return loggers.get(cls);
 		}
-		Logger logger = Logger.getLogger(cls.getSimpleName());
+		Logger logger = Logger.getLogger(cls);
 		loggers.put(cls, logger);
 		return logger;
 	}
 	
 	public static <T> void message(T instance, String message) {
-		getLogger(instance.getClass()).log(Level.INFO, message);
+		getLogger(instance.toString()).log(Level.INFO, message + " [REMOVEME]");
 	}
 	
 	public static <T> void warning(T instance, String message) {
-		getLogger(instance.getClass()).log(Level.WARNING, message);
+		getLogger(instance.toString()).log(Level.WARNING, message);
 	}
 	
 	public static <T> void error(T instance, String message) {
-		getLogger(instance.getClass()).log(Level.SEVERE, message);
+		getLogger(instance.toString()).log(Level.SEVERE, message);
 	}
 }

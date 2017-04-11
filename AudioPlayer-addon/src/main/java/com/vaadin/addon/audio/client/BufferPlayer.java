@@ -1,9 +1,7 @@
 package com.vaadin.addon.audio.client;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 import com.vaadin.addon.audio.client.effects.BalanceEffect;
 import com.vaadin.addon.audio.client.util.Log;
@@ -143,6 +141,10 @@ public class BufferPlayer {
 		Log.message(this, "remove effect " + effect);
 		effects.remove(effect);
 		dirty = true;
+	}
+	
+	public String toString() {
+		return "BufferPlayer";
 	}
 	
 }

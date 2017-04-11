@@ -12,6 +12,10 @@ public class PitchEffect extends Effect {
 		// TODO Auto-generated method stub
 		Log.message(this, "init");
 	}
+
+	public String toString() {
+		return "PitchEffect";
+	}
 	
 	// Figure out how to create a pitch shift effect-
 	// See https://github.com/mmckegg/soundbank-pitch-shift/blob/master/index.js

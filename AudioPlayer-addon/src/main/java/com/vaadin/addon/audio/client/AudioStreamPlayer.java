@@ -1,9 +1,8 @@
 package com.vaadin.addon.audio.client;
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Stack;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -15,6 +14,10 @@ import com.vaadin.addon.audio.client.util.Log;
  */
 public class AudioStreamPlayer {
 
+	//
+	// TODO: improve log messages
+	//
+	
 	private static final int MAX_PLAYERS = 3;	// Maximum number of players
 	
 	private ClientStream stream;
@@ -45,8 +48,9 @@ public class AudioStreamPlayer {
 	
 	public void play() {
 		Log.message(this, "play");
-		if (currentPlayer != null) {
-			
+		if (currentPlayer == null) {
+			logError("current player is null");
+			return;
 		}
 	}
 	
@@ -128,4 +132,7 @@ public class AudioStreamPlayer {
 		logger.log(Level.SEVERE, msg);
 	}
 	
+	public String toString() {
+		return "AudioStreamPlayer";
+	}
 }
