@@ -16,11 +16,16 @@ import com.vaadin.addon.audio.server.AudioPlayer;
 import com.vaadin.addon.audio.server.Encoder;
 import com.vaadin.addon.audio.server.effects.FilterEffect;
 import com.vaadin.addon.audio.server.Stream;
+import com.vaadin.addon.audio.server.AudioPlayer.PlaybackState;
+import com.vaadin.addon.audio.server.AudioPlayer.StateChangeCallback;
+import com.vaadin.addon.audio.server.Stream.StreamState;
+import com.vaadin.addon.audio.server.Stream.StreamStateCallback;
 import com.vaadin.addon.audio.server.encoders.MP3Encoder;
 import com.vaadin.addon.audio.server.encoders.NullEncoder;
 import com.vaadin.addon.audio.server.encoders.OGGEncoder;
 import com.vaadin.addon.audio.server.util.FeatureSupport;
 import com.vaadin.addon.audio.shared.util.Log;
+import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
 import com.vaadin.annotations.VaadinServletConfiguration;
@@ -31,6 +36,7 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.OptionGroup;
 import com.vaadin.ui.Panel;
@@ -39,6 +45,7 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Button.ClickEvent;
 
+@Push
 @Theme("demo")
 @Title("AudioPlayer Add-on Demo")
 @SuppressWarnings("serial")
@@ -74,7 +81,8 @@ public class DemoUI extends UI {
 
 			positionSlider = new Slider("Position");
 			positionSlider.setSizeFull();
-			// TODO: connect position slider to player
+			positionSlider.setEnabled(false);
+			// TODO: rethink the entire position-as-slider. We should rather have a progress indicator
 
 			layout.addComponent(positionSlider);
 
@@ -195,11 +203,92 @@ public class DemoUI extends UI {
 			deleteButton.addStyleName("danger");
 			deleteButton.addStyleName(BUTTON_SIZE_CLASS);
 
-			HorizontalLayout deleteLayout = new HorizontalLayout();
-			deleteLayout.addComponent(deleteButton);
-			deleteLayout.setWidth("100%");
-			deleteLayout.setComponentAlignment(deleteButton, Alignment.MIDDLE_RIGHT);
-			innerContainer.addComponent(deleteLayout);
+			final UI ui = UI.getCurrent();
+			final Label streamStatus = new Label("Stream status: IDLE");
+			streamStatus.setSizeFull();
+			player.getStream().addStateChangeListener(new StreamStateCallback() {
+				@Override
+				public void onStateChanged(final StreamState newState) {
+					ui.access(new Runnable() {
+						@Override
+						public void run() {
+							String text = "Stream status: ";
+							switch(newState) {
+							case COMPRESSING:
+								text += "COMPRESSING";
+								break;
+							case ENCODING:
+								text += "ENCODING";
+								break;
+							case IDLE:
+								text += "IDLE";
+								break;
+							case READING:
+								text += "READING";
+								break;
+							case SERIALIZING:
+								text += "SERIALIZING";
+								break;
+							default:
+								text += "broken or something";
+								break;
+							}
+							streamStatus.setValue(text);
+						}
+					});
+				}
+			});
+			
+			final Label playerStatus = new Label("Player status: STOPPED");
+			playerStatus.setSizeFull();
+			player.addStateChangeListener(new StateChangeCallback() {
+				@Override
+				public void playbackStateChanged(final PlaybackState new_state) {
+					ui.access(new Runnable() {
+						@Override
+						public void run() {
+							String text = "Player status: ";
+							switch(new_state) {
+							case PAUSED:
+								text += "PAUSED";
+								break;
+							case PLAYING:
+								text += "PLAYING";
+								break;
+							case STOPPED:
+								text += "STOPPED";
+								break;
+							default:
+								break;
+							}
+							playerStatus.setValue(text);
+						}
+					});
+				}
+				
+				@Override
+				public void playbackPositionChanged(final int new_position_millis) {
+					ui.access(new Runnable() {
+						@Override
+						public void run() {
+							positionSlider.setValue((double)new_position_millis);
+						}
+					});
+				}
+			});
+			
+			HorizontalLayout bottomLayout = new HorizontalLayout();
+			bottomLayout.setWidth("100%");
+
+			bottomLayout.addComponent(playerStatus);
+			bottomLayout.setComponentAlignment(playerStatus, Alignment.MIDDLE_LEFT);
+			
+			bottomLayout.addComponent(streamStatus);
+			bottomLayout.setComponentAlignment(streamStatus, Alignment.MIDDLE_LEFT);
+			
+			bottomLayout.addComponent(deleteButton);
+			bottomLayout.setComponentAlignment(deleteButton, Alignment.MIDDLE_RIGHT);
+			innerContainer.addComponent(bottomLayout);
 
 			setContent(layout);
 		}
