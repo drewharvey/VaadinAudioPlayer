@@ -1,9 +1,11 @@
 package com.vaadin.addon.audio.shared;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SharedEffect {
+@SuppressWarnings("serial")
+public class SharedEffect implements Serializable {
 	
 	public enum EffectName {
 		BalanceEffect,
