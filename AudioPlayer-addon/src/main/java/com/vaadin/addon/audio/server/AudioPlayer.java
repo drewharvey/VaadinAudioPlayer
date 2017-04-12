@@ -1,13 +1,13 @@
 package com.vaadin.addon.audio.server;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import com.vaadin.addon.audio.shared.AudioPlayerClientRpc;
 import com.vaadin.addon.audio.shared.AudioPlayerServerRpc;
 import com.vaadin.addon.audio.shared.AudioPlayerState;
 import com.vaadin.addon.audio.shared.ChunkDescriptor;
 import com.vaadin.addon.audio.shared.SharedEffect;
-import com.vaadin.annotations.JavaScript;
 import com.vaadin.server.AbstractExtension;
 import com.vaadin.ui.UI;
 
@@ -15,6 +15,15 @@ import com.vaadin.ui.UI;
 // for AudioPlayer
 @SuppressWarnings("serial")
 public class AudioPlayer extends AbstractExtension {
+	
+	// TODO: use an actual event system
+	public static interface StateChangeCallback {
+		
+		void playbackPositionChanged(int new_position_millis);
+		
+		void playbackStateChanged(PlaybackState new_state);
+		
+	}
 
 	private static void trace(String msg) {
 		System.err.println("[AudioPlayer] " + msg + " (REMOVEME)");
@@ -35,44 +44,80 @@ public class AudioPlayer extends AbstractExtension {
     	
     	registerRpc(new AudioPlayerServerRpc() {
 			@Override
-			public void requestChunk(int chunkID) {
-				String data = stream.getChunkData(stream.getChunkById(chunkID));
-				trace("received request for chunk");
+			public void requestChunk(final int chunkID) {
+				trace("received request for chunk " + chunkID);
+				
+				final UI ui = UI.getCurrent();
+				final AudioPlayer player = AudioPlayer.this;
+				
+				Stream.Callback onComplete = new Stream.Callback() {
+					@Override
+					public void onComplete(String encodedData) {
+						ui.access(new Runnable() {
+							@Override
+							public void run() {
+								player.getClientRPC().sendData(chunkID, stream.isCompressionEnabled(), encodedData);
+								trace("sent chunk " + chunkID);
+							}
+						});
+					}
+				};
+				stream.getChunkData(stream.getChunkById(chunkID), onComplete);
 			}
 			
 			@Override
 			public void reportPlaybackPosition(int position_millis) {
-				
 				trace("received position report: " + position_millis);
+				for(StateChangeCallback cb : stateCallbacks) {
+					cb.playbackPositionChanged(position_millis);
+				}
 			}
 
 			@Override
 			public void reportPlaybackStarted() {
-				playbackState = PlaybackState.PLAYING;
 				trace("received playback state change to PLAYING");
+				playbackState = PlaybackState.PLAYING;
+				for(StateChangeCallback cb : stateCallbacks) {
+					cb.playbackStateChanged(playbackState);
+				}
 			}
 
 			@Override
 			public void reportPlaybackPaused() {
-				playbackState = PlaybackState.PAUSED;
 				trace("received playback state change to PAUSED");
+				playbackState = PlaybackState.PAUSED;
+				for(StateChangeCallback cb : stateCallbacks) {
+					cb.playbackStateChanged(playbackState);
+				}
 			}
 
 			@Override
 			public void reportPlaybackStopped() {
-				playbackState = PlaybackState.STOPPED;
 				trace("received playback state change to STOPPED");
+				playbackState = PlaybackState.STOPPED;
+				for(StateChangeCallback cb : stateCallbacks) {
+					cb.playbackStateChanged(playbackState);
+				}
 			}
 		}, AudioPlayerServerRpc.class);
 
     	// Register stream, set up chunk table in state
-    	this.stream = stream;
-    	
+    	setStream(stream);
     	
     	// Extend current UI
     	ui = UI.getCurrent();
     	extend(ui);
-    	
+    }
+    
+    // TODO: use a proper event system
+    private List<StateChangeCallback> stateCallbacks = new
+    		ArrayList<>();
+    public void addListener(StateChangeCallback cb) {
+    	stateCallbacks.add(cb);
+    }
+    
+    public void removeListener(StateChangeCallback cb) {
+    	stateCallbacks.remove(cb);
     }
     
     public void destroy() {
@@ -84,11 +129,10 @@ public class AudioPlayer extends AbstractExtension {
     }
     
     public Stream setStream(Stream stream) {
-    	
     	if(this.stream != null) {
-    		
+    		// TODO: remove stream
     	}
-    	
+    	this.stream = stream;
     	return stream;
     }
     
