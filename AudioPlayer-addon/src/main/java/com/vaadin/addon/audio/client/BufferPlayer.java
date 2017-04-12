@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.vaadin.addon.audio.client.effects.BalanceEffect;
-import com.vaadin.addon.audio.client.util.Log;
+import com.vaadin.addon.audio.shared.util.Log;
 
 import elemental.html.AudioBufferSourceNode;
 import elemental.html.AudioContext;

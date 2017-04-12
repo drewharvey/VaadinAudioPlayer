@@ -1,7 +1,7 @@
 package com.vaadin.addon.audio.client.effects;
 
 import com.vaadin.addon.audio.client.Effect;
-import com.vaadin.addon.audio.client.util.Log;
+import com.vaadin.addon.audio.shared.util.Log;
 
 import elemental.html.AudioContext;
 

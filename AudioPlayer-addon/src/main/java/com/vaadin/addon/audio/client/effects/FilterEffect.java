@@ -3,9 +3,9 @@ package com.vaadin.addon.audio.client.effects;
 import java.util.List;
 
 import com.vaadin.addon.audio.client.Effect;
-import com.vaadin.addon.audio.client.util.Log;
 import com.vaadin.addon.audio.shared.SharedEffectProperty;
 import com.vaadin.addon.audio.shared.SharedEffectProperty.PropertyName;
+import com.vaadin.addon.audio.shared.util.Log;
 
 import elemental.html.AudioContext;
 import elemental.html.BiquadFilterNode;

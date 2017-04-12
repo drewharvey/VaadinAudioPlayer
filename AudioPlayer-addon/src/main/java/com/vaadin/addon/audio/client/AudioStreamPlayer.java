@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.vaadin.addon.audio.client.util.Log;
+import com.vaadin.addon.audio.shared.util.Log;
 
 /**
  * Player controls for a stream.

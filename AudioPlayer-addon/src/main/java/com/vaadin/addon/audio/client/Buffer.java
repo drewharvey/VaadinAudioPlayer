@@ -1,6 +1,6 @@
 package com.vaadin.addon.audio.client;
 
-import com.vaadin.addon.audio.client.util.Log;
+import com.vaadin.addon.audio.shared.util.Log;
 
 import elemental.html.AudioBuffer;
 import elemental.html.AudioContext;

@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.vaadin.addon.audio.client.util.Log;
 import com.vaadin.addon.audio.shared.ChunkDescriptor;
+import com.vaadin.addon.audio.shared.util.Log;
 
 /**
  * Handles stream logic on the client.
