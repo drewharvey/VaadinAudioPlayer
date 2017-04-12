@@ -14,11 +14,15 @@ public abstract class Encoder {
 	private ByteBuffer inputBuffer;
 	private PCMFormat inputFormat;
 	
-	public Encoder(ByteBuffer pcmBytes, PCMFormat inputFormat) {
+	public Encoder() {
+		// ?
+	}
+
+	protected void setInput(ByteBuffer pcmBytes, PCMFormat inputFormat) {
 		this.inputBuffer = pcmBytes;
 		this.inputFormat = inputFormat;
 	}
-
+	
 	/**
 	 * Get access to the raw input data buffer
 	 * 

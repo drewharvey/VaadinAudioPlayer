@@ -1,9 +1,6 @@
 package com.vaadin.addon.audio.server.encoders;
 
-import java.nio.ByteBuffer;
-
 import com.vaadin.addon.audio.server.Encoder;
-import com.vaadin.addon.audio.shared.PCMFormat;
 
 /**
  * MP3 encoder placeholder.
@@ -16,12 +13,23 @@ public class MP3Encoder extends Encoder {
 		// TODO: implement
 	}
 	
+	private static final MP3Format DEFAULT_FORMAT;
+	
+	static {
+		DEFAULT_FORMAT = new MP3Format();
+		// TODO: init mp3 format
+	}
+	
 	private MP3Format outputFormat;
 	
-	public MP3Encoder(ByteBuffer inputBuffer, PCMFormat inputFormat, MP3Format outputFormat) {
-		super(inputBuffer, inputFormat);
+	public MP3Encoder() {
+		this(DEFAULT_FORMAT);
+	}
+	
+	public MP3Encoder(MP3Format outputFormat) {
 		this.outputFormat = outputFormat;
 		
+		// Actual constructor
 	}
 
 	@Override

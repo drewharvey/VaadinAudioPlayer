@@ -61,6 +61,7 @@ public class Stream {
 	public Stream(ByteBuffer pcmBuffer, PCMFormat format, Encoder encoder) {
 		this.buffer = pcmBuffer;
 		this.encoder = encoder;
+		encoder.setInput(pcmBuffer, format);
 		
 		// TODO: create chunk descriptor list
 	}

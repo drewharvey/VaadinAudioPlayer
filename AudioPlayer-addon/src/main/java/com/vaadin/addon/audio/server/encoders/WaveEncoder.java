@@ -10,21 +10,24 @@ import com.vaadin.addon.audio.shared.PCMFormat;
  */
 public class WaveEncoder extends Encoder {
 
-	// TODO: allow different input and output formats
-	
-	// 
-	//
-	//
-	
 	private PCMFormat outputFormat;
 	
-	public WaveEncoder(ByteBuffer pcmBytes, PCMFormat inputFormat, PCMFormat outputFormat) {
-		super(pcmBytes,inputFormat);
+	public WaveEncoder() {
+		this(null);
+	}
+	
+	public WaveEncoder(PCMFormat outputFormat) {
 		this.outputFormat = outputFormat;
 	}
 	
 	@Override
 	public byte[] encode(int from_offset, int length) {
+		
+		PCMFormat infmt = getInputFormat();
+		PCMFormat outfmt = outputFormat == null ? infmt : outputFormat;
+		
+		// TODO: allow different input and output formats - we currently do no conversion
+				
 		
 		return null;
 	}

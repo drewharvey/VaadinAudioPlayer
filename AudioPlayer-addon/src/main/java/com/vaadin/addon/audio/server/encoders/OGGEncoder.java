@@ -1,9 +1,7 @@
 package com.vaadin.addon.audio.server.encoders;
 
-import java.nio.ByteBuffer;
-
 import com.vaadin.addon.audio.server.Encoder;
-import com.vaadin.addon.audio.shared.PCMFormat;
+import com.vaadin.addon.audio.server.encoders.MP3Encoder.MP3Format;
 
 /**
  * OGG encoder placeholder. We'll need to add a dependency to an
@@ -16,10 +14,21 @@ public class OGGEncoder extends Encoder {
 		// TODO: implement
 	}
 	
+	private static final OGGFormat DEFAULT_FORMAT;
+	
+	static {
+		DEFAULT_FORMAT = new OGGFormat();
+		// TODO: init ogg format
+	}
+
+	
 	private OGGFormat outputFormat;
 	
-	public OGGEncoder(ByteBuffer inputBuffer, PCMFormat inputFormat, OGGFormat outputFormat) {
-		super(inputBuffer, inputFormat);
+	public OGGEncoder() {
+		this(DEFAULT_FORMAT);
+	}
+	
+	public OGGEncoder(OGGFormat outputFormat) {
 		this.outputFormat = outputFormat;
 		
 	}
@@ -27,6 +36,8 @@ public class OGGEncoder extends Encoder {
 	@Override
 	public byte[] encode(int from_offset, int length) {
 
+		// TODO: implement OGG encoding
+		
 		return null;
 	}
 
