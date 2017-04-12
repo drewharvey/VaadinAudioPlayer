@@ -67,11 +67,11 @@ public class ChunkDescriptor implements Serializable {
 		return leadOutDuration;
 	}
 
-	public int getStartStreamByteOffset() {
+	public int getStartSampleOffset() {
 		return startStreamByteOffset;
 	}
 
-	public int getEndStreamByteOffset() {
+	public int getEndSampleOffset() {
 		return endStreamByteOffset;
 	}
 

@@ -14,6 +14,8 @@ import com.vaadin.addon.audio.shared.PCMFormat;
  */
 public class Stream {
 
+	public static final int CHUNK_LENGTH_MILLIS = 10000;
+	
 	public static interface Callback {
 		public void onComplete(String encodedData);
 	}
@@ -45,9 +47,11 @@ public class Stream {
 	private ByteBuffer buffer = null;
 	private Encoder encoder = null;
 	private StreamState streamState = StreamState.IDLE;
-	 
+	
+	private int chunkLength = CHUNK_LENGTH_MILLIS;
+	
 	private boolean compression = false;
-	private int chunkCount = 0;
+	private int sampleCount = 0;
 	private int duration = 0;
 	
 	/**
@@ -141,9 +145,9 @@ public class Stream {
 			@Override
 			public void run() {
 				setStreamState(StreamState.READING);
-				int startOffset = chunk.getStartStreamByteOffset();
-				int endOffset = chunk.getEndStreamByteOffset();
-				int length = endOffset - startOffset; 
+				int startOffset = chunk.getStartSampleOffset();
+				int endOffset = chunk.getEndSampleOffset();
+				int length = endOffset - startOffset;
 				
 				setStreamState(StreamState.ENCODING);
 				byte[] bytes = encoder.encode(startOffset, length);
@@ -165,9 +169,7 @@ public class Stream {
 					setStreamState(StreamState.READING);
 					serviceChunkRequests();
 				}
-				
 			}
-			
 		});
 		worker.run();
 	}
@@ -188,10 +190,18 @@ public class Stream {
 		return null;
 	}
 	
-	public int getChunkCount() {
-		return chunkCount;
+	/**
+	 * Get number of samples in stream
+	 * @return
+	 */
+	public int getSampleCount() {
+		return sampleCount;
 	}
 	
+	/**
+	 * Get total duration of stream in milliseconds
+	 * @return
+	 */
 	public int getDuration() {
 		return duration;
 	}
