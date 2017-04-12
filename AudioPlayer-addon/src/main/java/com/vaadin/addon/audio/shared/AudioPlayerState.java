@@ -9,11 +9,8 @@ import com.vaadin.shared.AbstractComponentState;
 @SuppressWarnings("serial")
 public class AudioPlayerState extends AbstractComponentState {
 
-	// NOTE: set this once and then don't touch it
 	public final List<ChunkDescriptor> chunks = new ArrayList<ChunkDescriptor>();
 	
-	public final List<String> chunkData = new ArrayList<String>();
-	
-	public List<SharedEffect> effects = new ArrayList<SharedEffect>();
+	public final List<SharedEffect> effects = new ArrayList<SharedEffect>();
 	
 }
