@@ -45,6 +45,9 @@ public class BufferPlayer {
 			source.setNativeBuffer(buffer.getAudioBuffer());
 		}
 		output = context.createGainNode();
+		
+		// XXX, TODO: rework this
+		source.connect(context.getDestination());
 	}
 	
 	public AudioNode getOutput() {
@@ -80,16 +83,16 @@ public class BufferPlayer {
 	
 	public void play(int offset_millis) {
 		Log.message(this, "start playback at " + offset_millis);
-		
+		source.start();
 	}
 	
 	public void stop() {
 		Log.message(this, "stop playback");
+		source.stop();
 	}
 	
 	public void setBuffer(Buffer buffer) {
 		Log.message(this, "buffer reassigned");
-		stop();
 		source.setBuffer(buffer);
 	}
 	

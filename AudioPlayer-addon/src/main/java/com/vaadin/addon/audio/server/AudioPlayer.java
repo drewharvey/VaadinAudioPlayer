@@ -153,14 +153,16 @@ public class AudioPlayer extends AbstractExtension {
     }
     
     public void play() {
-    	getClientRPC().stopPlayback();
+    	// TODO: re-enable
+    	//getClientRPC().stopPlayback();
     	getClientRPC().startPlayback();
     	Log.message(AudioPlayer.this,"start or restart playback");
     }
     
     public void play(int offset_millis) {
-    	getClientRPC().stopPlayback();
-    	getClientRPC().setPlaybackPosition(offset_millis);
+    	// TODO: re-enable
+    	//getClientRPC().stopPlayback();
+    	//getClientRPC().setPlaybackPosition(offset_millis);
     	getClientRPC().startPlayback();
     	Log.message(AudioPlayer.this,"start playback at time offset");
     }

@@ -1,5 +1,6 @@
 package com.vaadin.addon.audio.client;
 
+import elemental.html.ArrayBuffer;
 import elemental.html.Uint8Array;
 
 /**
@@ -13,11 +14,17 @@ public final class StreamDataDecoder {
 	 * @param encodedData encoded data as string
 	 * @return a JavaScript native array with decoded data
 	 */
-	public static Uint8Array decode(String encodedData) {
-		return decodeBase64(encodedData);
+	public static ArrayBuffer decode(String encodedData) {
+		ArrayBuffer decoded = decodeBase64(encodedData);
+		clog("decoded: " + decoded);
+		return decoded;
 	}
 	
-	public static Uint8Array decompress(Uint8Array data) {
+	private static final native void clog(String msg) /*-{
+		console.log(msg);
+	}-*/;
+	
+	public static ArrayBuffer decompress(ArrayBuffer data) {
 		// TODO: implement decompression using the pako library
 		// TODO: get pako library to load
 		// See https://github.com/nodeca/pako
@@ -30,7 +37,7 @@ public final class StreamDataDecoder {
 	 * 
 	 * TODO: see if we can change this to a GWT intrinsic that doesn't suck
 	 */
-	private static final native Uint8Array decodeBase64(String str) /*-{
+	private static final native ArrayBuffer decodeBase64(String str) /*-{
 		var Base64Binary = {
 			_keyStr : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
 			
