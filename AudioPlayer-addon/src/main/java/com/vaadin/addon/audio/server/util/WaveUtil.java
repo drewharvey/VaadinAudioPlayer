@@ -1,4 +1,4 @@
-package com.vaadin.addon.audio.shared.util;
+package com.vaadin.addon.audio.server.util;
 
 import java.nio.ByteBuffer;
 

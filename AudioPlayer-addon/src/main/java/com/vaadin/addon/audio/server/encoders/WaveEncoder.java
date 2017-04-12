@@ -3,8 +3,8 @@ package com.vaadin.addon.audio.server.encoders;
 import java.nio.ByteBuffer;
 
 import com.vaadin.addon.audio.server.Encoder;
+import com.vaadin.addon.audio.server.util.WaveUtil;
 import com.vaadin.addon.audio.shared.PCMFormat;
-import com.vaadin.addon.audio.shared.util.WaveUtil;
 
 /**
  * PCM-to-MSWave encoder.
