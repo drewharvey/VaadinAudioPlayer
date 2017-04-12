@@ -18,7 +18,6 @@ public class ChunkDescriptor implements Serializable {
 	private int startSampleOffset;
 	private int endSampleOffset;
 
-		
 	public void setId(int id) {
 		this.id = id;
 	}
@@ -77,8 +76,9 @@ public class ChunkDescriptor implements Serializable {
 
 	@Override
 	public String toString() {
-		return "[Descriptor for chunk " + id + " time: " + startTimeOffset + "-" + endTimeOffset + " samples: " + startSampleOffset
-				+ "-" + endSampleOffset + "]";
+		return "[Descriptor for chunk " + id + " time: " + startTimeOffset + "(-" + leadInDuration + ") - "
+				+ endTimeOffset + "(+" + leadOutDuration + ")" + " samples: " + startSampleOffset + "-"
+				+ endSampleOffset + ", size: " + (endSampleOffset - startSampleOffset) + " samples ]";
 	}
 
 }

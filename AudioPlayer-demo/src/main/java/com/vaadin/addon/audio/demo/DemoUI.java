@@ -25,6 +25,7 @@ import com.vaadin.addon.audio.server.encoders.WaveEncoder;
 import com.vaadin.addon.audio.server.encoders.OGGEncoder;
 import com.vaadin.addon.audio.server.util.FeatureSupport;
 import com.vaadin.addon.audio.server.util.WaveUtil;
+import com.vaadin.addon.audio.shared.ChunkDescriptor;
 import com.vaadin.addon.audio.shared.PCMFormat;
 import com.vaadin.addon.audio.shared.util.Log;
 import com.vaadin.annotations.Push;
@@ -106,7 +107,7 @@ public class DemoUI extends UI {
 			buttonLayout.addComponent(rewButton = new Button("Back " + SKIP_TIME_SEC + " sec", new ClickListener() {
 				@Override
 				public void buttonClick(ClickEvent event) {
-					player.skip(-5000);
+					player.skip(-SKIP_TIME_SEC * 1000);
 				}
 			}));
 			rewButton.addStyleName(BUTTON_SIZE_CLASS);
@@ -149,7 +150,7 @@ public class DemoUI extends UI {
 			buttonLayout.addComponent(fwdButton = new Button("Forward " + SKIP_TIME_SEC + " sec", new ClickListener() {
 				@Override
 				public void buttonClick(ClickEvent event) {
-					player.skip(5000);
+					player.skip(SKIP_TIME_SEC * 1000);
 				}
 			}));
 			fwdButton.addStyleName(BUTTON_SIZE_CLASS);
@@ -460,6 +461,12 @@ public class DemoUI extends UI {
 				// TODO: use the following line when OGG and/or MP3 encoders have been implemented
 				//Stream stream = createWaveStream(fileBytes, encoder);
 				Stream stream = createWaveStream(fileBytes, new WaveEncoder());
+				
+				for(ChunkDescriptor d : stream.getChunks()) {
+					Log.message(this, d.toString());
+				}
+				
+				Log.message(this, "Stream duration: " + stream.getDurationString());
 				
 				if(encoder instanceof WaveEncoder) {
 					// TODO: enable the following line when client decompression library can be loaded

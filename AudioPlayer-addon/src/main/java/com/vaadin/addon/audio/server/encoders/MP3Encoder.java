@@ -39,6 +39,7 @@ public class MP3Encoder extends Encoder {
 	}
 
 	public static boolean isSupported() {
+		// TODO: actually report if it's supported or not
 		return false;
 	}
 
