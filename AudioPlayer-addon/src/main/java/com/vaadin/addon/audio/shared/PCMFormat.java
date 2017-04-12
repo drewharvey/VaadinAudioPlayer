@@ -14,6 +14,15 @@ public class PCMFormat implements Serializable {
 	private int blockAlign;    // numChannels * (bitsPerSample / 8)
 	private int bitsPerSample; // usually either 8 or 16
 
+	public PCMFormat(int numChannels, int sampleRate, int bitsPerSample) {
+		this.numChannels = numChannels;
+		this.sampleRate = sampleRate;
+		this.bitsPerSample = bitsPerSample;
+		
+		this.blockAlign = numChannels * (bitsPerSample / 8);
+		this.byteRate = blockAlign * (bitsPerSample / 8);
+	}
+	
 	public int getNumChannels() {
 		return numChannels;
 	}
@@ -32,26 +41,6 @@ public class PCMFormat implements Serializable {
 
 	public int getBitsPerSample() {
 		return bitsPerSample;
-	}
-
-	public void setNumChannels(int numChannels) {
-		this.numChannels = numChannels;
-	}
-
-	public void setSampleRate(int sampleRate) {
-		this.sampleRate = sampleRate;
-	}
-
-	public void setByteRate(int byteRate) {
-		this.byteRate = byteRate;
-	}
-
-	public void setBlockAlign(int blockAlign) {
-		this.blockAlign = blockAlign;
-	}
-
-	public void setBitsPerSample(int bitsPerSample) {
-		this.bitsPerSample = bitsPerSample;
 	}
 
 }
