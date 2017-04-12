@@ -10,99 +10,6 @@ import com.vaadin.addon.audio.shared.PCMFormat;
 public final class WaveUtil {
 
 	/**
-	 * Read a little endian value (up to 4 bytes) from a ByteBuffer
-	 * 
-	 * @param buffer
-	 *            buffer to read from
-	 * @param offset
-	 *            byte offset to start reading from
-	 * @param bytes
-	 *            number of bytes to read
-	 * @return the bytes read interpreted as an integer value
-	 */
-	public static int readLE(ByteBuffer buffer, int offset, int bytes) {
-		assert (bytes > 0 && bytes < 5);
-
-		int value = 0;
-		int shift = 0;
-		for (int b = 0; b < bytes; ++b) {
-			value |= (buffer.get(offset + b) & 0xff) << shift;
-			shift += 8;
-		}
-
-		return value;
-	}
-
-	/**
-	 * Write an integer as a little endian value (up to 4 bytes) into a
-	 * bytebuffer
-	 * 
-	 * @param value
-	 *            value to write
-	 * @param buffer
-	 *            buffer to write to
-	 * @param offset
-	 *            byte offset to start writing at
-	 * @param bytes
-	 *            number of bytes to write
-	 */
-	public static void writeLE(int value, ByteBuffer buffer, int offset, int bytes) {
-		assert (bytes > 0 && bytes < 5);
-
-		int shift = 0;
-		for (int b = 0; b < bytes; ++b) {
-			buffer.put(offset + b, (byte) ((value >>> shift) & 0xff));
-			shift += 8;
-		}
-	}
-
-	/**
-	 * Read a big endian value (up to 4 bytes) from a ByteBuffer
-	 * 
-	 * @param buffer
-	 *            buffer to read from
-	 * @param offset
-	 *            byte offset to start reading from
-	 * @param bytes
-	 *            number of bytes to read
-	 * @return the bytes read interpreted as an integer value
-	 */
-	public static int readBE(ByteBuffer buffer, int offset, int bytes) {
-		assert (bytes > 0 && bytes < 5);
-
-		int value = 0;
-		int shift = (bytes - 1) * 8;
-		for (int b = 0; b < bytes; ++b) {
-			value |= (buffer.get(offset + b) & 0xff) << shift;
-			shift -= 8;
-		}
-
-		return value;
-	}
-
-	/**
-	 * Write an integer as a big endian value (up to 4 bytes) into a bytebuffer
-	 * 
-	 * @param value
-	 *            value to write
-	 * @param buffer
-	 *            buffer to write to
-	 * @param offset
-	 *            byte offset to start writing at
-	 * @param bytes
-	 *            number of bytes to write
-	 */
-	public static void writeBE(int value, ByteBuffer buffer, int offset, int bytes) {
-		assert (bytes > 0 && bytes < 5);
-
-		int shift = (bytes - 1) * 8;
-		for (int b = 0; b < bytes; ++b) {
-			buffer.put(offset + b, (byte) ((value >>> shift) & 0xff));
-			shift -= 8;
-		}
-	}
-
-	/**
 	 * Read Wave header to get data format
 	 * 
 	 * @param waveFileBytes
@@ -135,7 +42,7 @@ public final class WaveUtil {
 	 * @return number of bytes in PCM data block
 	 */
 	public static int getDataLength(ByteBuffer waveFileBytes) {
-		return readLE(waveFileBytes, 40, 4);
+		return Endian.readLE(waveFileBytes, 40, 4);
 	}
 
 	/**
@@ -178,25 +85,25 @@ public final class WaveUtil {
 		buf.put((byte) ' ');
 
 		// subchunk size
-		writeLE(16, buf, 16, 4);
+		Endian.writeLE(16, buf, 16, 4);
 
 		// audio format (1 is for linear quantization PCM data)
-		writeLE(1, buf, 20, 2);
+		Endian.writeLE(1, buf, 20, 2);
 
 		// number of channels
-		writeLE(format.getNumChannels(), buf, 22, 2);
+		Endian.writeLE(format.getNumChannels(), buf, 22, 2);
 
 		// sample rate
-		writeLE(format.getSampleRate(), buf, 24, 4);
+		Endian.writeLE(format.getSampleRate(), buf, 24, 4);
 
 		// byte rate
-		writeLE(format.getByteRate(), buf, 28, 4);
+		Endian.writeLE(format.getByteRate(), buf, 28, 4);
 
 		// block align
-		writeLE(format.getBlockAlign(), buf, 32, 2);
+		Endian.writeLE(format.getBlockAlign(), buf, 32, 2);
 
 		// bits per sample
-		writeLE(format.getBitsPerSample(), buf, 34, 2);
+		Endian.writeLE(format.getBitsPerSample(), buf, 34, 2);
 
 		// data subchunk id
 		buf.position(36);
@@ -207,10 +114,10 @@ public final class WaveUtil {
 
 		// data size
 		int dataSize = numSamples * format.getSampleSize();
-		writeLE(dataSize, buf, 40, 4);
+		Endian.writeLE(dataSize, buf, 40, 4);
 		
 		// write the initial chunk length (see docs)
-		writeLE(36 + dataSize, buf, 4, 4);
+		Endian.writeLE(36 + dataSize, buf, 4, 4);
 
 		return buf.array();
 	}
