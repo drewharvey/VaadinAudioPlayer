@@ -133,6 +133,15 @@
 				</configuration>
 			</plugin>
 
+			<plugin>
+				<groupId>com.vaadin</groupId>
+				<artifactId>vaadin-maven-plugin</artifactId>
+				<version>7.7.7</version>
+				<configuration>
+					<extraJvmArgs>-Xmx8196M -Xss2048k</extraJvmArgs>
+				</configuration>
+			</plugin>
+
 		</plugins>
 
 	</build>

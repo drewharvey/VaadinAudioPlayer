@@ -29,24 +29,12 @@
 		<maven.javadoc.skip>true</maven.javadoc.skip>
 	</properties>
 
-    <!--
-	<organization>
-		<name>My Name</name>
-		<url>https://github.com/mygithubaccount/AudioPlayer/</url>
-	</organization>
-
-	<scm>
-		<url>https://github.com/mygithubaccount/AudioPlayer</url>
-		<connection>scm:git:git://github.com/mygithubaccount/AudioPlayer.git</connection>
-		<developerConnection>scm:git:ssh://git@github.com:/mygithubaccount/${componentClassName}.git</developerConnection>
-		<tag>AudioPlayer add-on for Vaadin</tag>
-	</scm>
-
-	<issueManagement>
-		<system>GitHub</system>
-		<url>https://github.com/mygithubaccount/AudioPlayer/issues</url>
-	</issueManagement>
-    -->
+	<!-- <organization> <name>My Name</name> <url>https://github.com/mygithubaccount/AudioPlayer/</url> 
+		</organization> <scm> <url>https://github.com/mygithubaccount/AudioPlayer</url> 
+		<connection>scm:git:git://github.com/mygithubaccount/AudioPlayer.git</connection> 
+		<developerConnection>scm:git:ssh://git@github.com:/mygithubaccount/${componentClassName}.git</developerConnection> 
+		<tag>AudioPlayer add-on for Vaadin</tag> </scm> <issueManagement> <system>GitHub</system> 
+		<url>https://github.com/mygithubaccount/AudioPlayer/issues</url> </issueManagement> -->
 
 	<licenses>
 		<license>
@@ -76,20 +64,21 @@
 			<scope>provided</scope>
 		</dependency>
 
-		<!-- This can be replaced with TestNG or some other test framework supported by the surefire plugin -->
+		<!-- This can be replaced with TestNG or some other test framework supported 
+			by the surefire plugin -->
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.8.1</version>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<!-- For Vorbis encoding support -->
 		<dependency>
-		    <groupId>org.gagravarr</groupId>
-		    <artifactId>vorbis-java-core</artifactId>
-		    <version>0.8</version>
-		</dependency>		
+			<groupId>org.gagravarr</groupId>
+			<artifactId>vorbis-java-core</artifactId>
+			<version>0.8</version>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -102,14 +91,14 @@
 					<skipTests>true</skipTests>
 				</configuration>
 			</plugin>
-		
-		    <!-- vaadin update widgetset -->
+
+			<!-- vaadin update widgetset -->
 			<plugin>
 				<groupId>com.vaadin</groupId>
 				<artifactId>vaadin-maven-plugin</artifactId>
 				<version>7.7.7</version>
 				<configuration>
-					<extraJvmArgs>-Xmx2048M -Xss2048k</extraJvmArgs>
+					<extraJvmArgs>-Xmx8196M -Xss2048k</extraJvmArgs>
 					<webappDirectory>${basedir}/target/VAADIN/widgetsets</webappDirectory>
 					<hostedWebapp>${basedir}/target/VAADIN/widgetsets</hostedWebapp>
 					<force>false</force>
@@ -218,14 +207,14 @@
 			</plugin>
 		</plugins>
 
-		<!-- This is needed for the sources required by the client-side compiler to be
-			included in the produced JARs -->
+		<!-- This is needed for the sources required by the client-side compiler 
+			to be included in the produced JARs -->
 		<resources>
 			<resource>
 				<directory>src/main/java</directory>
 				<excludes>
-                    <exclude>rebel.xml</exclude>
-                </excludes>
+					<exclude>rebel.xml</exclude>
+				</excludes>
 			</resource>
 			<resource>
 				<directory>src/main/resources</directory>
