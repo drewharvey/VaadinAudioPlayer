@@ -17,24 +17,16 @@ public class WaveEncoder extends Encoder {
 	//
 	
 	private PCMFormat outputFormat;
-	private PCMFormat inputFormat;
-	private ByteBuffer inputBuffer;
 	
 	public WaveEncoder(ByteBuffer pcmBytes, PCMFormat inputFormat, PCMFormat outputFormat) {
-		
+		super(pcmBytes,inputFormat);
+		this.outputFormat = outputFormat;
 	}
 	
-	// TODO: maybe we should just keep a static buffer of bytes?
-	// TODO: run a performance profile on this and see if we're clogging up the heap
-
 	@Override
-	public void encode(int from_offset, int length, Callback callback) {
-
+	public byte[] encode(int from_offset, int length) {
 		
-		
-		byte[] bytes = new byte[length]; 
-		getBuffer().get(bytes,from_offset,length);
-		callback.onComplete(bytes);
+		return null;
 	}
 
 }

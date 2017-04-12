@@ -1,6 +1,9 @@
 package com.vaadin.addon.audio.server.encoders;
 
+import java.nio.ByteBuffer;
+
 import com.vaadin.addon.audio.server.Encoder;
+import com.vaadin.addon.audio.shared.PCMFormat;
 
 /**
  * MP3 encoder placeholder.
@@ -9,14 +12,22 @@ import com.vaadin.addon.audio.server.Encoder;
  */
 public class MP3Encoder extends Encoder {
 
-	public MP3Encoder() {
+	public static class MP3Format {
+		// TODO: implement
+	}
+	
+	private MP3Format outputFormat;
+	
+	public MP3Encoder(ByteBuffer inputBuffer, PCMFormat inputFormat, MP3Format outputFormat) {
+		super(inputBuffer, inputFormat);
+		this.outputFormat = outputFormat;
 		
 	}
 
 	@Override
-	public void encode(int from_offset, int length, Callback callback) {
-		// TODO Auto-generated method stub
-		
+	public byte[] encode(int from_offset, int length) {
+
+		return null;
 	}
 
 	public static boolean isSupported() {
