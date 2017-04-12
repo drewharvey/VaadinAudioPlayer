@@ -66,6 +66,11 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
     private void updateEffects() {
     	Log.message(this, "shared state effects list changed");
     	// TODO: don't rebuild list every time
+    	
+    	// TODO: for now we return early; this method causes a NullPointerException
+    	return;
+    	
+    	/*
 		List<Effect> effects = new ArrayList<Effect>();
     	for (SharedEffect e : getState().effects) {
     		Log.message(this, "adding " + e.getName().name());
@@ -75,6 +80,7 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
     		effects.add(getEffectFromSharedEffect(e));
     	}
     	player.setEffects(effects);
+    	*/
     }
     
     private Effect getEffectFromSharedEffect(SharedEffect sharedEffect) {
