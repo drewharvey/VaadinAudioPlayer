@@ -17,6 +17,13 @@ public final class StreamDataDecoder {
 		return decodeBase64(encodedData);
 	}
 	
+	public static Uint8Array decompress(Uint8Array data) {
+		// TODO: implement decompression using the pako library
+		// TODO: get pako library to load
+		// See https://github.com/nodeca/pako
+		return data;
+	}
+	
 	/**
 	 * Method borrowed from
 	 * http://blog.danguer.com/2011/10/24/base64-binary-decoding-in-javascript/

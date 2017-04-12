@@ -11,26 +11,44 @@ import elemental.html.Uint8Array;
  */
 public class Buffer {
 
-	private AudioBuffer buffer;
-	private Uint8Array data;
-	
+	private AudioBuffer buffer = null;
+	private Uint8Array data = null;
+
 	/**
-	 * Create a new WebAudio buffer using a 
+	 * Create a new WebAudio buffer using any compatible audio data
 	 * 
-	 * @param context
 	 * @param encodedData
+	 *            data encoded using the StreamDataEncoder on the server side
+	 * 
+	 * @param compressedData
+	 *            set to true if compression was also used
 	 */
-	public Buffer(AudioContext context, boolean compressedData, String encodedData) {
-		Log.message(this, "create");
-		
+	public Buffer(String encodedData, boolean compressedData) {
+		Log.message(this, "decoding data");
+		Uint8Array decodedBytes = StreamDataDecoder.decode(encodedData);
+		if (compressedData) {
+			data = StreamDataDecoder.decompress(decodedBytes);
+		} else {
+			data = decodedBytes;
+		}
+		Log.message(this, "created");
 	}
-	
+
+	/**
+	 * Get the WebAudio AudioBuffer object
+	 * @return
+	 */
 	public AudioBuffer getAudioBuffer() {
+		if(buffer == null) {
+			Log.message(this, "creating AudioBuffer object");
+			buffer = AudioPlayerConnector.getAudioContext().createBuffer(data.getBuffer(), false);
+			Log.message(this, "AudioBuffer object created");
+		}
 		return buffer;
 	}
-	
+
 	public String toString() {
 		return "Buffer";
 	}
-	
+
 }

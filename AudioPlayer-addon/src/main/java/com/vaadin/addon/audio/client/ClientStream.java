@@ -26,15 +26,15 @@ public class ClientStream {
 	 * Callback object. The onDataReceived(chunk) method gets called
 	 * when data for a certain chunk has been made available in this stream.
 	 */
-	public abstract class DataCallback {
-		public abstract void onDataReceived(ChunkDescriptor chunk);
+	public static interface DataCallback {
+		public void onDataReceived(ChunkDescriptor chunk);
 	}
 
 	private AudioPlayerConnector connector;
 	private Map<ChunkDescriptor, Buffer> buffers;
 	private Map<ChunkDescriptor, DataCallback> requests;
 	
-	public ClientStream(AudioPlayerConnector connector, List<ChunkDescriptor> chunks) {
+	public ClientStream(AudioPlayerConnector connector) {
 		Log.message(this, "create");
 		
 		buffers = new LinkedHashMap<>();
@@ -79,6 +79,10 @@ public class ClientStream {
 	 * @return
 	 */
 	private ChunkDescriptor findChunkForPosition(int position_millis) {
+		
+		// Read chunks directly from connector
+		List<ChunkDescriptor> chunks = connector.getState().chunks;
+		
 		return null;
 	}
 	

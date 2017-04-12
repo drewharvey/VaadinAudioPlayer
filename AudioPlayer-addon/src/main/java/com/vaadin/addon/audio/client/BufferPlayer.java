@@ -30,10 +30,11 @@ public class BufferPlayer {
 	private double volume;
 	private boolean dirty;
 	
-	public BufferPlayer(AudioContext context, Buffer buffer) {
+	public BufferPlayer(Buffer buffer) {
 		Log.message(this, "create");
 		effects = new ArrayList<Effect>();
 		this.buffer = buffer;
+		AudioContext context = AudioPlayerConnector.getAudioContext();
 		source = context.createBufferSource();
 		source.setBuffer(buffer.getAudioBuffer());
 		output = context.createGainNode();
@@ -53,6 +54,9 @@ public class BufferPlayer {
 			AudioNode current = source;
 			AudioNode prev = null;
 			for(Effect e : effects) {
+				
+				// TODO: uh.. is this the right order?
+				
 				prev = current;
 				current = e.getAudioNode();
 				prev.connect(current, 0, 0);
@@ -63,17 +67,32 @@ public class BufferPlayer {
 			// connect predefined gain node
 			current.connect(output, 0, 0);
 			// do we need to connect to the context destination here or somewhere else?
-			output.connect(AudioPlayerConnector.getContext().getDestination(), 0, 0);
+			output.connect(AudioPlayerConnector.getAudioContext().getDestination(), 0, 0);
 			dirty = false;
 		}
 		return output;
 	}
+
+	public boolean isPlaying() {
+		return source.getPlaybackState() == AudioBufferSourceNode.PLAYING_STATE;
+	}
+	
+	public void play(int offset_millis) {
+		Log.message(this, "start playback at " + offset_millis);
+		
+	}
+	
+	public void stop() {
+		Log.message(this, "stop playback");
+	}
 	
 	public void setBuffer(Buffer buffer) {
+		if(this.buffer == buffer) return;
+		
 		Log.message(this, "buffer reassigned");
 		stop();
 		this.buffer = buffer;
-		// TODO: change this on the node
+		source.setBuffer(buffer.getAudioBuffer());
 	}
 	
 	public Buffer getBuffer() {
@@ -88,15 +107,6 @@ public class BufferPlayer {
 	
 	public double getVolume() {
 		return volume;
-	}
-	
-	public void play(int offset_millis) {
-		Log.message(this, "start playback at " + offset_millis);
-		
-	}
-	
-	public void stop() {
-		Log.message(this, "stop playback");
 	}
 	
 	public void setPlaybackSpeed(double speed_scale) {

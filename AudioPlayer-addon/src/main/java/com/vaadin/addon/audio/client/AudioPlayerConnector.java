@@ -35,31 +35,30 @@ import elemental.js.JsBrowser;
 // corresponding server-side component
 @Connect(AudioPlayer.class)
 @SuppressWarnings("serial")
-@JavaScript({ "pako_inflate.min.js" })
+@JavaScript({ "pako_inflate.min.js" }) // TODO: get this to load!!!! (should it be on the server side?)
 public class AudioPlayerConnector extends AbstractExtensionConnector {
 
 	// For now, we're going with a simple singleton
 	private static AudioContext context;
-	public static AudioContext getContext() {
+	public static AudioContext getAudioContext() {
 		if(context == null) {
 			context = JsBrowser.getWindow().newAudioContext();
 		}
 		return context;
 	}
-	
 
 	private AudioStreamPlayer player;
 	private ClientStream stream;
 	
     public AudioPlayerConnector() {
-    	// TODO: don't init the stream here! Also the stream needs to be able to update
-    	stream = new ClientStream(this, getState().chunks);
-    	player = new AudioStreamPlayer(stream);
     }
     
     @OnStateChange("chunks")
     private void updateChunks() {
     	 Log.message(this, "chunk table updated");
+    	 
+    	 // TODO: do we need to respond to this somehow? probably not
+    	 
     }
     
     @OnStateChange("effects")
@@ -131,7 +130,7 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 			@Override
 			public void sendData(int chunkId, boolean compressed, String data) {
 				Log.message(this, "data available for chunk " + chunkId);
-				stream.notifyChunkLoaded(chunkId, new Buffer(context, compressed, data));
+				stream.notifyChunkLoaded(chunkId, new Buffer(data, compressed));
 			}
 
 			@Override
@@ -195,7 +194,10 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 				player.setBalance(balance);
 			}
 
-        });		
+        });
+        
+    	stream = new ClientStream(this);
+    	player = new AudioStreamPlayer(stream);
 	}
 	
 	public String toString() {

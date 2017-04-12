@@ -21,17 +21,23 @@ public class AudioStreamPlayer {
 	private static final int MAX_PLAYERS = 3;	// Maximum number of players
 	
 	private ClientStream stream;
-	
-	private final Set<BufferPlayer> players = new HashSet<BufferPlayer>();
-	private BufferPlayer currentPlayer = null;
+	private BufferPlayer player = null;
 	
 	private List<Effect> effects = new ArrayList<Effect>();
 	
 	private int duration = 0;
 	private int position = 0;
+	private int playerStartPosition = 0;
 	
 	public AudioStreamPlayer(ClientStream stream) {
 		Log.message(this, "create");
+		
+		// Warm up the stream
+		this.stream = stream;
+		player = new BufferPlayer(null);
+		stream.requestChunkByTimestamp(0, (chunk) -> {
+			player.setBuffer(stream.getBufferForChunk(chunk));
+		});
 	}
 	
 	public int getDuration() {
@@ -40,6 +46,11 @@ public class AudioStreamPlayer {
 	
 	public void setPosition(int millis) {
 		Log.message(this, "set position to " + millis);
+		stop();
+		stream.requestChunkByTimestamp(millis, (chunk) -> {
+			player.setBuffer(stream.getBufferForChunk(chunk));
+			position = millis;
+		});
 	}
 	
 	public int getPosition() {
@@ -48,10 +59,12 @@ public class AudioStreamPlayer {
 	
 	public void play() {
 		Log.message(this, "play");
-		if (currentPlayer == null) {
+		if (player == null) {
 			logError("current player is null");
 			return;
 		}
+		
+		player.play(playerStartPosition);
 	}
 	
 	public void pause() {
@@ -67,58 +80,58 @@ public class AudioStreamPlayer {
 	}
 	
 	public void setVolume(double volume) {
-		if(currentPlayer == null) {
+		if(player == null) {
 			logError("current player is null");
 			return;
 		}
-		currentPlayer.setVolume(volume);
+		player.setVolume(volume);
 	}
 	
 	public double getVolume() {
-		if(currentPlayer == null) {
+		if(player == null) {
 			logError("current player is null");
 			return 0;
 		}
-		return currentPlayer.getVolume();
+		return player.getVolume();
 	}
 	
 	public void setPlaybackSpeed(double playbackSpeed) {
-		if(currentPlayer == null) {
+		if(player == null) {
 			logError("current player is null");
 			return;
 		}
-		currentPlayer.setPlaybackSpeed(playbackSpeed);
+		player.setPlaybackSpeed(playbackSpeed);
 	}
 	
 	public double getPlaybackSpeed() {
-		if(currentPlayer == null) {
+		if(player == null) {
 			logError("current player is null");
 			return 0;
 		}
-		return currentPlayer.getPlaybackSpeed();
+		return player.getPlaybackSpeed();
 	}
 	
 	public void setBalance(double balance) {
-		if(currentPlayer == null) {
+		if(player == null) {
 			logError("current player is null");
 			return;
 		}
-		currentPlayer.setBalance(balance);
+		player.setBalance(balance);
 	}
 	
 	public double getBalance() {
-		if(currentPlayer == null) {
+		if(player == null) {
 			logError("current player is null");
 			return 0;
 		}
-		return currentPlayer.getBalance();
+		return player.getBalance();
 	}
 	
 	public void setEffects(List<Effect> effects) {
 		Log.message(this, "AudioStreamPlayer adding effects");
 		this.effects.clear();
 		this.effects.addAll(effects);
-		currentPlayer.setEffects(effects);
+		player.setEffects(effects);
 		
 	}
 	
