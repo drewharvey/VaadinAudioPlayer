@@ -1,8 +1,10 @@
 package com.vaadin.addon.audio.server;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
 
 import com.vaadin.addon.audio.shared.ChunkDescriptor;
 
@@ -15,10 +17,34 @@ public class Stream {
 		public void onComplete(String encodedData);
 	}
 	
+	public static enum StreamState {
+		IDLE, READING, ENCODING, COMPRESSING, SERIALIZING
+	}
+	
+	// TODO: use proper event system
+	public static interface StreamStateCallback {
+		public void onStateChanged(StreamState newState);
+	}
+	
+	private static class ChunkRequest {
+		ChunkDescriptor chunk;
+		Callback callback;
+		
+		ChunkRequest(ChunkDescriptor d, Callback c) {
+			chunk = d;
+			callback = c;
+		}
+	}
+	
+	private List<StreamStateCallback> stateCallbacks = new ArrayList<>();
 	private List<ChunkDescriptor> chunks = new ArrayList<ChunkDescriptor>();
+	private volatile Queue<ChunkRequest> requestQueue = new ArrayDeque<>();
+	private volatile Thread worker = null;
+	
 	private ByteBuffer buffer = null;
 	private Encoder encoder = null;
-
+	private StreamState streamState = StreamState.IDLE;
+	 
 	private boolean compression = false;
 	private int chunkCount = 0;
 	private int duration = 0;
@@ -35,6 +61,28 @@ public class Stream {
 		this.encoder = encoder;
 	}
 
+	public void addStateChangeListener(StreamStateCallback cb) {
+		stateCallbacks.add(cb);
+	}
+	
+	public void removeStateChangeListener(StreamStateCallback cb) {
+		stateCallbacks.remove(cb);
+	}
+	
+	private void setStreamState(StreamState s) {
+		if(streamState == s) {
+			return;
+		}
+		streamState = s;
+		for(StreamStateCallback cb : stateCallbacks) {
+			cb.onStateChanged(s);
+		}
+	}
+	
+	public StreamState getState() {
+		return streamState;
+	}
+	
 	/**
 	 * Enable or disable datastream compression. If compression is enabled,
 	 * data retrieved from this stream is run through a fast zlib compression
@@ -66,20 +114,62 @@ public class Stream {
 	 * The logic runs in its own thread, and calls cb when complete.
 	 */
 	public void getChunkData(ChunkDescriptor chunk, Callback cb) {
-		new Thread(new Runnable() {
+		requestQueue.add(new ChunkRequest(chunk,cb));
+		serviceChunkRequests();
+	}
+	
+	private void serviceChunkRequests() {
+		if(worker != null) {
+			return;
+		}
+		
+		ChunkRequest request = requestQueue.remove();
+		
+		final ChunkDescriptor chunk = request.chunk;
+		final Callback callback = request.callback;
+		
+		worker = new Thread(new Runnable() {
 			@Override
 			public void run() {
+				setStreamState(StreamState.READING);
 				int startOffset = chunk.getStartStreamByteOffset();
 				int endOffset = chunk.getEndStreamByteOffset();
 				int length = endOffset - startOffset; 
-				byte[] bytes = new byte[length];
-				buffer.get(bytes,startOffset,length);
-				if(compression) {
-					bytes = DataEncoder.compress(bytes);
-				}
-				cb.onComplete(DataEncoder.encode(bytes));
+				
+				setStreamState(StreamState.ENCODING);
+				encoder.encode(startOffset, length, new Encoder.Callback() {
+					@Override
+					public void onComplete(byte[] encodedBytes) {
+						
+						byte[] bytes = encodedBytes;
+						
+						if(compression) {
+							setStreamState(StreamState.COMPRESSING);
+							bytes = DataEncoder.compress(bytes);
+						}
+						
+						setStreamState(StreamState.SERIALIZING);
+						String serialized = DataEncoder.encode(bytes);
+						callback.onComplete(serialized);
+						
+						// We're done, kill the worker
+						worker = null;
+						if(requestQueue.isEmpty()) {
+							setStreamState(StreamState.IDLE);
+						} else {
+							setStreamState(StreamState.READING);
+							serviceChunkRequests();
+							// XXX: do we cause some kind of cascade of threads here?
+						}
+						
+					}
+					
+				});
+				
 			}
-		}).run();
+			
+		});
+		worker.run();
 	}
 	
 	/**
