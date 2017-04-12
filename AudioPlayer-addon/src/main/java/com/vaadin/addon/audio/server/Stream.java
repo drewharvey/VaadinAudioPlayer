@@ -10,6 +10,10 @@ import com.vaadin.addon.audio.shared.ChunkDescriptor;
  * Server-side datastream class
  */
 public class Stream {
+
+	public static interface Callback {
+		public void onComplete(String encodedData);
+	}
 	
 	private List<ChunkDescriptor> chunks = new ArrayList<ChunkDescriptor>();
 	private ByteBuffer buffer = null;
@@ -58,17 +62,24 @@ public class Stream {
 	/**
 	 * Get data for a chunk of audio as an encoded string.
 	 * This method is used to facilitate audio transport.
+	 * 
+	 * The logic runs in its own thread, and calls cb when complete.
 	 */
-	protected String getChunkData(ChunkDescriptor chunk) {
-		int startOffset = chunk.getStartStreamByteOffset();
-		int endOffset = chunk.getEndStreamByteOffset();
-		int length = endOffset - startOffset; 
-		byte[] bytes = new byte[length];
-		buffer.get(bytes,startOffset,length);
-		if(compression) {
-			bytes = DataEncoder.compress(bytes);
-		}
-		return DataEncoder.encode(bytes);
+	public void getChunkData(ChunkDescriptor chunk, Callback cb) {
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				int startOffset = chunk.getStartStreamByteOffset();
+				int endOffset = chunk.getEndStreamByteOffset();
+				int length = endOffset - startOffset; 
+				byte[] bytes = new byte[length];
+				buffer.get(bytes,startOffset,length);
+				if(compression) {
+					bytes = DataEncoder.compress(bytes);
+				}
+				cb.onComplete(DataEncoder.encode(bytes));
+			}
+		}).run();
 	}
 	
 	/**
