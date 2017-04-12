@@ -15,8 +15,8 @@ public class ChunkDescriptor implements Serializable {
 	private int leadOutDuration;
 
 	// PCM source stream data offsets
-	private int startStreamByteOffset;
-	private int endStreamByteOffset;
+	private int startSampleOffset;
+	private int endSampleOffset;
 
 		
 	public void setId(int id) {
@@ -39,12 +39,12 @@ public class ChunkDescriptor implements Serializable {
 		this.leadOutDuration = leadOutDuration;
 	}
 
-	public void setStartStreamByteOffset(int startStreamByteOffset) {
-		this.startStreamByteOffset = startStreamByteOffset;
+	public void setStartSampleOffset(int startSampleOffset) {
+		this.startSampleOffset = startSampleOffset;
 	}
 
-	public void setEndStreamByteOffset(int endStreamByteOffset) {
-		this.endStreamByteOffset = endStreamByteOffset;
+	public void setEndSampleOffset(int endSampleOffset) {
+		this.endSampleOffset = endSampleOffset;
 	}
 
 	public int getId() {
@@ -68,17 +68,17 @@ public class ChunkDescriptor implements Serializable {
 	}
 
 	public int getStartSampleOffset() {
-		return startStreamByteOffset;
+		return startSampleOffset;
 	}
 
 	public int getEndSampleOffset() {
-		return endStreamByteOffset;
+		return endSampleOffset;
 	}
 
 	@Override
 	public String toString() {
-		return "[Descriptor for chunk " + id + " time: " + startTimeOffset + "-" + endTimeOffset + " bytes: " + startStreamByteOffset
-				+ "-" + endStreamByteOffset + "]";
+		return "[Descriptor for chunk " + id + " time: " + startTimeOffset + "-" + endTimeOffset + " samples: " + startSampleOffset
+				+ "-" + endSampleOffset + "]";
 	}
 
 }
