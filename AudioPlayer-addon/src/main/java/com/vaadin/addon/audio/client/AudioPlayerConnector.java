@@ -35,7 +35,7 @@ import elemental.js.JsBrowser;
 // corresponding server-side component
 @Connect(AudioPlayer.class)
 @SuppressWarnings("serial")
-@JavaScript({ "AudioPlayer/pako_inflate.min.js" })
+@JavaScript({ "pako_inflate.min.js" })
 public class AudioPlayerConnector extends AbstractExtensionConnector {
 
 	// For now, we're going with a simple singleton
