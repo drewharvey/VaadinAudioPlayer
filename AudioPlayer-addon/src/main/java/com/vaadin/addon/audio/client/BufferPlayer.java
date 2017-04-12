@@ -1,15 +1,16 @@
 package com.vaadin.addon.audio.client;
 
 import java.util.ArrayList;
+
 import java.util.List;
 
 import com.vaadin.addon.audio.client.effects.BalanceEffect;
+import com.vaadin.addon.audio.client.webaudio.AudioNode;
+import com.vaadin.addon.audio.client.webaudio.Buffer;
+import com.vaadin.addon.audio.client.webaudio.BufferSourceNode;
+import com.vaadin.addon.audio.client.webaudio.Context;
+import com.vaadin.addon.audio.client.webaudio.GainNode;
 import com.vaadin.addon.audio.shared.util.Log;
-
-import elemental.html.AudioBufferSourceNode;
-import elemental.html.AudioContext;
-import elemental.html.AudioGainNode;
-import elemental.html.AudioNode;
 
 /**
  * Actual player component, plays a single Buffer.
@@ -20,15 +21,16 @@ import elemental.html.AudioNode;
  */
 public class BufferPlayer {
 
-	private List<Effect> effects;
-	private AudioBufferSourceNode source;
-	private AudioNode output;
-	private BalanceEffect balanceEffect;
-	private Buffer buffer;
+	//private List<Effect> effects;
+	//private BalanceEffect balanceEffect;
 	
-	private double speed;
+	private BufferSourceNode source;
+	private GainNode output;
+	
+    private double speed;
 	private double volume;
-	private boolean dirty;
+	
+	//private boolean dirty;
 	
 	public BufferPlayer() {
 		this(null);
@@ -36,53 +38,44 @@ public class BufferPlayer {
 	
 	public BufferPlayer(Buffer buffer) {
 		Log.message(this, "create");
-		effects = new ArrayList<Effect>();
-		this.buffer = buffer;
 		
-		AudioContext context = AudioPlayerConnector.getAudioContext();
-		source = context.createBufferSource();
+		Context context = Context.get();
+		source = context.createBufferSourceNode();
 		if(buffer != null) {
-			source.setBuffer(buffer.getAudioBuffer());
+			source.setNativeBuffer(buffer.getAudioBuffer());
 		}
-		
 		output = context.createGainNode();
-		balanceEffect = new BalanceEffect();
-		balanceEffect.init(context);
-		dirty = true;
-	}
-	
-	public AudioBufferSourceNode getSource() {
-		return source;
 	}
 	
 	public AudioNode getOutput() {
-		if(dirty) {
-			Log.message(this, "marked as dirty, reconfigure output");
-			// TODO: build audio processing chain
-			AudioNode current = source;
-			AudioNode prev = null;
-			for(Effect e : effects) {
-				
-				// TODO: uh.. is this the right order?
-				
-				prev = current;
-				current = e.getAudioNode();
-				prev.connect(current, 0, 0);
-			}
-			// connect predefined balance node
-			current.connect(balanceEffect.getAudioNode(), 0, 0);
-			current = balanceEffect.getAudioNode();
-			// connect predefined gain node
-			current.connect(output, 0, 0);
-			// do we need to connect to the context destination here or somewhere else?
-			output.connect(AudioPlayerConnector.getAudioContext().getDestination(), 0, 0);
-			dirty = false;
-		}
+//		if(dirty) {
+//			Log.message(this, "marked as dirty, reconfigure output");
+//			// TODO: build audio processing chain
+//			AudioNode current = source;
+//			AudioNode prev = null;
+//			for(Effect e : effects) {
+//				
+//				// TODO: uh.. is this the right order?
+//				
+//				prev = current;
+//				current = e.getAudioNode();
+//				prev.connect(current, 0, 0);
+//			}
+//			// connect predefined balance node
+//			current.connect(balanceEffect.getAudioNode(), 0, 0);
+//			current = balanceEffect.getAudioNode();
+//			// connect predefined gain node
+//			current.connect(output, 0, 0);
+//			// do we need to connect to the context destination here or somewhere else?
+//			output.connect(AudioPlayerConnector.getAudioContext().getDestination(), 0, 0);
+//			dirty = false;
+//		}
 		return output;
 	}
 
 	public boolean isPlaying() {
-		return source.getPlaybackState() == AudioBufferSourceNode.PLAYING_STATE;
+		return false;
+		//return source.getPlaybackState() == AudioBufferSourceNode.PLAYING_STATE;
 	}
 	
 	public void play(int offset_millis) {
@@ -95,22 +88,18 @@ public class BufferPlayer {
 	}
 	
 	public void setBuffer(Buffer buffer) {
-		if(this.buffer == buffer) return;
-		
 		Log.message(this, "buffer reassigned");
 		stop();
-		this.buffer = buffer;
-		source.setBuffer(buffer.getAudioBuffer());
+		source.setBuffer(buffer);
 	}
 	
 	public Buffer getBuffer() {
-		return buffer;
+		return source.getBuffer();
 	}
 	
 	public void setVolume(double volume) {
 		Log.message(this, "set volume to " + volume);
 		this.volume = volume;
-		((AudioGainNode) output).getGain().setValue((float) volume);
 	}
 	
 	public double getVolume() {
@@ -120,7 +109,7 @@ public class BufferPlayer {
 	public void setPlaybackSpeed(double speed_scale) {
 		Log.message(this, "set speed scale " + speed_scale);
 		speed = speed_scale;
-		source.getPlaybackRate().setValue((float) speed_scale);
+		
 		// TODO: keep normal pitch if speed is changed, normally the pitch also changes
 		// when the speed is changed
 	}
@@ -130,13 +119,17 @@ public class BufferPlayer {
 	}
 	
 	public void setBalance(double balance) {
-		balanceEffect.setBalance(balance);
+		//balanceEffect.setBalance(balance);
 	}
 	
 	public double getBalance() {
-		return balanceEffect.getBalance();
+		//return balanceEffect.getBalance();
+		return 0;
 	}
 	
+	/*
+	 // TODO: get the following back into action 
+	  * 
 	public void setEffects(List<Effect> effects) {
 		// TODO: only replace/remove effects based on if there are matching IDs
 		this.effects.clear();
@@ -160,6 +153,7 @@ public class BufferPlayer {
 		effects.remove(effect);
 		dirty = true;
 	}
+	*/
 	
 	public String toString() {
 		return "BufferPlayer";

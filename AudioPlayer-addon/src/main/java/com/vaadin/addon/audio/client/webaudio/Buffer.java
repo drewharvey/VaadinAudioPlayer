@@ -1,9 +1,10 @@
-package com.vaadin.addon.audio.client;
+package com.vaadin.addon.audio.client.webaudio;
 
+import com.vaadin.addon.audio.client.StreamDataDecoder;
+import com.vaadin.addon.audio.client.webaudio.Context.AudioBufferCallback;
 import com.vaadin.addon.audio.shared.util.Log;
 
 import elemental.html.AudioBuffer;
-import elemental.html.AudioContext;
 import elemental.html.Uint8Array;
 
 /*
@@ -31,20 +32,35 @@ public class Buffer {
 		} else {
 			data = decodedBytes;
 		}
-		Log.message(this, "created");
+		
+		Context.get().decodeAudioData(data.getBuffer(), new AudioBufferCallback() {
+			@Override
+			public void onError() {
+				Log.error(Buffer.this, "error decoding audio data buffer");
+				buffer = null;
+			}
+			
+			@Override
+			public void onComplete(AudioBuffer buffer) {
+				Log.message(Buffer.this, "audio data decoded");
+				Buffer.this.buffer = buffer;
+			}
+		});
 	}
 
+	public boolean isReady() {
+		return buffer != null;
+	}
+	
 	/**
 	 * Get the WebAudio AudioBuffer object
-	 * @return
 	 */
 	public AudioBuffer getAudioBuffer() {
-		if(buffer == null) {
-			Log.message(this, "creating AudioBuffer object");
-			buffer = AudioPlayerConnector.getAudioContext().createBuffer(data.getBuffer(), false);
-			Log.message(this, "AudioBuffer object created");
-		}
 		return buffer;
+	}
+	
+	public Uint8Array getData() {
+		return data;
 	}
 
 	public String toString() {

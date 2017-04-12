@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.vaadin.addon.audio.client.webaudio.Buffer;
 import com.vaadin.addon.audio.shared.ChunkDescriptor;
 import com.vaadin.addon.audio.shared.util.Log;
 
@@ -37,6 +38,7 @@ public class ClientStream {
 	public ClientStream(AudioPlayerConnector connector) {
 		Log.message(this, "create");
 		
+		this.connector = connector;
 		buffers = new LinkedHashMap<>();
 		requests = new HashMap<>();
 	}
@@ -79,11 +81,11 @@ public class ClientStream {
 	 * @return
 	 */
 	private ChunkDescriptor findChunkForPosition(int position_millis) {
-		
 		// Read chunks directly from connector
 		List<ChunkDescriptor> chunks = connector.getState().chunks;
 		
-		return null;
+		// TODO: get correct chunk
+		return chunks.get(0);
 	}
 	
 	/**
@@ -92,7 +94,11 @@ public class ClientStream {
 	 * @return
 	 */
 	private ChunkDescriptor findChunkById(int id) {
-		return null;
+		// Read chunks directly from connector
+		List<ChunkDescriptor> chunks = connector.getState().chunks;
+		
+		// TODO: get correct chunk
+		return chunks.get(0);
 	}
 	
 	

@@ -4,6 +4,7 @@ import com.vaadin.addon.audio.client.Effect;
 import com.vaadin.addon.audio.shared.util.Log;
 
 import elemental.html.AudioContext;
+import elemental.html.AudioNode;
 import elemental.html.AudioPannerNode;
 
 public class BalanceEffect extends Effect {
@@ -13,7 +14,7 @@ public class BalanceEffect extends Effect {
 	@Override
 	public void init(AudioContext context) {
 		Log.message(this, "Creating AudioPannerNode");
-		setAudioNode(context.createPanner());
+
 	}
 	
 	/**

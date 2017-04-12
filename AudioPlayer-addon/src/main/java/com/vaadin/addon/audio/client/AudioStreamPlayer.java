@@ -139,7 +139,7 @@ public class AudioStreamPlayer {
 		Log.message(this, "AudioStreamPlayer adding effects");
 		this.effects.clear();
 		this.effects.addAll(effects);
-		player.setEffects(effects);
+		//player.setEffects(effects);
 		
 	}
 	

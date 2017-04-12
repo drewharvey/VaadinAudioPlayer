@@ -22,7 +22,7 @@ public abstract class Effect {
 
 	protected void setPlayer(BufferPlayer p) {
 		if(player != null) {
-			player.removeEffect(this);
+			//player.removeEffect(this);
 		}
 		player = p;
 	}

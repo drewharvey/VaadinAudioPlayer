@@ -4,6 +4,7 @@ import com.vaadin.addon.audio.client.effects.BalanceEffect;
 import com.vaadin.addon.audio.client.effects.FilterEffect;
 import com.vaadin.addon.audio.client.effects.PitchEffect;
 import com.vaadin.addon.audio.client.effects.VolumeEffect;
+import com.vaadin.addon.audio.client.webaudio.Buffer;
 import com.vaadin.addon.audio.server.AudioPlayer;
 import com.vaadin.addon.audio.shared.AudioPlayerClientRpc;
 import com.vaadin.addon.audio.shared.AudioPlayerServerRpc;
@@ -36,19 +37,6 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 	// For now, we're going with a simple singleton
 	private static AudioContext context;
 	
-	private static native final AudioContext createContext() /*-{
-		var AudioContext = window.AudioContext || window.webkitAudioContext;
-		var audioCtx = new AudioContext();
-		return audioCtx;
-	}-*/;
-	
-	public static AudioContext getAudioContext() {
-		if(context == null) {
-			context = createContext();
-		}
-		return context;
-	}
-
 	private AudioStreamPlayer player;
 	private ClientStream stream;
 	
