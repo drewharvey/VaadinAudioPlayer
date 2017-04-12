@@ -7,6 +7,8 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.vaadin.addon.audio.client.ClientStream.DataCallback;
+import com.vaadin.addon.audio.shared.ChunkDescriptor;
 import com.vaadin.addon.audio.shared.util.Log;
 
 /**
@@ -35,8 +37,11 @@ public class AudioStreamPlayer {
 		// Warm up the stream
 		this.stream = stream;
 		player = new BufferPlayer(null);
-		stream.requestChunkByTimestamp(0, (chunk) -> {
-			player.setBuffer(stream.getBufferForChunk(chunk));
+		stream.requestChunkByTimestamp(0, new DataCallback() {
+			@Override
+			public void onDataReceived(ChunkDescriptor chunk) {
+				player.setBuffer(stream.getBufferForChunk(chunk));
+			}
 		});
 	}
 	
@@ -47,9 +52,12 @@ public class AudioStreamPlayer {
 	public void setPosition(int millis) {
 		Log.message(this, "set position to " + millis);
 		stop();
-		stream.requestChunkByTimestamp(millis, (chunk) -> {
-			player.setBuffer(stream.getBufferForChunk(chunk));
-			position = millis;
+		stream.requestChunkByTimestamp(millis, new DataCallback() {
+			@Override
+			public void onDataReceived(ChunkDescriptor chunk) {
+				player.setBuffer(stream.getBufferForChunk(chunk));
+				position = millis;
+			}
 		});
 	}
 	
