@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Queue;
 
 import com.vaadin.addon.audio.shared.ChunkDescriptor;
+import com.vaadin.addon.audio.shared.PCMFormat;
 
 /**
  * Server-side datastream class
@@ -53,12 +54,15 @@ public class Stream {
 	 * Create an audio stream. Performs on-the-fly audio encoding
 	 * on a chunk-by-chunk basis.
 	 * 
-	 * @param pcmBuffer Buffer containing PCM data
-	 * @param encoder 
+	 * @param pcmBuffer Buffer containing PCM data - data should start at offset 0
+	 * @param format Object describing PCM data format
+	 * @param encoder Data encoder to use. {@link WaveEncoder} forwards PCM data.
 	 */
-	public Stream(ByteBuffer pcmBuffer, Encoder encoder) {
+	public Stream(ByteBuffer pcmBuffer, PCMFormat format, Encoder encoder) {
 		this.buffer = pcmBuffer;
 		this.encoder = encoder;
+		
+		// TODO: create chunk descriptor list
 	}
 
 	public void addStateChangeListener(StreamStateCallback cb) {
@@ -81,6 +85,10 @@ public class Stream {
 	
 	public StreamState getState() {
 		return streamState;
+	}
+	
+	public List<ChunkDescriptor> getChunks() {
+		return chunks;
 	}
 	
 	/**
@@ -137,34 +145,25 @@ public class Stream {
 				int length = endOffset - startOffset; 
 				
 				setStreamState(StreamState.ENCODING);
-				encoder.encode(startOffset, length, new Encoder.Callback() {
-					@Override
-					public void onComplete(byte[] encodedBytes) {
-						
-						byte[] bytes = encodedBytes;
-						
-						if(compression) {
-							setStreamState(StreamState.COMPRESSING);
-							bytes = DataEncoder.compress(bytes);
-						}
-						
-						setStreamState(StreamState.SERIALIZING);
-						String serialized = DataEncoder.encode(bytes);
-						callback.onComplete(serialized);
-						
-						// We're done, kill the worker
-						worker = null;
-						if(requestQueue.isEmpty()) {
-							setStreamState(StreamState.IDLE);
-						} else {
-							setStreamState(StreamState.READING);
-							serviceChunkRequests();
-							// XXX: do we cause some kind of cascade of threads here?
-						}
-						
-					}
-					
-				});
+				byte[] bytes = encoder.encode(startOffset, length);
+				
+				if(compression) {
+					setStreamState(StreamState.COMPRESSING);
+					bytes = StreamDataEncoder.compress(bytes);
+				}
+				
+				setStreamState(StreamState.SERIALIZING);
+				String serialized = StreamDataEncoder.serialize(bytes);
+				callback.onComplete(serialized);
+				
+				// We're done, kill the worker
+				worker = null;
+				if(requestQueue.isEmpty()) {
+					setStreamState(StreamState.IDLE);
+				} else {
+					setStreamState(StreamState.READING);
+					serviceChunkRequests();
+				}
 				
 			}
 			
