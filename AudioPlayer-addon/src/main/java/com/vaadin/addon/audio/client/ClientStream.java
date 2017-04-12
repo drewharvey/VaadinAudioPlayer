@@ -1,5 +1,6 @@
 package com.vaadin.addon.audio.client;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -33,7 +34,7 @@ public class ClientStream {
 
 	private AudioPlayerConnector connector;
 	private Map<ChunkDescriptor, Buffer> buffers;
-	private Map<ChunkDescriptor, DataCallback> requests;
+	private Map<ChunkDescriptor, List<DataCallback>> requests;
 	
 	public ClientStream(AudioPlayerConnector connector) {
 		Log.message(this, "create");
@@ -59,8 +60,17 @@ public class ClientStream {
 			return;
 		}
 
+		List<DataCallback> cblist = requests.get(chunk);
+		if(cblist != null) {
+			cblist.add(onDataReceived);
+			return;
+		}
+		
+		cblist = new ArrayList<DataCallback>();
+		cblist.add(onDataReceived);
+		
 		// Otherwise, put in a request for the data
-		requests.put(chunk, onDataReceived);
+		requests.put(chunk, cblist);
 		connector.getServerRPC().requestChunk(chunk.getId());
 	}
 
@@ -84,7 +94,11 @@ public class ClientStream {
 		// Read chunks directly from connector
 		List<ChunkDescriptor> chunks = connector.getState().chunks;
 		
-		// TODO: get correct chunk
+		for(ChunkDescriptor c : chunks) {
+			if(c.getStartTimeOffset() >= position_millis && c.getEndTimeOffset() <= position_millis) return c;
+		}
+
+		// TODO: fail gracefully
 		return chunks.get(0);
 	}
 	
@@ -96,8 +110,14 @@ public class ClientStream {
 	private ChunkDescriptor findChunkById(int id) {
 		// Read chunks directly from connector
 		List<ChunkDescriptor> chunks = connector.getState().chunks;
-		
-		// TODO: get correct chunk
+	
+		for(ChunkDescriptor c : chunks) {
+			if(c.getId() == id) {
+				return c;
+			}
+		}
+
+		// TODO: fail gracefully
 		return chunks.get(0);
 	}
 	
@@ -122,8 +142,10 @@ public class ClientStream {
 		buffers.put(chunk, buffer);
 	
 		// Notify of chunk being received
-		DataCallback cb = requests.get(chunk);
-		cb.onDataReceived(chunk);
+		List<DataCallback> cbs = requests.remove(chunk);
+		for(DataCallback cb : cbs) {
+			cb.onDataReceived(chunk);
+		}
 	}
 	
 	public String toString() {
