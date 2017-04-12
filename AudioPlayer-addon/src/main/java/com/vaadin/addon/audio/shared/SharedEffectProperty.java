@@ -1,6 +1,9 @@
 package com.vaadin.addon.audio.shared;
 
-public class SharedEffectProperty {
+import java.io.Serializable;
+
+@SuppressWarnings("serial")
+public class SharedEffectProperty implements Serializable {
 
 	public enum PropertyName {
 		// Balance Effect props
