@@ -29,7 +29,7 @@ public class AudioPlayer extends AbstractExtension {
 		System.err.println("[AudioPlayer] " + msg + " (REMOVEME)");
 	}
 	
-	private enum PlaybackState {
+	public static enum PlaybackState {
 		PLAYING,
 		PAUSED,
 		STOPPED
@@ -112,11 +112,11 @@ public class AudioPlayer extends AbstractExtension {
     // TODO: use a proper event system
     private List<StateChangeCallback> stateCallbacks = new
     		ArrayList<>();
-    public void addListener(StateChangeCallback cb) {
+    public void addStateChangeListener(StateChangeCallback cb) {
     	stateCallbacks.add(cb);
     }
     
-    public void removeListener(StateChangeCallback cb) {
+    public void removeStateChangeListener(StateChangeCallback cb) {
     	stateCallbacks.remove(cb);
     }
     
