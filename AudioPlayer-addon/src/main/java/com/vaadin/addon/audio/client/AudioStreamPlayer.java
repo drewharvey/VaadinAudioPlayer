@@ -36,7 +36,7 @@ public class AudioStreamPlayer {
 		
 		// Warm up the stream
 		this.stream = stream;
-		player = new BufferPlayer(null);
+		player = new BufferPlayer();
 		stream.requestChunkByTimestamp(0, new DataCallback() {
 			@Override
 			public void onDataReceived(ChunkDescriptor chunk) {

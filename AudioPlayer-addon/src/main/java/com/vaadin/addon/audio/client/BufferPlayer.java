@@ -30,13 +30,21 @@ public class BufferPlayer {
 	private double volume;
 	private boolean dirty;
 	
+	public BufferPlayer() {
+		this(null);
+	}
+	
 	public BufferPlayer(Buffer buffer) {
 		Log.message(this, "create");
 		effects = new ArrayList<Effect>();
 		this.buffer = buffer;
+		
 		AudioContext context = AudioPlayerConnector.getAudioContext();
 		source = context.createBufferSource();
-		source.setBuffer(buffer.getAudioBuffer());
+		if(buffer != null) {
+			source.setBuffer(buffer.getAudioBuffer());
+		}
+		
 		output = context.createGainNode();
 		balanceEffect = new BalanceEffect();
 		balanceEffect.init(context);
