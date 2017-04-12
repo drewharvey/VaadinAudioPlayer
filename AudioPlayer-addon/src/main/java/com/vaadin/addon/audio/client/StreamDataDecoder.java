@@ -5,7 +5,7 @@ import elemental.html.Uint8Array;
 /**
  * Functions for handling decoding of data received from server.
  */
-public final class DataDecoder {
+public final class StreamDataDecoder {
 
 	/**
 	 * Perform Base64 decode of assumed Base64 data

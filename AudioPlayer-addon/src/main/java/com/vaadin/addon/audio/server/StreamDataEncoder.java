@@ -8,7 +8,7 @@ import java.util.zip.Deflater;
 /**
  * Functions for handling encoding of data to be sent to client
  */
-public final class DataEncoder {
+public final class StreamDataEncoder {
 
 	public static String encode(byte[] bytes) {
 		return Base64.getEncoder().encodeToString(bytes);

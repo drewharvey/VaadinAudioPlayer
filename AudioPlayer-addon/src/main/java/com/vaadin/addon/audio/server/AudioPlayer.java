@@ -130,9 +130,10 @@ public class AudioPlayer extends AbstractExtension {
     
     public Stream setStream(Stream stream) {
     	if(this.stream != null) {
-    		// TODO: remove stream
+    		getState().chunks.clear();
     	}
     	this.stream = stream;
+    	getState().chunks.addAll(stream.getChunks());
     	return stream;
     }
     

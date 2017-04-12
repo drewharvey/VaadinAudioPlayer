@@ -153,7 +153,7 @@ public class Stream {
 				}
 				
 				setStreamState(StreamState.SERIALIZING);
-				String serialized = StreamDataEncoder.serialize(bytes);
+				String serialized = StreamDataEncoder.encode(bytes);
 				callback.onComplete(serialized);
 				
 				// We're done, kill the worker
