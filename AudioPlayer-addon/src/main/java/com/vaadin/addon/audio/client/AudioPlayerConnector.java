@@ -119,27 +119,27 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 
 			@Override
 			public void sendData(int chunkId, boolean compressed, String data) {
-				Log.message(this, "data available for chunk " + chunkId);
+				Log.message(AudioPlayerConnector.this, "data available for chunk " + chunkId);
 				stream.notifyChunkLoaded(chunkId, new Buffer(data, compressed));
 			}
 
 			@Override
 			public void setPlaybackPosition(int position_millis) {
-				Log.message(this, "set playback position to " + position_millis);
+				Log.message(AudioPlayerConnector.this, "set playback position to " + position_millis);
 				player.setPosition(position_millis);
 				getServerRPC().reportPlaybackPosition(player.getPosition());
 			}
 			
 			@Override
 			public void skipPosition(int delta_millis) {
-				Log.message(this, "skip by " + delta_millis);
+				Log.message(AudioPlayerConnector.this, "skip by " + delta_millis);
 				player.setPosition(player.getPosition() + delta_millis);
 				setPlaybackPosition(player.getPosition() + delta_millis);
 			}
 
 			@Override
 			public void startPlayback() {
-				Log.message(this, "start playback");
+				Log.message(AudioPlayerConnector.this, "start playback");
 				player.play();
 				getServerRPC().reportPlaybackStarted();
 				getServerRPC().reportPlaybackPosition(player.getPosition());
@@ -147,40 +147,40 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 
 			@Override
 			public void pausePlayback() {
-				Log.message(this, "pause playback");
+				Log.message(AudioPlayerConnector.this, "pause playback");
 				player.pause();
 				getServerRPC().reportPlaybackPaused();
 			}
 
 			@Override
 			public void resumePlayback() {
-				Log.message(this, "resume playback");
+				Log.message(AudioPlayerConnector.this, "resume playback");
 				player.resume();
 				getServerRPC().reportPlaybackStarted();
 			}
 
 			@Override
 			public void stopPlayback() {
-				Log.message(this, "stop playback");
+				Log.message(AudioPlayerConnector.this, "stop playback");
 				player.stop();
 				getServerRPC().reportPlaybackStopped();
 			}
 
 			@Override
 			public void setPlaybackSpeed(double speed_multiplier) {
-				Log.message(this, "set playback speed to " + speed_multiplier);
+				Log.message(AudioPlayerConnector.this, "set playback speed to " + speed_multiplier);
 				player.setPlaybackSpeed(speed_multiplier);
 			}
 			
 			@Override
 			public void setVolume(double volume) {
-				Log.message(this, "set volume to " + volume);
+				Log.message(AudioPlayerConnector.this, "set volume to " + volume);
 				player.setVolume(volume);
 			}
 			
 			@Override
 			public void setBalance(double balance) {
-				Log.message(this, "set balance to " + balance);
+				Log.message(AudioPlayerConnector.this, "set balance to " + balance);
 				player.setBalance(balance);
 			}
 
