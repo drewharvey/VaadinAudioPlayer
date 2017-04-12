@@ -53,6 +53,14 @@ import com.vaadin.ui.Button.ClickEvent;
 @SuppressWarnings("serial")
 public class DemoUI extends UI {
 
+	//
+	// Main TODO list
+	//
+	//
+	// X: detect when a session dies and kill any work pending in Stream
+	//
+	//
+	
 	public static final String BUTTON_SIZE_CLASS = "small";
 	public static final int SKIP_TIME_SEC = 5;
 	public static final String TEST_FILE_PATH = "src/main/resources/com/vaadin/addon/audio/wav";
