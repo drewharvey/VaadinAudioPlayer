@@ -19,26 +19,15 @@
 		<vaadin.version>7.7.7</vaadin.version>
 		<vaadin.plugin.version>7.7.7</vaadin.plugin.version>
 		<jetty.plugin.version>9.3.9.v20160517</jetty.plugin.version>
+		<maven.javadoc.skip>true</maven.javadoc.skip>
 	</properties>
 
-    <!--
-	<organization>
-		<name>My Name</name>
-		<url>https://github.com/mygithubaccount/AudioPlayer/</url>
-	</organization>
-
-	<scm>
-		<url>git://github.com/mygithubaccount/AudioPlayer.git</url>
-		<connection>scm:git:git://github.com/mygithubaccount/AudioPlayer.git</connection>
-		<developerConnection>scm:git:ssh://git@github.com:/mygithubaccount/${componentClassName}.git</developerConnection>
-		<tag>AudioPlayer add-on for Vaadin</tag>
-	</scm>
-
-	<issueManagement>
-		<system>GitHub</system>
-		<url>https://github.com/mygithubaccount/AudioPlayer/issues</url>
-	</issueManagement>
-    -->
+	<!-- <organization> <name>My Name</name> <url>https://github.com/mygithubaccount/AudioPlayer/</url> 
+		</organization> <scm> <url>git://github.com/mygithubaccount/AudioPlayer.git</url> 
+		<connection>scm:git:git://github.com/mygithubaccount/AudioPlayer.git</connection> 
+		<developerConnection>scm:git:ssh://git@github.com:/mygithubaccount/${componentClassName}.git</developerConnection> 
+		<tag>AudioPlayer add-on for Vaadin</tag> </scm> <issueManagement> <system>GitHub</system> 
+		<url>https://github.com/mygithubaccount/AudioPlayer/issues</url> </issueManagement> -->
 
 	<licenses>
 		<license>
@@ -96,6 +85,15 @@
 
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<!-- <version>2.12.4</version> -->
+				<configuration>
+					<skipTests>true</skipTests>
+				</configuration>
+			</plugin>
+
 			<plugin>
 				<artifactId>maven-war-plugin</artifactId>
 				<version>2.6</version>
