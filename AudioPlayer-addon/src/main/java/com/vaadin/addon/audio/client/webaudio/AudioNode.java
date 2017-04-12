@@ -36,6 +36,7 @@ public abstract class AudioNode {
 			elemental.html.AudioNode dst,
 			int outputIndex,
 			int inputIndex) /*-{
+		console.log("connect src: " + src + " to dst: " + dst + " output: " + outputIndex + " input: " + inputIndex); 
 		src.connect(dst,outputIndex,inputIndex);
 	}-*/;
 	

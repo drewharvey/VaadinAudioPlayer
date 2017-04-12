@@ -4,6 +4,7 @@ import com.vaadin.addon.audio.client.StreamDataDecoder;
 import com.vaadin.addon.audio.client.webaudio.Context.AudioBufferCallback;
 import com.vaadin.addon.audio.shared.util.Log;
 
+import elemental.html.ArrayBuffer;
 import elemental.html.AudioBuffer;
 import elemental.html.Uint8Array;
 
@@ -13,7 +14,7 @@ import elemental.html.Uint8Array;
 public class Buffer {
 
 	private AudioBuffer buffer = null;
-	private Uint8Array data = null;
+	private ArrayBuffer data = null;
 
 	/**
 	 * Create a new WebAudio buffer using any compatible audio data
@@ -26,14 +27,14 @@ public class Buffer {
 	 */
 	public Buffer(String encodedData, boolean compressedData) {
 		Log.message(this, "decoding data");
-		Uint8Array decodedBytes = StreamDataDecoder.decode(encodedData);
+		ArrayBuffer decodedBytes = StreamDataDecoder.decode(encodedData);
 		if (compressedData) {
 			data = StreamDataDecoder.decompress(decodedBytes);
 		} else {
 			data = decodedBytes;
 		}
 		
-		Context.get().decodeAudioData(data.getBuffer(), new AudioBufferCallback() {
+		Context.get().decodeAudioData(data, new AudioBufferCallback() {
 			@Override
 			public void onError() {
 				Log.error(Buffer.this, "error decoding audio data buffer");
@@ -59,7 +60,7 @@ public class Buffer {
 		return buffer;
 	}
 	
-	public Uint8Array getData() {
+	public ArrayBuffer getData() {
 		return data;
 	}
 

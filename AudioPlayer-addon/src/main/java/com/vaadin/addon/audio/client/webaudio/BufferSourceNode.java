@@ -1,6 +1,7 @@
 package com.vaadin.addon.audio.client.webaudio;
 
 import com.google.gwt.user.client.Timer;
+import com.vaadin.addon.audio.shared.util.Log;
 
 import elemental.html.AudioBuffer;
 import elemental.html.AudioContext;
@@ -38,6 +39,7 @@ public class BufferSourceNode extends AudioScheduledSourceNode {
 				if(!b.isReady()) {
 					bufferTimer.schedule(20);
 				} else {
+					Log.message(BufferSourceNode.this, "set audio buffer");
 					setNativeBuffer(b.getAudioBuffer());
 				}
 			}

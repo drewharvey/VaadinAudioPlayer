@@ -23,11 +23,12 @@ public class Context {
 		return instance;
 	}
 	
-	private AudioContext ctx;
+	private final AudioContext ctx;
+	private AudioDestinationNode destination;
 	
 	private static final native AudioContext createContext() /*-{
-		var AudioContext = window.AudioContext || window.webkitAudioContext;
 		var audioCtx = new AudioContext();
+		console.log("created context: " + audioCtx);
 		return audioCtx;
 	}-*/;
 	
@@ -35,20 +36,37 @@ public class Context {
 		ctx = createContext();
 	}
 	
-	public AudioBuffer decodeAudioData(ArrayBuffer buf, AudioBufferCallback cb) {
-		return decodeAudioData(ctx,buf);
+	public void decodeAudioData(ArrayBuffer buf, AudioBufferCallback cb) {
+		decodeAudioData(ctx,buf,cb);
 	}
 	
-	private static final native AudioBuffer decodeAudioData(AudioContext ctx, ArrayBuffer audioData) /*-{
-		return ctx.decodeAudioData
+	private static final native void decodeAudioData(AudioContext ctx, ArrayBuffer audioData, AudioBufferCallback cb) /*-{
+		ctx.decodeAudioData(audioData, function(buffer) {
+			@com.vaadin.addon.audio.client.webaudio.Context::audioDataDecodeSuccess(Lelemental/html/AudioBuffer;Lcom/vaadin/addon/audio/client/webaudio/Context$AudioBufferCallback;)(buffer,cb);
+		}, function() {
+			@com.vaadin.addon.audio.client.webaudio.Context::audioDataDecodeFailed(Lcom/vaadin/addon/audio/client/webaudio/Context$AudioBufferCallback;)(cb);
+		});
 	}-*/;
 	
-	public AudioNode getDestination() {
-		return getDestination(ctx);
+	protected static void audioDataDecodeSuccess(AudioBuffer buffer, AudioBufferCallback cb) {
+		cb.onComplete(buffer);
 	}
 	
-	private static final native AudioNode getDestination(AudioContext ctx) /*-{
-		return ctx.destination;
+	protected static void audioDataDecodeFailed(AudioBufferCallback cb) {
+		cb.onError();
+	}
+	
+	public AudioDestinationNode getDestination() {
+		if(destination == null) {
+			destination = new AudioDestinationNode(getDestination(ctx));
+		}
+		return destination;
+	}
+	
+	private static final native elemental.html.AudioNode getDestination(AudioContext ctx) /*-{
+		var dest = ctx.destination;
+		console.log("context destination: " + dest);
+		return dest;
 	}-*/;
 	
 	
