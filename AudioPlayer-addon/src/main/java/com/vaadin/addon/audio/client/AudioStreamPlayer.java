@@ -40,7 +40,7 @@ public class AudioStreamPlayer {
 		stream.requestChunkByTimestamp(0, new DataCallback() {
 			@Override
 			public void onDataReceived(ChunkDescriptor chunk) {
-				player.setBuffer(stream.getBufferForChunk(chunk));
+				player.setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk));
 			}
 		});
 	}
@@ -49,7 +49,7 @@ public class AudioStreamPlayer {
 		return duration;
 	}
 	
-	public void setPosition(int millis) {
+	public void setPosition(final int millis) {
 		Log.message(this, "set position to " + millis);
 		stop();
 		stream.requestChunkByTimestamp(millis, new DataCallback() {
