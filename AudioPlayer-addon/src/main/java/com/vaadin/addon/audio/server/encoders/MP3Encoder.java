@@ -19,4 +19,8 @@ public class MP3Encoder extends Encoder {
 		
 	}
 
+	public static boolean isSupported() {
+		return false;
+	}
+
 }
