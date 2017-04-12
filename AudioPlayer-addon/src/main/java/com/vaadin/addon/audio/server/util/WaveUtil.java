@@ -12,14 +12,23 @@ public final class WaveUtil {
 	/**
 	 * Read Wave header to get data format
 	 * 
-	 * @param waveFileBytes
+	 * @param buf
 	 *            bytebuffer containing data of wave file
 	 * @return a PCMFormat object
 	 */
-	public static PCMFormat getDataFormat(ByteBuffer waveFileBytes) {
-		PCMFormat fmt = null;
+	public static PCMFormat getDataFormat(ByteBuffer buf) {
 
-		return fmt;
+		// number of channels
+		int channels = Endian.readLE(buf, 22, 2);
+
+		// sample rate
+		int sampleRate = Endian.readLE(buf, 24, 4);
+		
+		// bits per sample
+		int bitsPerSample = Endian.readLE(buf, 34, 2);
+		
+		// Enough info gathered
+		return new PCMFormat(channels, sampleRate, bitsPerSample);
 	}
 
 	/**
