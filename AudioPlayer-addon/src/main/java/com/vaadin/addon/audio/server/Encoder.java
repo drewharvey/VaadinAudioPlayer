@@ -7,8 +7,8 @@ public abstract class Encoder {
 	/**
 	 * Callback that returns the bytes requested by the application
 	 */
-	public abstract class Callback {
-		public abstract void onComplete(byte[] encodedBytes);
+	public static interface Callback {
+		public void onComplete(byte[] encodedBytes);
 	}
 	
 	private ByteBuffer buffer;
