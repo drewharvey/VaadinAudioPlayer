@@ -21,10 +21,12 @@ import com.vaadin.addon.audio.server.AudioPlayer.StateChangeCallback;
 import com.vaadin.addon.audio.server.Stream.StreamState;
 import com.vaadin.addon.audio.server.Stream.StreamStateCallback;
 import com.vaadin.addon.audio.server.encoders.MP3Encoder;
-import com.vaadin.addon.audio.server.encoders.NullEncoder;
+import com.vaadin.addon.audio.server.encoders.WaveEncoder;
 import com.vaadin.addon.audio.server.encoders.OGGEncoder;
 import com.vaadin.addon.audio.server.util.FeatureSupport;
+import com.vaadin.addon.audio.shared.PCMFormat;
 import com.vaadin.addon.audio.shared.util.Log;
+import com.vaadin.addon.audio.shared.util.WaveUtil;
 import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
@@ -430,8 +432,8 @@ public class DemoUI extends UI {
 		final FileSelector fileSelector = new FileSelector(new FileSelector.SelectionCallback() {
 			@Override
 			public void onSelected(String itemName) {
-				// TODO: use OGGEncoder instead of NullEncoder to save bandwidth
-				// choose encoder based on support
+				
+				// Choose encoder based on support
 				Encoder encoder = null;
 				
 				// Prefer OGG support
@@ -441,13 +443,17 @@ public class DemoUI extends UI {
 					// Try MP3 support (it's patent-encumbered)
 					encoder = new MP3Encoder();					
 				} else {
-					encoder = new NullEncoder();
+					// WaveEncoder should always work
+					encoder = new WaveEncoder();
 				}
-
-				// TODO: enable this when OGG and/or MP3 encoders are implemented
-				// Stream stream = new Stream(readFile(itemName, TEST_FILE_PATH), encoder);
-				Stream stream = new Stream(readFile(itemName, TEST_FILE_PATH), new NullEncoder());
-				if(encoder instanceof NullEncoder) {
+				
+				ByteBuffer fileBytes = readFile(itemName, TEST_FILE_PATH);
+				
+				// TODO: use the following line when OGG and/or MP3 encoders have been implemented
+				//Stream stream = createWaveStream(fileBytes, encoder);
+				Stream stream = createWaveStream(fileBytes, new WaveEncoder());
+				
+				if(encoder instanceof WaveEncoder) {
 					// TODO: enable the following line when client decompression library can be loaded
 					//stream.setCompression(true);
 				}
@@ -459,6 +465,15 @@ public class DemoUI extends UI {
 
 		layout.addComponent(fileSelector);
 		setContent(layout);
+	}
+	
+	private static Stream createWaveStream(ByteBuffer waveFile, Encoder outputEncoder) {
+		int startOffset = WaveUtil.getDataStartOffset(waveFile);
+		int dataLength = WaveUtil.getDataLength(waveFile);
+		PCMFormat dataFormat = WaveUtil.getDataFormat(waveFile);
+		ByteBuffer dataBuffer = ByteBuffer.wrap(waveFile.array(),startOffset,dataLength);
+		Stream stream = new Stream(dataBuffer,dataFormat,outputEncoder);
+		return stream;
 	}
 
 	// =========================================================================
