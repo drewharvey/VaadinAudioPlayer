@@ -8,6 +8,7 @@ import com.vaadin.addon.audio.shared.AudioPlayerServerRpc;
 import com.vaadin.addon.audio.shared.AudioPlayerState;
 import com.vaadin.addon.audio.shared.ChunkDescriptor;
 import com.vaadin.addon.audio.shared.SharedEffect;
+import com.vaadin.addon.audio.shared.util.Log;
 import com.vaadin.server.AbstractExtension;
 import com.vaadin.ui.UI;
 
@@ -25,10 +26,6 @@ public class AudioPlayer extends AbstractExtension {
 		
 	}
 
-	private static void trace(String msg) {
-		System.err.println("[AudioPlayer] " + msg + " (REMOVEME)");
-	}
-	
 	public static enum PlaybackState {
 		PLAYING,
 		PAUSED,
@@ -45,7 +42,7 @@ public class AudioPlayer extends AbstractExtension {
     	registerRpc(new AudioPlayerServerRpc() {
 			@Override
 			public void requestChunk(final int chunkID) {
-				trace("received request for chunk " + chunkID);
+				Log.message(AudioPlayer.this,"received request for chunk " + chunkID);
 				
 				final UI ui = UI.getCurrent();
 				final AudioPlayer player = AudioPlayer.this;
@@ -57,7 +54,7 @@ public class AudioPlayer extends AbstractExtension {
 							@Override
 							public void run() {
 								player.getClientRPC().sendData(chunkID, stream.isCompressionEnabled(), encodedData);
-								trace("sent chunk " + chunkID);
+								Log.message(AudioPlayer.this, "sent chunk " + chunkID);
 							}
 						});
 					}
@@ -67,7 +64,7 @@ public class AudioPlayer extends AbstractExtension {
 			
 			@Override
 			public void reportPlaybackPosition(int position_millis) {
-				trace("received position report: " + position_millis);
+				Log.message(AudioPlayer.this,"received position report: " + position_millis);
 				for(StateChangeCallback cb : stateCallbacks) {
 					cb.playbackPositionChanged(position_millis);
 				}
@@ -75,7 +72,7 @@ public class AudioPlayer extends AbstractExtension {
 
 			@Override
 			public void reportPlaybackStarted() {
-				trace("received playback state change to PLAYING");
+				Log.message(AudioPlayer.this,"received playback state change to PLAYING");
 				playbackState = PlaybackState.PLAYING;
 				for(StateChangeCallback cb : stateCallbacks) {
 					cb.playbackStateChanged(playbackState);
@@ -84,7 +81,7 @@ public class AudioPlayer extends AbstractExtension {
 
 			@Override
 			public void reportPlaybackPaused() {
-				trace("received playback state change to PAUSED");
+				Log.message(AudioPlayer.this,"received playback state change to PAUSED");
 				playbackState = PlaybackState.PAUSED;
 				for(StateChangeCallback cb : stateCallbacks) {
 					cb.playbackStateChanged(playbackState);
@@ -93,7 +90,7 @@ public class AudioPlayer extends AbstractExtension {
 
 			@Override
 			public void reportPlaybackStopped() {
-				trace("received playback state change to STOPPED");
+				Log.message(AudioPlayer.this,"received playback state change to STOPPED");
 				playbackState = PlaybackState.STOPPED;
 				for(StateChangeCallback cb : stateCallbacks) {
 					cb.playbackStateChanged(playbackState);
@@ -147,40 +144,40 @@ public class AudioPlayer extends AbstractExtension {
 
     public void setPosition(int millis) {
     	getClientRPC().setPlaybackPosition(millis);
-    	trace("set playback position: " + millis);
+    	Log.message(AudioPlayer.this,"set playback position: " + millis);
     }
     
     public void skip(int millis) {
     	getClientRPC().skipPosition(millis);
-    	trace("skip " + millis + " milliseconds");
+    	Log.message(AudioPlayer.this,"skip " + millis + " milliseconds");
     }
     
     public void play() {
     	getClientRPC().stopPlayback();
     	getClientRPC().startPlayback();
-    	trace("start or restart playback");
+    	Log.message(AudioPlayer.this,"start or restart playback");
     }
     
     public void play(int offset_millis) {
     	getClientRPC().stopPlayback();
     	getClientRPC().setPlaybackPosition(offset_millis);
     	getClientRPC().startPlayback();
-    	trace("start playback at time offset");
+    	Log.message(AudioPlayer.this,"start playback at time offset");
     }
     
     public void pause() {
     	getClientRPC().pausePlayback();
-    	trace("pause playback");
+    	Log.message(AudioPlayer.this,"pause playback");
     }
     
     public void resume() {
     	getClientRPC().resumePlayback();
-    	trace("resume playback");
+    	Log.message(AudioPlayer.this,"resume playback");
     }
     
     public void stop() {
     	getClientRPC().stopPlayback();
-    	trace("stop playback");
+    	Log.message(AudioPlayer.this,"stop playback");
     }
     
     public boolean isPlaying() {
@@ -197,12 +194,12 @@ public class AudioPlayer extends AbstractExtension {
 	
 	public void setVolume(double volume) {
 		getClientRPC().setVolume(volume);
-		trace("setting volume to " + volume);
+		Log.message(AudioPlayer.this,"setting volume to " + volume);
 	}
 	
 	public void setPlaybackSpeed(double playbackSpeed) {
 		getClientRPC().setPlaybackSpeed(playbackSpeed);
-		trace("setting playback speed to " + playbackSpeed);
+		Log.message(AudioPlayer.this,"setting playback speed to " + playbackSpeed);
 	}
 	
 	public void setBalance(double balance) {
@@ -220,7 +217,7 @@ public class AudioPlayer extends AbstractExtension {
 		for (SharedEffect e : getState().effects) {
 			if (effect.getID().equals(e.getID())) {
 				getState().effects.remove(e);
-				trace("removing effect: " + e.getName().name());
+				Log.message(AudioPlayer.this,"removing effect: " + e.getName().name());
 			}
 		}
 	}
