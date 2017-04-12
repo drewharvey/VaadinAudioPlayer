@@ -20,7 +20,7 @@ public class PCMFormat implements Serializable {
 		this.bitsPerSample = bitsPerSample;
 		
 		this.blockAlign = numChannels * (bitsPerSample / 8);
-		this.byteRate = blockAlign * (bitsPerSample / 8);
+		this.byteRate = blockAlign * sampleRate;
 	}
 	
 	public int getNumChannels() {
@@ -36,6 +36,13 @@ public class PCMFormat implements Serializable {
 	}
 
 	public int getBlockAlign() {
+		return blockAlign;
+	}
+	
+	/**
+	 * Get size of a single sample in bytes
+	 */
+	public int getSampleSize() {
 		return blockAlign;
 	}
 
