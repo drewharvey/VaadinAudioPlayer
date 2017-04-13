@@ -76,7 +76,7 @@ public class AudioStreamPlayer {
 	}
 	
 	public void pause() {
-		Log.message(this, "pause");		
+		Log.message(this, "pause");	
 	}
 	
 	public void resume() {
@@ -85,6 +85,11 @@ public class AudioStreamPlayer {
 	
 	public void stop() {
 		Log.message(this, "stop");
+		if (player == null) {
+			logError("current player is null");
+			return;
+		}
+		player.stop();
 	}
 	
 	public void setVolume(double volume) {
