@@ -100,16 +100,21 @@ public class BufferPlayer {
 		Log.message(this, "stop playback");
 		Buffer buffer = source.getBuffer();
 		source.stop();
-		Log.message(this, "disconnecting source from dest");
+		// source nodes can only be played once, so we need to 
+		// create a new audio node and prep it to be played
+		resetSourceNode(buffer);
+		state = State.STOPPED;
+	}
+
+	private void resetSourceNode(Buffer buffer) {
+		Context context = Context.get();
 		source.disconnect(Context.get().getDestination());
-		Log.message(this, "resetting source node");
 		source.resetNode();
 		if (buffer != null) {
-			Log.message(this, "setting native buffer on source");
 			source.setNativeBuffer(buffer.getAudioBuffer());
 		}
-		source.connect(Context.get().getDestination());
-		state = State.STOPPED;
+		// XXX, TODO: rework this
+		source.connect(context.getDestination());
 	}
 	
 	public void setBuffer(Buffer buffer) {
