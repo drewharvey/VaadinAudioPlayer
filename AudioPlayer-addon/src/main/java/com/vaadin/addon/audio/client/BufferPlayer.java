@@ -92,12 +92,17 @@ public class BufferPlayer {
 		if (state == State.PLAYING) {
 			stop();
 		}
-		source.start();
+		float offsetSeconds = offset_millis / 1000;
+//		source.start();
+		source.start(0, offsetSeconds);
 		state = State.PLAYING;
 	}
 	
 	public void stop() {
 		Log.message(this, "stop playback");
+		if (state == State.STOPPED) {
+			return;
+		}
 		Buffer buffer = source.getBuffer();
 		source.stop();
 		// source nodes can only be played once, so we need to 

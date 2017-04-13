@@ -7,7 +7,9 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.gwt.core.client.Duration;
 import com.vaadin.addon.audio.client.ClientStream.DataCallback;
+import com.vaadin.addon.audio.client.webaudio.Context;
 import com.vaadin.addon.audio.shared.ChunkDescriptor;
 import com.vaadin.addon.audio.shared.util.Log;
 
@@ -30,6 +32,9 @@ public class AudioStreamPlayer {
 	private int duration = 0;
 	private int position = 0;
 	private int playerStartPosition = 0;
+	
+	private Duration durationObj;
+	private int elapsedTime = 0;
 	
 	public AudioStreamPlayer(ClientStream stream) {
 		Log.message(this, "create");
@@ -69,33 +74,48 @@ public class AudioStreamPlayer {
 	public void play() {
 		Log.message(this, "play");
 		if (player == null) {
-			logError("current player is null");
+			Log.error(this, "current player is null");
 			return;
 		}
-		
 		player.play(playerStartPosition);
+		// Duration object starts counting MS when instantiated
+		durationObj = new Duration();
 	}
 	
 	public void pause() {
 		Log.message(this, "pause");	
+		if (player == null) {
+			Log.error(this, "current player is null");
+			return;
+		}
+		player.stop();
+		elapsedTime += durationObj.elapsedMillis();
 	}
 	
 	public void resume() {
 		Log.message(this, "resume");
+		if (player == null) {
+			Log.error(this, "current player is null");
+			return;
+		}
+		player.play(elapsedTime);
+		// Duration object starts counting MS when instantiated
+		durationObj = new Duration();
 	}
 	
 	public void stop() {
 		Log.message(this, "stop");
 		if (player == null) {
-			logError("current player is null");
+			Log.error(this, "current player is null");
 			return;
 		}
 		player.stop();
+		elapsedTime = 0;
 	}
 	
 	public void setVolume(double volume) {
 		if(player == null) {
-			logError("current player is null");
+			Log.error(this, "current player is null");
 			return;
 		}
 		player.setVolume(volume);

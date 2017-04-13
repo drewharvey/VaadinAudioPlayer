@@ -7,26 +7,26 @@ public abstract class AudioScheduledSourceNode extends AudioNode {
 	}
 
 	public void start() {
-		start(0);
+		start(0, 0);
 	}
 	
-	public void start(int delay_millis) {
-		start(getNativeNode(),delay_millis);
+	public void start(float delay_seconds, float offset_seconds) {
+		start(getNativeNode(), delay_seconds, offset_seconds);
 	}
 	
-	private static final native void start(elemental.html.AudioNode node, int delay) /*-{
-		node.start(delay);
+	private static final native void start(elemental.html.AudioNode node, float delay, float offset) /*-{
+		node.start(delay, offset);
 	}-*/;
 	
 	public void stop() {
 		stop(0);
 	}
 	
-	public void stop(int delay_millis) {
-		stop(getNativeNode(),delay_millis);
+	public void stop(float delay_seconds) {
+		stop(getNativeNode(), delay_seconds);
 	}
 
-	private static final native void stop(elemental.html.AudioNode node, int delay) /*-{
+	private static final native void stop(elemental.html.AudioNode node, float delay) /*-{
 		node.stop(delay);
 	}-*/;
 
