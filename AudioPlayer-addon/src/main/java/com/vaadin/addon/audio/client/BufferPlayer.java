@@ -20,12 +20,18 @@ import com.vaadin.addon.audio.shared.util.Log;
  * possible lag as the data buffers are swapped.
  */
 public class BufferPlayer {
+	
+	private enum State {
+		PLAYING,
+		STOPPED
+	}
 
 	//private List<Effect> effects;
 	//private BalanceEffect balanceEffect;
 	
 	private BufferSourceNode source;
 	private GainNode output;
+	private State state = State.STOPPED;
 	
     private double speed;
 	private double volume;
@@ -83,12 +89,27 @@ public class BufferPlayer {
 	
 	public void play(int offset_millis) {
 		Log.message(this, "start playback at " + offset_millis);
+		if (state == State.PLAYING) {
+			stop();
+		}
 		source.start();
+		state = State.PLAYING;
 	}
 	
 	public void stop() {
 		Log.message(this, "stop playback");
+		Buffer buffer = source.getBuffer();
 		source.stop();
+		Log.message(this, "disconnecting source from dest");
+		source.disconnect(Context.get().getDestination());
+		Log.message(this, "resetting source node");
+		source.resetNode();
+		if (buffer != null) {
+			Log.message(this, "setting native buffer on source");
+			source.setNativeBuffer(buffer.getAudioBuffer());
+		}
+		source.connect(Context.get().getDestination());
+		state = State.STOPPED;
 	}
 	
 	public void setBuffer(Buffer buffer) {

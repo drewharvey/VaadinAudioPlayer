@@ -10,6 +10,10 @@ public abstract class AudioNode {
 		wa_node = nativeNode;
 	}
 	
+	protected void setNativeNode(elemental.html.AudioNode node) {
+		wa_node = node;
+	}
+	
 	protected elemental.html.AudioNode getNativeNode() {
 		return wa_node;
 	}

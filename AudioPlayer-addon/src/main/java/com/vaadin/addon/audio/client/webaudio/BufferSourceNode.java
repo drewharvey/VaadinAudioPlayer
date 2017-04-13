@@ -22,16 +22,24 @@ public class BufferSourceNode extends AudioScheduledSourceNode {
 		super(createBufferSource(ctx));
 	}
 	
+	public void resetNode() {
+		// create new buffer source node and add the current buffer
+		setNativeNode(createBufferSource(getNativeContext()));
+		setBuffer(buffer);
+	}
+	
 	public void setBuffer(Buffer buffer) {
 		if(buffer == this.buffer) {
 			return;
 		}
 		
 		this.buffer = buffer;
+		// cancel previous buffer check timer
 		if(bufferTimer != null && bufferTimer.isRunning()) {
 			bufferTimer.cancel();
 			bufferTimer = null;
 		}
+		// set timer to periodically check if buffer is ready to play
 		bufferTimer = new Timer() {
 			@Override
 			public void run() {
