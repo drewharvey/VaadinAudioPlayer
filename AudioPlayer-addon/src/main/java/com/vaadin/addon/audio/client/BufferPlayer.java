@@ -92,8 +92,7 @@ public class BufferPlayer {
 		if (state == State.PLAYING) {
 			stop();
 		}
-		float offsetSeconds = offset_millis / 1000;
-//		source.start();
+		double offsetSeconds = offset_millis / 1000;
 		source.start(0, offsetSeconds);
 		state = State.PLAYING;
 	}
