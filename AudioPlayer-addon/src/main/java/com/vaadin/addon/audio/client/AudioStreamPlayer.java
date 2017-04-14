@@ -8,6 +8,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.gwt.core.client.Duration;
+import com.google.gwt.user.client.Timer;
 import com.vaadin.addon.audio.client.ClientStream.DataCallback;
 import com.vaadin.addon.audio.client.webaudio.Context;
 import com.vaadin.addon.audio.shared.ChunkDescriptor;
@@ -26,6 +27,8 @@ public class AudioStreamPlayer {
 	
 	private ClientStream stream;
 	private BufferPlayer player = null;
+	private int currentPlayer = 0;
+	BufferPlayer[] players = new BufferPlayer[2];
 	
 	private List<Effect> effects = new ArrayList<Effect>();
 	
@@ -41,12 +44,21 @@ public class AudioStreamPlayer {
 		
 		// Warm up the stream
 		this.stream = stream;
-		player = new BufferPlayer();
+		players[0] = new BufferPlayer();
+		players[1] = new BufferPlayer();
+		player = players[currentPlayer];
 		// get first chunk of audio
 		stream.requestChunkByTimestamp(0, new DataCallback() {
 			@Override
 			public void onDataReceived(ChunkDescriptor chunk) {
-				player.setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk));
+				players[0].setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk));
+			}
+		});
+		// get second chunk of audio
+		stream.requestChunkByTimestamp(5000, new DataCallback() {
+			@Override
+			public void onDataReceived(ChunkDescriptor chunk) {
+				players[1].setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk));
 			}
 		});
 	}
@@ -80,6 +92,15 @@ public class AudioStreamPlayer {
 		player.play(playerStartPosition);
 		// Duration object starts counting MS when instantiated
 		durationObj = new Duration();
+		Timer timer = new Timer() {
+			@Override
+			public void run() {
+				currentPlayer = 1;
+				player = players[currentPlayer];
+				player.play(0);
+			}
+		};
+		timer.schedule(5000);
 	}
 	
 	public void pause() {

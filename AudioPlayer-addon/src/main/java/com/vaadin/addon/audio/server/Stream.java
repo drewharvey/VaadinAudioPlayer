@@ -15,7 +15,7 @@ import com.vaadin.addon.audio.shared.PCMFormat;
 public class Stream {
 
 	private static final int CHUNK_LENGTH_MILLIS = 5000;
-	private static final int CHUNK_OVERLAP_MILLIS = 500;
+	private static final int CHUNK_OVERLAP_MILLIS = 0;
 
 	public static interface Callback {
 		public void onComplete(String encodedData);
@@ -92,7 +92,7 @@ public class Stream {
 				// Calculate read area
 				from_sample = ((chunk * chunkLength) - chunkOverlapLength) * samplesPerMillis;
 				from_sample = Math.max(0, from_sample);
-				to_sample = (((chunk + 1) * chunkLength) + chunkOverlapLength) * samplesPerMillis;
+				to_sample = (((chunk + 1) * chunkLength) - 1 + chunkOverlapLength) * samplesPerMillis;
 				to_sample = Math.min(samples, to_sample);
 
 				// Calculate lead in/out duration

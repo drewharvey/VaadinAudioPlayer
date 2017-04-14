@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.google.gwt.user.client.Window;
 import com.vaadin.addon.audio.client.webaudio.Buffer;
 import com.vaadin.addon.audio.shared.ChunkDescriptor;
 import com.vaadin.addon.audio.shared.util.Log;
@@ -95,7 +96,10 @@ public class ClientStream {
 		List<ChunkDescriptor> chunks = connector.getState().chunks;
 		
 		for(ChunkDescriptor c : chunks) {
-			if(c.getStartTimeOffset() >= position_millis && c.getEndTimeOffset() <= position_millis) return c;
+			if(c.getStartTimeOffset() <= position_millis 
+					&& c.getEndTimeOffset() >= position_millis) {
+				return c;
+			}
 		}
 
 		// TODO: fail gracefully
