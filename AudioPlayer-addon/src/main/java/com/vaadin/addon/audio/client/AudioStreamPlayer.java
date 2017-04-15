@@ -9,10 +9,12 @@ import java.util.logging.Logger;
 
 import com.google.gwt.core.client.Duration;
 import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.Window;
 import com.vaadin.addon.audio.client.ClientStream.DataCallback;
 import com.vaadin.addon.audio.client.webaudio.Context;
 import com.vaadin.addon.audio.shared.ChunkDescriptor;
 import com.vaadin.addon.audio.shared.util.Log;
+import com.vaadin.ui.Notification;
 
 /**
  * Player controls for a stream.
@@ -25,10 +27,13 @@ public class AudioStreamPlayer {
 	
 	private static final int MAX_PLAYERS = 3;	// Maximum number of players
 	
+	//TODO: sync this with server side chunking
+	private static final int TIME_PER_CHUNK = 5000;
+	
 	private ClientStream stream;
 	private BufferPlayer player = null;
 	private int currentPlayer = 0;
-	BufferPlayer[] players = new BufferPlayer[2];
+	BufferPlayer[] players = new BufferPlayer[MAX_PLAYERS];
 	
 	private List<Effect> effects = new ArrayList<Effect>();
 	
@@ -36,7 +41,9 @@ public class AudioStreamPlayer {
 	private int position = 0;
 	private int playerStartPosition = 0;
 	
+	private Timer playNextChunkTimer;
 	private Duration durationObj;
+	private int currentPlayTime = 0;
 	private int elapsedTime = 0;
 	
 	public AudioStreamPlayer(ClientStream stream) {
@@ -44,23 +51,25 @@ public class AudioStreamPlayer {
 		
 		// Warm up the stream
 		this.stream = stream;
-		players[0] = new BufferPlayer();
-		players[1] = new BufferPlayer();
-		player = players[currentPlayer];
+		// create players
+		for (int i = 0; i < players.length; i++) {
+			players[i] = new BufferPlayer();
+		}
 		// get first chunk of audio
+		player = getCurrentPlayer();
 		stream.requestChunkByTimestamp(0, new DataCallback() {
 			@Override
 			public void onDataReceived(ChunkDescriptor chunk) {
-				players[0].setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk));
+				player.setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk));
 			}
 		});
-		// get second chunk of audio
-		stream.requestChunkByTimestamp(5000, new DataCallback() {
+		// setup timer for moving to next chunk after current chunk finishes playing
+		playNextChunkTimer = new Timer() {
 			@Override
-			public void onDataReceived(ChunkDescriptor chunk) {
-				players[1].setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk));
+			public void run() {
+				playNextChunk();
 			}
-		});
+		};
 	}
 	
 	public int getDuration() {
@@ -89,18 +98,53 @@ public class AudioStreamPlayer {
 			Log.error(this, "current player is null");
 			return;
 		}
+		
+		// start player current chunk
 		player.play(playerStartPosition);
-		// Duration object starts counting MS when instantiated
+		
+		// Duration object starts counting MS when instantiated (used to continue from a pause)
 		durationObj = new Duration();
-		Timer timer = new Timer() {
+
+		// start timer to play next chunk of audio
+		playNextChunkTimer.schedule(TIME_PER_CHUNK);
+		
+		// start loading next chunk
+		int nextChunkTime = currentPlayTime + TIME_PER_CHUNK;
+		stream.requestChunkByTimestamp(nextChunkTime, new DataCallback() {
 			@Override
-			public void run() {
-				currentPlayer = 1;
-				player = players[currentPlayer];
-				player.play(0);
+			public void onDataReceived(ChunkDescriptor chunk) {
+				getNextPlayer().setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk));
 			}
-		};
-		timer.schedule(5000);
+		});
+	}
+	
+	private void playNextChunk() {
+		moveToNextPlayer();
+		currentPlayTime += TIME_PER_CHUNK;
+		player = getCurrentPlayer();
+		play();
+	}
+	
+	private void moveToNextPlayer() {
+		currentPlayer = (currentPlayer + 1) % MAX_PLAYERS;
+	}
+	
+	private void moveToPrevPlayer() {
+		currentPlayer = (currentPlayer == 0 ? MAX_PLAYERS - 1 : currentPlayer - 1);
+	}
+	
+	private BufferPlayer getCurrentPlayer() {
+		return players[currentPlayer];
+	}
+	
+	private BufferPlayer getNextPlayer() {
+		int i = (currentPlayer + 1) % MAX_PLAYERS;
+		return players[i];
+	}
+	
+	private BufferPlayer getPrevPlayer() {
+		int i = (currentPlayer == 0 ? MAX_PLAYERS - 1 : currentPlayer - 1);
+		return players[i];
 	}
 	
 	public void pause() {
@@ -111,6 +155,7 @@ public class AudioStreamPlayer {
 		}
 		player.stop();
 		elapsedTime += durationObj.elapsedMillis();
+		playNextChunkTimer.cancel();
 	}
 	
 	public void resume() {
@@ -120,6 +165,7 @@ public class AudioStreamPlayer {
 			return;
 		}
 		player.play(elapsedTime);
+		playNextChunkTimer.schedule(TIME_PER_CHUNK - elapsedTime);
 		// Duration object starts counting MS when instantiated
 		durationObj = new Duration();
 	}
@@ -130,8 +176,18 @@ public class AudioStreamPlayer {
 			Log.error(this, "current player is null");
 			return;
 		}
+		// reset everything
 		player.stop();
+		playNextChunkTimer.cancel();
+		currentPlayTime = 0;
 		elapsedTime = 0;
+		// load the first chunk (beginning of audio)
+		stream.requestChunkByTimestamp(0, new DataCallback() {
+			@Override
+			public void onDataReceived(ChunkDescriptor chunk) {
+				player.setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk));
+			}
+		});
 	}
 	
 	public void setVolume(double volume) {
