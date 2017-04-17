@@ -131,6 +131,7 @@ public class AudioPlayer extends AbstractExtension {
     	}
     	this.stream = stream;
     	getState().chunks.addAll(stream.getChunks());
+    	getState().duration = stream.getDuration();
     	return stream;
     }
     

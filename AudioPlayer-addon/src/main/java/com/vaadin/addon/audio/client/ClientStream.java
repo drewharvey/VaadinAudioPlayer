@@ -6,6 +6,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.google.gwt.user.client.Window;
 import com.vaadin.addon.audio.client.webaudio.Buffer;
@@ -43,6 +45,10 @@ public class ClientStream {
 		this.connector = connector;
 		buffers = new LinkedHashMap<>();
 		requests = new HashMap<>();
+	}
+	
+	public int getDuration() {
+		return connector.getState().duration;
 	}
 
 	public Buffer getBufferForChunk(ChunkDescriptor chunk) {
@@ -98,6 +104,7 @@ public class ClientStream {
 		for(ChunkDescriptor c : chunks) {
 			if(c.getStartTimeOffset() <= position_millis 
 					&& c.getEndTimeOffset() >= position_millis) {
+				Logger.getLogger("ClientStream").log(Level.SEVERE, c.toString());
 				return c;
 			}
 		}

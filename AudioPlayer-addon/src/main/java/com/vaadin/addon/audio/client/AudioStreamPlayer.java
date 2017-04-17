@@ -24,8 +24,9 @@ public class AudioStreamPlayer {
 	
 	private static final int MAX_PLAYERS = 3;	// Maximum number of players
 	
-	//TODO: sync this with server side chunking
+	//TODO: get values from ChunkDescriptions
 	private static final int TIME_PER_CHUNK = 5000;
+	private static final int LEAD_IN_TIME = 0;
 	
 	private ClientStream stream;
 	BufferPlayer[] players = new BufferPlayer[MAX_PLAYERS];
@@ -33,13 +34,11 @@ public class AudioStreamPlayer {
 	
 	private List<Effect> effects = new ArrayList<Effect>();
 	
-	private int duration = 0;
 	private int position = 0;
 	private int playerStartPosition = 0;
 	
 	private Timer playNextChunkTimer;
-	private Duration durationObj;
-	private int currentPlayTime = 0;
+	private Duration durationTracker;
 	private int elapsedTime = 0;
 	
 	public AudioStreamPlayer(ClientStream stream) {
@@ -47,6 +46,9 @@ public class AudioStreamPlayer {
 		
 		// Warm up the stream
 		this.stream = stream;
+		
+		logError("Duration: " + getDuration());
+		
 		stream.requestChunkByTimestamp(0, new DataCallback() {
 			@Override
 			public void onDataReceived(ChunkDescriptor chunk) {
@@ -65,7 +67,7 @@ public class AudioStreamPlayer {
 	}
 	
 	public int getDuration() {
-		return duration;
+		return stream.getDuration();
 	}
 	
 	public void setPosition(final int millis) {
@@ -83,7 +85,8 @@ public class AudioStreamPlayer {
 	}
 	
 	public int getPosition() {
-		return position;
+		return 0;
+//		return position;
 	}
 	
 	public void play() {
@@ -98,13 +101,13 @@ public class AudioStreamPlayer {
 		
 		// Duration object starts counting MS when instantiated (used to continue from a pause)
 		elapsedTime = 0;
-		durationObj = new Duration();
+		durationTracker = new Duration();
 
 		// start timer to play next chunk of audio
 		playNextChunkTimer.schedule(TIME_PER_CHUNK);
 		
 		// start loading next chunk
-		int nextChunkTime = currentPlayTime + TIME_PER_CHUNK;
+		int nextChunkTime = position + TIME_PER_CHUNK;
 		stream.requestChunkByTimestamp(nextChunkTime, new DataCallback() {
 			@Override
 			public void onDataReceived(ChunkDescriptor chunk) {
@@ -118,7 +121,7 @@ public class AudioStreamPlayer {
 	private void playNextChunk() {
 		logError("PLAY NEXT CHUNK");
 		moveToNextPlayer();
-		currentPlayTime += TIME_PER_CHUNK;
+		position += TIME_PER_CHUNK;
 		play();
 	}
 	
@@ -129,7 +132,7 @@ public class AudioStreamPlayer {
 			return;
 		}
 		getCurrentPlayer().stop();
-		elapsedTime += durationObj.elapsedMillis();
+		elapsedTime += durationTracker.elapsedMillis();
 		logError("pause() - elapsedTime:  " + elapsedTime);
 		playNextChunkTimer.cancel();
 	}
@@ -145,7 +148,7 @@ public class AudioStreamPlayer {
 		getCurrentPlayer().play(elapsedTime);
 		playNextChunkTimer.schedule(TIME_PER_CHUNK - elapsedTime);
 		// Duration object starts counting MS when instantiated
-		durationObj = new Duration();
+		durationTracker = new Duration();
 	}
 	
 	public void stop() {
@@ -157,7 +160,7 @@ public class AudioStreamPlayer {
 		// reset everything
 		getCurrentPlayer().stop();
 		playNextChunkTimer.cancel();
-		currentPlayTime = 0;
+		position = 0;
 		elapsedTime = 0;
 		// load the first chunk (beginning of audio)
 		stream.requestChunkByTimestamp(0, new DataCallback() {
