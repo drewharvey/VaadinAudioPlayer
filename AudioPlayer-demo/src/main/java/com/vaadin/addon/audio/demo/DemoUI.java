@@ -140,8 +140,8 @@ public class DemoUI extends UI {
 					} else if (player.isPaused()) {
 						player.resume();
 					} else {
-						player.stop();
-						player.play(0);
+//						player.play(0);
+						player.play();
 					}
 				}
 			}));

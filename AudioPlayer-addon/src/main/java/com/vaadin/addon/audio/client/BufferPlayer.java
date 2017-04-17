@@ -56,6 +56,20 @@ public class BufferPlayer {
 		source.connect(context.getDestination());
 	}
 	
+	public void resetBufferPlayer(Buffer buffer) {
+		Log.message(this, "reset");
+		
+		Context context = Context.get();
+		source = context.createBufferSourceNode();
+		if(buffer != null) {
+			source.setNativeBuffer(buffer.getAudioBuffer());
+		}
+		output = context.createGainNode();
+		
+		// XXX, TODO: rework this
+		source.connect(context.getDestination());
+	}
+	
 	public AudioNode getOutput() {
 //		if(dirty) {
 //			Log.message(this, "marked as dirty, reconfigure output");

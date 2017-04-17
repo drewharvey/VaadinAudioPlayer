@@ -1,25 +1,22 @@
 package com.vaadin.addon.audio.client;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.gwt.core.client.Duration;
 import com.google.gwt.user.client.Timer;
-import com.google.gwt.user.client.Window;
 import com.vaadin.addon.audio.client.ClientStream.DataCallback;
-import com.vaadin.addon.audio.client.webaudio.Context;
 import com.vaadin.addon.audio.shared.ChunkDescriptor;
 import com.vaadin.addon.audio.shared.util.Log;
-import com.vaadin.ui.Notification;
 
 /**
  * Player controls for a stream.
  */
 public class AudioStreamPlayer {
+	
+	private static Logger logger = Logger.getLogger("AudioStreamPlayer");
 
 	//
 	// TODO: improve log messages
@@ -31,9 +28,8 @@ public class AudioStreamPlayer {
 	private static final int TIME_PER_CHUNK = 5000;
 	
 	private ClientStream stream;
-	private BufferPlayer player = null;
-	private int currentPlayer = 0;
 	BufferPlayer[] players = new BufferPlayer[MAX_PLAYERS];
+	private int currentPlayer = 0;
 	
 	private List<Effect> effects = new ArrayList<Effect>();
 	
@@ -47,20 +43,16 @@ public class AudioStreamPlayer {
 	private int elapsedTime = 0;
 	
 	public AudioStreamPlayer(ClientStream stream) {
-		Log.message(this, "create");
+		logError("create");
 		
 		// Warm up the stream
 		this.stream = stream;
-		// create players
-		for (int i = 0; i < players.length; i++) {
-			players[i] = new BufferPlayer();
-		}
-		// get first chunk of audio
-		player = getCurrentPlayer();
 		stream.requestChunkByTimestamp(0, new DataCallback() {
 			@Override
 			public void onDataReceived(ChunkDescriptor chunk) {
+				BufferPlayer player = new BufferPlayer();
 				player.setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk));
+				setCurrentPlayer(player);
 			}
 		});
 		// setup timer for moving to next chunk after current chunk finishes playing
@@ -77,12 +69,14 @@ public class AudioStreamPlayer {
 	}
 	
 	public void setPosition(final int millis) {
-		Log.message(this, "set position to " + millis);
+		logError("set position to " + millis);
 		stop();
 		stream.requestChunkByTimestamp(millis, new DataCallback() {
 			@Override
 			public void onDataReceived(ChunkDescriptor chunk) {
-				player.setBuffer(stream.getBufferForChunk(chunk));
+				BufferPlayer player = new BufferPlayer();
+				player.setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk));
+				setCurrentPlayer(player);
 				position = millis;
 			}
 		});
@@ -93,16 +87,17 @@ public class AudioStreamPlayer {
 	}
 	
 	public void play() {
-		Log.message(this, "play");
-		if (player == null) {
+		logError("PLAY");
+		if (getCurrentPlayer() == null) {
 			Log.error(this, "current player is null");
 			return;
 		}
 		
 		// start player current chunk
-		player.play(playerStartPosition);
+		getCurrentPlayer().play(playerStartPosition);
 		
 		// Duration object starts counting MS when instantiated (used to continue from a pause)
+		elapsedTime = 0;
 		durationObj = new Duration();
 
 		// start timer to play next chunk of audio
@@ -113,16 +108,75 @@ public class AudioStreamPlayer {
 		stream.requestChunkByTimestamp(nextChunkTime, new DataCallback() {
 			@Override
 			public void onDataReceived(ChunkDescriptor chunk) {
-				getNextPlayer().setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk));
+				BufferPlayer player = new BufferPlayer();
+				player.setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk));
+				setNextPlayer(player);
 			}
 		});
 	}
 	
 	private void playNextChunk() {
+		logError("PLAY NEXT CHUNK");
 		moveToNextPlayer();
 		currentPlayTime += TIME_PER_CHUNK;
-		player = getCurrentPlayer();
 		play();
+	}
+	
+	public void pause() {
+		logError("PAUSE");	
+		if (getCurrentPlayer() == null) {
+			Log.error(this, "current player is null");
+			return;
+		}
+		getCurrentPlayer().stop();
+		elapsedTime += durationObj.elapsedMillis();
+		logError("pause() - elapsedTime:  " + elapsedTime);
+		playNextChunkTimer.cancel();
+	}
+	
+	public void resume() {
+		logError("resume");
+		if (getCurrentPlayer() == null) {
+			Log.error(this, "current player is null");
+			return;
+		}
+		logError("resume() - elapsed: " + elapsedTime);
+		logError("scheduled for " + (TIME_PER_CHUNK - elapsedTime));
+		getCurrentPlayer().play(elapsedTime);
+		playNextChunkTimer.schedule(TIME_PER_CHUNK - elapsedTime);
+		// Duration object starts counting MS when instantiated
+		durationObj = new Duration();
+	}
+	
+	public void stop() {
+		logError("stop");
+		if (getCurrentPlayer() == null) {
+			Log.error(this, "current player is null");
+			return;
+		}
+		// reset everything
+		getCurrentPlayer().stop();
+		playNextChunkTimer.cancel();
+		currentPlayTime = 0;
+		elapsedTime = 0;
+		// load the first chunk (beginning of audio)
+		stream.requestChunkByTimestamp(0, new DataCallback() {
+			@Override
+			public void onDataReceived(ChunkDescriptor chunk) {
+				BufferPlayer player = new BufferPlayer();
+				player.setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk));
+				setCurrentPlayer(player);
+			}
+		});
+	}
+	
+	private void setCurrentPlayer(BufferPlayer player) {
+		players[currentPlayer] = player;
+	}
+	
+	private void setNextPlayer(BufferPlayer player) {
+		int i = (currentPlayer + 1) % MAX_PLAYERS;
+		players[i] = player;
 	}
 	
 	private void moveToNextPlayer() {
@@ -147,99 +201,56 @@ public class AudioStreamPlayer {
 		return players[i];
 	}
 	
-	public void pause() {
-		Log.message(this, "pause");	
-		if (player == null) {
-			Log.error(this, "current player is null");
-			return;
-		}
-		player.stop();
-		elapsedTime += durationObj.elapsedMillis();
-		playNextChunkTimer.cancel();
-	}
-	
-	public void resume() {
-		Log.message(this, "resume");
-		if (player == null) {
-			Log.error(this, "current player is null");
-			return;
-		}
-		player.play(elapsedTime);
-		playNextChunkTimer.schedule(TIME_PER_CHUNK - elapsedTime);
-		// Duration object starts counting MS when instantiated
-		durationObj = new Duration();
-	}
-	
-	public void stop() {
-		Log.message(this, "stop");
-		if (player == null) {
-			Log.error(this, "current player is null");
-			return;
-		}
-		// reset everything
-		player.stop();
-		playNextChunkTimer.cancel();
-		currentPlayTime = 0;
-		elapsedTime = 0;
-		// load the first chunk (beginning of audio)
-		stream.requestChunkByTimestamp(0, new DataCallback() {
-			@Override
-			public void onDataReceived(ChunkDescriptor chunk) {
-				player.setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk));
-			}
-		});
-	}
-	
 	public void setVolume(double volume) {
-		if(player == null) {
+		if(getCurrentPlayer() == null) {
 			Log.error(this, "current player is null");
 			return;
 		}
-		player.setVolume(volume);
+		getCurrentPlayer().setVolume(volume);
 	}
 	
 	public double getVolume() {
-		if(player == null) {
+		if(getCurrentPlayer() == null) {
 			logError("current player is null");
 			return 0;
 		}
-		return player.getVolume();
+		return getCurrentPlayer().getVolume();
 	}
 	
 	public void setPlaybackSpeed(double playbackSpeed) {
-		if(player == null) {
+		if(getCurrentPlayer() == null) {
 			logError("current player is null");
 			return;
 		}
-		player.setPlaybackSpeed(playbackSpeed);
+		getCurrentPlayer().setPlaybackSpeed(playbackSpeed);
 	}
 	
 	public double getPlaybackSpeed() {
-		if(player == null) {
+		if(getCurrentPlayer() == null) {
 			logError("current player is null");
 			return 0;
 		}
-		return player.getPlaybackSpeed();
+		return getCurrentPlayer().getPlaybackSpeed();
 	}
 	
 	public void setBalance(double balance) {
-		if(player == null) {
+		if(getCurrentPlayer() == null) {
 			logError("current player is null");
 			return;
 		}
-		player.setBalance(balance);
+		getCurrentPlayer().setBalance(balance);
 	}
 	
 	public double getBalance() {
-		if(player == null) {
+		if(getCurrentPlayer() == null) {
 			logError("current player is null");
 			return 0;
 		}
-		return player.getBalance();
+		return getCurrentPlayer().getBalance();
 	}
 	
 	public void setEffects(List<Effect> effects) {
-		Log.message(this, "AudioStreamPlayer adding effects");
+		logError("AudioStreamPlayer adding effects");
 		this.effects.clear();
 		this.effects.addAll(effects);
 		//player.setEffects(effects);
@@ -250,8 +261,6 @@ public class AudioStreamPlayer {
 		return effects;
 	}
 
-	private static Logger logger = Logger.getLogger("AudioStreamPlayer");
-	
 	private static void logError(String msg) {
 		logger.log(Level.SEVERE, msg);
 	}
