@@ -284,7 +284,15 @@ public class DemoUI extends UI {
 						public void run() {
 							// TODO: for proper slider setting, we need to know the position
 							// in millis and total duration of audio
-							//positionSlider.setValue((double)new_position_millis);
+							int duration = getPlayer().getDuration();
+							int pos = getPlayer().getPosition();
+							if (pos > duration) {
+								// TODO: ?
+								return;
+							}
+							positionSlider.setMax(duration);
+							positionSlider.setMin(0);
+							positionSlider.setValue((double) new_position_millis);
 						}
 					});
 				}
