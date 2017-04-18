@@ -23,7 +23,6 @@ public class AudioStreamPlayer {
 	//
 	
 	private static final int MAX_PLAYERS = 3;	// Maximum number of players
-	
 	//TODO: get values from ChunkDescriptions
 	private static final int TIME_PER_CHUNK = 5000;
 	private static final int LEAD_IN_TIME = 0;
@@ -34,12 +33,13 @@ public class AudioStreamPlayer {
 	
 	private List<Effect> effects = new ArrayList<Effect>();
 	
-	private int position = 0;
 	private int playerStartPosition = 0;
+	private int position = 0;
+	private int chunkPosition = 0;
 	
 	private Timer playNextChunkTimer;
-	private Duration durationTracker;
-	private int elapsedTime = 0;
+	private Timer updatePositionTimer;
+	private Duration chunkPositionClock;
 	
 	public AudioStreamPlayer(ClientStream stream) {
 		logError("create");
@@ -64,6 +64,13 @@ public class AudioStreamPlayer {
 				playNextChunk();
 			}
 		};
+		//
+		updatePositionTimer = new Timer() {
+			@Override
+			public void run() {
+				 
+			}
+		};
 	}
 	
 	public int getDuration() {
@@ -72,39 +79,56 @@ public class AudioStreamPlayer {
 	
 	public void setPosition(final int millis) {
 		logError("set position to " + millis);
-		stop();
-		stream.requestChunkByTimestamp(millis, new DataCallback() {
+		getCurrentPlayer().stop();
+		chunkPosition += chunkPositionClock.elapsedMillis();
+		// TODO: impl in a way we don't need the current chunk's playtime offset
+		int chunkTime = millis;
+		if (chunkTime < 0) {
+			chunkTime = 0;
+		}
+		logError("setPosition() - millis: " + millis + " / elapsedTime:  " + chunkPosition + " / chunkTime: " + chunkTime);
+		playNextChunkTimer.cancel();
+		stream.requestChunkByTimestamp(chunkTime, new DataCallback() {
 			@Override
 			public void onDataReceived(ChunkDescriptor chunk) {
 				BufferPlayer player = new BufferPlayer();
 				player.setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk));
 				setCurrentPlayer(player);
-				position = millis;
+				int offset = millis % TIME_PER_CHUNK;
+				position = millis - offset;
+				play(offset);
 			}
 		});
 	}
 	
+	/**
+	 * Gets current playtime position of the entire audio file.
+	 * @return playtime position (milliseconds)
+	 */
 	public int getPosition() {
-		return 0;
-//		return position;
+		return position + getChunkPosition();
 	}
 	
 	public void play() {
+		chunkPosition = 0;
+		play(chunkPosition);
+	}
+	
+	private void play(int offset) {
 		logError("PLAY");
 		if (getCurrentPlayer() == null) {
 			Log.error(this, "current player is null");
 			return;
 		}
-		
+		chunkPosition = offset;
 		// start player current chunk
-		getCurrentPlayer().play(playerStartPosition);
+		getCurrentPlayer().play(chunkPosition);
 		
-		// Duration object starts counting MS when instantiated (used to continue from a pause)
-		elapsedTime = 0;
-		durationTracker = new Duration();
+		// starts counting MS when instantiated, used primarily for pausing
+		chunkPositionClock = new Duration();
 
 		// start timer to play next chunk of audio
-		playNextChunkTimer.schedule(TIME_PER_CHUNK);
+		playNextChunkTimer.schedule(TIME_PER_CHUNK - chunkPosition);
 		
 		// start loading next chunk
 		int nextChunkTime = position + TIME_PER_CHUNK;
@@ -116,6 +140,18 @@ public class AudioStreamPlayer {
 				setNextPlayer(player);
 			}
 		});
+	}
+	
+	/**
+	 * Gets playtime position of the current audio chunk.
+	 * @return playtime position (milliseconds)
+	 */
+	private int getChunkPosition() {
+		int pos = chunkPosition;
+		if (chunkPositionClock != null) {
+			pos += chunkPositionClock.elapsedMillis();
+		}
+		return pos;
 	}
 	
 	private void playNextChunk() {
@@ -132,8 +168,9 @@ public class AudioStreamPlayer {
 			return;
 		}
 		getCurrentPlayer().stop();
-		elapsedTime += durationTracker.elapsedMillis();
-		logError("pause() - elapsedTime:  " + elapsedTime);
+		chunkPosition += chunkPositionClock.elapsedMillis();
+		chunkPositionClock = null;
+		logError("pause() - elapsedTime:  " + chunkPosition);
 		playNextChunkTimer.cancel();
 	}
 	
@@ -143,12 +180,12 @@ public class AudioStreamPlayer {
 			Log.error(this, "current player is null");
 			return;
 		}
-		logError("resume() - elapsed: " + elapsedTime);
-		logError("scheduled for " + (TIME_PER_CHUNK - elapsedTime));
-		getCurrentPlayer().play(elapsedTime);
-		playNextChunkTimer.schedule(TIME_PER_CHUNK - elapsedTime);
+		logError("resume() - elapsed: " + chunkPosition);
+		logError("scheduled for " + (TIME_PER_CHUNK - chunkPosition));
+		getCurrentPlayer().play(chunkPosition);
+		playNextChunkTimer.schedule(TIME_PER_CHUNK - chunkPosition);
 		// Duration object starts counting MS when instantiated
-		durationTracker = new Duration();
+		chunkPositionClock = new Duration();
 	}
 	
 	public void stop() {
@@ -161,7 +198,8 @@ public class AudioStreamPlayer {
 		getCurrentPlayer().stop();
 		playNextChunkTimer.cancel();
 		position = 0;
-		elapsedTime = 0;
+		chunkPosition = 0;
+		chunkPositionClock = null;
 		// load the first chunk (beginning of audio)
 		stream.requestChunkByTimestamp(0, new DataCallback() {
 			@Override

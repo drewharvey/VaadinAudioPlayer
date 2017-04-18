@@ -282,7 +282,9 @@ public class DemoUI extends UI {
 					ui.access(new Runnable() {
 						@Override
 						public void run() {
-							positionSlider.setValue((double)new_position_millis);
+							// TODO: for proper slider setting, we need to know the position
+							// in millis and total duration of audio
+							//positionSlider.setValue((double)new_position_millis);
 						}
 					});
 				}

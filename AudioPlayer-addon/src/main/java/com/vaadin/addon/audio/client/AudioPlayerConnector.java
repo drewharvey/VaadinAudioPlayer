@@ -1,5 +1,6 @@
 package com.vaadin.addon.audio.client;
 
+import com.google.gwt.user.client.Timer;
 import com.vaadin.addon.audio.client.effects.BalanceEffect;
 import com.vaadin.addon.audio.client.effects.FilterEffect;
 import com.vaadin.addon.audio.client.effects.PitchEffect;
@@ -36,6 +37,8 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 
 	// For now, we're going with a simple singleton
 	private static AudioContext context;
+	
+	private static int REPORT_POSITION_REPEAT_TIME = 500;
 	
 	private AudioStreamPlayer player;
 	private ClientStream stream;
@@ -126,14 +129,14 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 			@Override
 			public void setPlaybackPosition(int position_millis) {
 				Log.message(AudioPlayerConnector.this, "set playback position to " + position_millis);
+				position_millis = (position_millis < 0) ? 0 : position_millis;
 				player.setPosition(position_millis);
-				getServerRPC().reportPlaybackPosition(player.getPosition());
+				getServerRPC().reportPlaybackPosition(position_millis);
 			}
 			
 			@Override
 			public void skipPosition(int delta_millis) {
 				Log.message(AudioPlayerConnector.this, "skip by " + delta_millis);
-				player.setPosition(player.getPosition() + delta_millis);
 				setPlaybackPosition(player.getPosition() + delta_millis);
 			}
 
@@ -188,6 +191,14 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
         
     	stream = new ClientStream(this);
     	player = new AudioStreamPlayer(stream);
+    	
+    	Timer reportPositionTimer = new Timer() {
+			@Override
+			public void run() {
+				getServerRPC().reportPlaybackPosition(player.getPosition());
+			}
+    	};
+    	reportPositionTimer.scheduleRepeating(REPORT_POSITION_REPEAT_TIME);
 	}
 	
 	public String toString() {
