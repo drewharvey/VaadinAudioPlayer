@@ -24,8 +24,8 @@ public class AudioStreamPlayer {
 	
 	private static final int MAX_PLAYERS = 3;	// Maximum number of players
 	//TODO: get values from ChunkDescriptions
-	private static final int TIME_PER_CHUNK = 5000;
-	private static final int LEAD_IN_TIME = 0;
+	private int timePerChunk = 5000;
+	private int chunkOverlapTime = 500; // extra time added to end of each chunk
 	
 	private ClientStream stream;
 	BufferPlayer[] players = new BufferPlayer[MAX_PLAYERS];
@@ -33,12 +33,10 @@ public class AudioStreamPlayer {
 	
 	private List<Effect> effects = new ArrayList<Effect>();
 	
-	private int playerStartPosition = 0;
 	private int position = 0;
 	private int chunkPosition = 0;
 	
 	private Timer playNextChunkTimer;
-	private Timer updatePositionTimer;
 	private Duration chunkPositionClock;
 	
 	public AudioStreamPlayer(ClientStream stream) {
@@ -55,6 +53,11 @@ public class AudioStreamPlayer {
 				BufferPlayer player = new BufferPlayer();
 				player.setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk));
 				setCurrentPlayer(player);
+				// TODO: get chunk overlap time from chunk descriptor
+				//chunkOverlapTime = chunk.getLeadOutDuration();
+				// TODO: shouldn't need to add 1 here
+				timePerChunk = chunk.getEndTimeOffset() - chunk.getStartSampleOffset() + 1 - chunkOverlapTime;
+				logError("timePerChunk: " + timePerChunk + " / chunkLeadTime: " + chunkOverlapTime);
 			}
 		});
 		// setup timer for moving to next chunk after current chunk finishes playing
@@ -62,13 +65,6 @@ public class AudioStreamPlayer {
 			@Override
 			public void run() {
 				playNextChunk();
-			}
-		};
-		//
-		updatePositionTimer = new Timer() {
-			@Override
-			public void run() {
-				 
 			}
 		};
 	}
@@ -94,9 +90,9 @@ public class AudioStreamPlayer {
 				BufferPlayer player = new BufferPlayer();
 				player.setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk));
 				setCurrentPlayer(player);
-				int offset = millis % TIME_PER_CHUNK;
+				int offset = millis % timePerChunk;
 				position = millis - offset;
-				play(offset);
+				play(offset, false);
 			}
 		});
 	}
@@ -110,28 +106,37 @@ public class AudioStreamPlayer {
 	}
 	
 	public void play() {
-		chunkPosition = 0;
-		play(chunkPosition);
+		play(false);
 	}
 	
-	private void play(int offset) {
+	public void play(boolean fadeIn) {
+		chunkPosition = 0;
+		play(chunkPosition, fadeIn);
+	}
+	
+	private void play(int timeOffset, boolean fadeIn) {
 		logError("PLAY");
 		if (getCurrentPlayer() == null) {
 			Log.error(this, "current player is null");
 			return;
 		}
-		chunkPosition = offset;
+		chunkPosition = timeOffset;
 		// start player current chunk
-		getCurrentPlayer().play(chunkPosition);
+		if (fadeIn) {
+			getCurrentPlayer().fadeIn(chunkPosition, chunkOverlapTime);
+		} else {
+			getCurrentPlayer().play(chunkPosition);
+		}
 		
 		// starts counting MS when instantiated, used primarily for pausing
 		chunkPositionClock = new Duration();
 
 		// start timer to play next chunk of audio
-		playNextChunkTimer.schedule(TIME_PER_CHUNK - chunkPosition);
+		playNextChunkTimer.schedule(timePerChunk - chunkPosition);
 		
-		// start loading next chunk
-		int nextChunkTime = position + TIME_PER_CHUNK;
+		// start loading next chunk (add 1 to ask for the next chunk)
+		int nextChunkTime = position + timePerChunk + chunkOverlapTime;
+		logError("nextChunkTime: " + nextChunkTime);
 		stream.requestChunkByTimestamp(nextChunkTime, new DataCallback() {
 			@Override
 			public void onDataReceived(ChunkDescriptor chunk) {
@@ -156,13 +161,14 @@ public class AudioStreamPlayer {
 	
 	private void playNextChunk() {
 		logError("PLAY NEXT CHUNK");
-		position += TIME_PER_CHUNK;
+		position += timePerChunk;
 		// stop the audio if we've reached the end
 		if (getPosition() > getDuration()) {
 			stop();
 		} else {
+			getCurrentPlayer().fadeOut(chunkOverlapTime);
 			moveToNextPlayer();
-			play();
+			play(true);
 		}
 	}
 	
@@ -186,9 +192,9 @@ public class AudioStreamPlayer {
 			return;
 		}
 		logError("resume() - elapsed: " + chunkPosition);
-		logError("scheduled for " + (TIME_PER_CHUNK - chunkPosition));
+		logError("scheduled for " + (timePerChunk - chunkPosition));
 		getCurrentPlayer().play(chunkPosition);
-		playNextChunkTimer.schedule(TIME_PER_CHUNK - chunkPosition);
+		playNextChunkTimer.schedule(timePerChunk - chunkPosition);
 		// Duration object starts counting MS when instantiated
 		chunkPositionClock = new Duration();
 	}

@@ -18,7 +18,7 @@ public class GainNode extends AudioNode {
 	}
 	
 	private static final native void setGain(elemental.html.AudioNode node, double gain) /*-{
-		node.gain = gain;
+		node.gain.value = gain;
 	}-*/;
 	
 	public double getGain() {
@@ -26,6 +26,6 @@ public class GainNode extends AudioNode {
 	}
 	
 	private static final native double getGain(elemental.html.AudioNode node) /*-{
-		return node.gain;
+		return node.gain.value;
 	}-*/;
 }

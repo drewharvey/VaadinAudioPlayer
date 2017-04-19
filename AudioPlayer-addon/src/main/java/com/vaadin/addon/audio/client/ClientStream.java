@@ -104,12 +104,13 @@ public class ClientStream {
 		for(ChunkDescriptor c : chunks) {
 			if(c.getStartTimeOffset() <= position_millis 
 					&& c.getEndTimeOffset() >= position_millis) {
-				Logger.getLogger("ClientStream").log(Level.SEVERE, c.toString());
+				Logger.getLogger("ClientStream").log(Level.SEVERE, "time: " + position_millis + " - " + c.toString());
 				return c;
 			}
 		}
 
 		// TODO: fail gracefully
+		Logger.getLogger("ClientStream").log(Level.SEVERE, "FAILED TO FIND CHUNK FOR " + position_millis + "ms");
 		return chunks.get(0);
 	}
 	

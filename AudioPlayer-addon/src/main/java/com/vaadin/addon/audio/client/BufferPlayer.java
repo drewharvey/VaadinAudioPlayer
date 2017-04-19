@@ -3,7 +3,10 @@ package com.vaadin.addon.audio.client;
 import java.util.ArrayList;
 
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import com.google.gwt.user.client.Timer;
 import com.vaadin.addon.audio.client.effects.BalanceEffect;
 import com.vaadin.addon.audio.client.webaudio.AudioNode;
 import com.vaadin.addon.audio.client.webaudio.Buffer;
@@ -20,6 +23,8 @@ import com.vaadin.addon.audio.shared.util.Log;
  * possible lag as the data buffers are swapped.
  */
 public class BufferPlayer {
+	
+	private static Logger logger = Logger.getLogger("BufferPlayer");
 	
 	private enum State {
 		PLAYING,
@@ -53,7 +58,8 @@ public class BufferPlayer {
 		output = context.createGainNode();
 		
 		// XXX, TODO: rework this
-		source.connect(context.getDestination());
+		source.connect(output);
+		output.connect(context.getDestination());
 	}
 	
 	public void resetBufferPlayer(Buffer buffer) {
@@ -67,7 +73,91 @@ public class BufferPlayer {
 		output = context.createGainNode();
 		
 		// XXX, TODO: rework this
-		source.connect(context.getDestination());
+		source.connect(output);
+		output.connect(context.getDestination());
+	}
+	
+	// TODO: use crossfade curve instead of linear curve to keep volume consistant
+	public void fadeIn(int offsetMillis, int fadeInDuration) {
+		if (fadeInDuration <= 0) {
+			logger.log(Level.SEVERE, "fadeInDuration is 0");
+			play(offsetMillis);
+			return;
+		}
+		final double maxGain = 1;
+		final int changeInterval = 100;
+		// get number of increases based on doing it every 100 ms
+		int numGainChanges = fadeInDuration / changeInterval;
+		if (fadeInDuration % 100 != 0) {
+			numGainChanges++;
+		}
+		double gainPerChange = maxGain / numGainChanges;
+		
+		logger.log(Level.SEVERE, "IN - numGainChanges: " + numGainChanges
+				+ " , gainPerChange: " + gainPerChange);
+		
+		output.setGain(0);
+		play(offsetMillis);
+		fadeInR(numGainChanges, changeInterval, gainPerChange, true);
+	}
+	
+	private void fadeInR(final int numLoops, final int loopInterval, final double gainIncrease, boolean runImmediately) {
+		if (output.getGain() >= 1) {
+			return;
+		}
+		Timer timer = new Timer() {
+			@Override
+			public void run() {
+				logger.log(Level.SEVERE, "Increasing gain " + output.getGain() + " => " + (output.getGain()+gainIncrease));
+				output.setGain(output.getGain() + gainIncrease);
+				fadeInR(numLoops - 1, loopInterval, gainIncrease, false);
+			}
+		};
+		if (runImmediately) {
+			timer.run();
+		} else {
+			timer.schedule(loopInterval);
+		}
+	}
+	
+	public void fadeOut(int fadeOutDuration) {
+		if (fadeOutDuration <= 0) {
+			logger.log(Level.SEVERE, "fadeOutDuration is 0");
+			stop();
+			return;
+		}
+		final double minGain = 0;
+		final int changeInterval = 100;
+		// get number of increases based on doing it every 100 ms
+		int numGainChanges = fadeOutDuration / changeInterval;
+		if (fadeOutDuration % 100 != 0) {
+			numGainChanges++;
+		}
+		double gainPerChange = (output.getGain() - minGain) / numGainChanges;
+		
+		logger.log(Level.SEVERE, "OUT - numGainChanges: " + numGainChanges
+				+ " , gainPerChange: " + gainPerChange);
+
+		fadeOutR(numGainChanges, changeInterval, gainPerChange, true);
+	}
+	
+	private void fadeOutR(final int numLoops, final int loopInterval, final double gainDecrease, boolean runImmediately) {
+		if (output.getGain() <= 0) {
+			return;
+		}
+		Timer timer = new Timer() {
+			@Override
+			public void run() {
+				logger.log(Level.SEVERE, "Decreasing gain " + output.getGain() + " => " + (output.getGain()-gainDecrease));
+				output.setGain(output.getGain() - gainDecrease);
+				fadeOutR(numLoops - 1, loopInterval, gainDecrease, false);
+			}
+		};
+		if (runImmediately) {
+			timer.run();
+		} else {
+			timer.schedule(loopInterval);
+		}
 	}
 	
 	public AudioNode getOutput() {
@@ -126,13 +216,13 @@ public class BufferPlayer {
 
 	private void resetSourceNode(Buffer buffer) {
 		Context context = Context.get();
-		source.disconnect(Context.get().getDestination());
+		source.disconnect(output);
 		source.resetNode();
 		if (buffer != null) {
 			source.setNativeBuffer(buffer.getAudioBuffer());
 		}
 		// XXX, TODO: rework this
-		source.connect(context.getDestination());
+		source.connect(output);
 	}
 	
 	public void setBuffer(Buffer buffer) {
