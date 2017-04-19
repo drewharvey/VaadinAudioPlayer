@@ -156,9 +156,14 @@ public class AudioStreamPlayer {
 	
 	private void playNextChunk() {
 		logError("PLAY NEXT CHUNK");
-		moveToNextPlayer();
 		position += TIME_PER_CHUNK;
-		play();
+		// stop the audio if we've reached the end
+		if (getPosition() > getDuration()) {
+			stop();
+		} else {
+			moveToNextPlayer();
+			play();
+		}
 	}
 	
 	public void pause() {
