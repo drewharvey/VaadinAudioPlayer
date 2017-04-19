@@ -32,6 +32,8 @@ import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
 import com.vaadin.annotations.VaadinServletConfiguration;
+import com.vaadin.data.Property.ValueChangeEvent;
+import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinServlet;
 import com.vaadin.ui.Alignment;
@@ -92,9 +94,14 @@ public class DemoUI extends UI {
 
 			positionSlider = new Slider("Position");
 			positionSlider.setSizeFull();
-			positionSlider.setEnabled(false);
+			positionSlider.setEnabled(true);
 			// TODO: rethink the entire position-as-slider. We should rather have a progress indicator
-
+			positionSlider.addValueChangeListener(e -> {
+				// TODO: this will cause an infinite loop because the slider
+				// gets updated when the player.setPosition is called, and vice versa
+				 // player.setPosition(positionSlider.getValue().intValue());
+				positionSlider.setCaption(player.getPositionString() + " / " + player.getDurationString());
+			});
 			layout.addComponent(positionSlider);
 
 			VerticalLayout innerContainer = new VerticalLayout();

@@ -65,6 +65,7 @@ public class AudioPlayer extends AbstractExtension {
 			@Override
 			public void reportPlaybackPosition(int position_millis) {
 				Log.message(AudioPlayer.this,"received position report: " + position_millis);
+				currentPosition = position_millis;
 				for(StateChangeCallback cb : stateCallbacks) {
 					cb.playbackPositionChanged(position_millis);
 				}
@@ -144,6 +145,7 @@ public class AudioPlayer extends AbstractExtension {
     }
 
     public void setPosition(int millis) {
+    	currentPosition = millis;
     	getClientRPC().setPlaybackPosition(millis);
     	Log.message(AudioPlayer.this,"set playback position: " + millis);
     }
@@ -225,6 +227,52 @@ public class AudioPlayer extends AbstractExtension {
 	protected ChunkDescriptor getChunkDescriptor(int chunkId) {
 		// TODO: return chunk descriptor
 		return null;
+	}
+	
+	public String getPositionString() {
+		// TODO: use standard formatter
+		int hours = (getPosition() / 1000 / 60 / 60);
+		int minutes = (getPosition() / 1000 / 60) % 60;
+		int seconds = (getPosition() / 1000) % 60;
+		
+		String text = "";
+		if(hours > 0) {
+			if(!text.isEmpty()) text += ":";
+			text += hours;
+		}
+		if(minutes >= 0) {
+			if(!text.isEmpty()) text += ":";
+			text += minutes;
+		}
+		if(seconds >= 0) {
+			if(!text.isEmpty()) text += ":";
+			text += seconds;
+		}
+		
+		return text;
+	}
+	
+	public String getDurationString() {
+		// TODO: use standard formatter
+		int hours = (getDuration() / 1000 / 60 / 60);
+		int minutes = (getDuration() / 1000 / 60) % 60;
+		int seconds = (getDuration() / 1000) % 60;
+		
+		String text = "";
+		if(hours > 0) {
+			if(!text.isEmpty()) text += ":";
+			text += hours;
+		}
+		if(minutes >= 0) {
+			if(!text.isEmpty()) text += ":";
+			text += minutes;
+		}
+		if(seconds >= 0) {
+			if(!text.isEmpty()) text += ":";
+			text += seconds;
+		}
+		
+		return text;
 	}
 	
 	//=========================================================================

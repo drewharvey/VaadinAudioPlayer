@@ -78,6 +78,7 @@ public class BufferPlayer {
 	}
 	
 	// TODO: use crossfade curve instead of linear curve to keep volume consistant
+	// TODO: handle fade in/out when paused
 	public void fadeIn(int offsetMillis, int fadeInDuration) {
 		if (fadeInDuration <= 0) {
 			logger.log(Level.SEVERE, "fadeInDuration is 0");
