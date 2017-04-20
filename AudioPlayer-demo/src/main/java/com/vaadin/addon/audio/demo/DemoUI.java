@@ -174,7 +174,7 @@ public class DemoUI extends UI {
 			volumeSlider.setValue(80d);
 			volumeSlider.setWidth("150px");
 			volumeSlider.addValueChangeListener(e -> {
-				final double volume = volumeSlider.getValue();
+				final double volume = volumeSlider.getValue() / 100d;
 				player.setVolume(volume);
 			});
 

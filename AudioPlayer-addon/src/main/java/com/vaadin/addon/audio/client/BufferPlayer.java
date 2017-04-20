@@ -38,9 +38,6 @@ public class BufferPlayer {
 	private GainNode output;
 	private State state = State.STOPPED;
 	
-    private double speed;
-	private double volume;
-	
 	//private boolean dirty;
 	
 	public BufferPlayer() {
@@ -81,11 +78,10 @@ public class BufferPlayer {
 	// TODO: handle fade in/out when paused
 	public void fadeIn(int offsetMillis, int fadeInDuration) {
 		if (fadeInDuration <= 0) {
-			logger.log(Level.SEVERE, "fadeInDuration is 0");
 			play(offsetMillis);
 			return;
 		}
-		final double maxGain = 1;
+		final double maxGain = output.getGain();
 		final int changeInterval = 100;
 		// get number of increases based on doing it every 100 ms
 		int numGainChanges = fadeInDuration / changeInterval;
@@ -99,11 +95,12 @@ public class BufferPlayer {
 		
 		output.setGain(0);
 		play(offsetMillis);
-		fadeInR(numGainChanges, changeInterval, gainPerChange, true);
+		fadeInR(numGainChanges, changeInterval, gainPerChange, maxGain, true);
 	}
 	
-	private void fadeInR(final int numLoops, final int loopInterval, final double gainIncrease, boolean runImmediately) {
-		if (output.getGain() >= 1) {
+	private void fadeInR(final int numLoops, final int loopInterval, final double gainIncrease, final double maxGain, boolean runImmediately) {
+		if (output.getGain() >= maxGain) {
+			output.setGain(maxGain);
 			return;
 		}
 		Timer timer = new Timer() {
@@ -111,7 +108,7 @@ public class BufferPlayer {
 			public void run() {
 				logger.log(Level.SEVERE, "Increasing gain " + output.getGain() + " => " + (output.getGain()+gainIncrease));
 				output.setGain(output.getGain() + gainIncrease);
-				fadeInR(numLoops - 1, loopInterval, gainIncrease, false);
+				fadeInR(numLoops - 1, loopInterval, gainIncrease, maxGain, false);
 			}
 		};
 		if (runImmediately) {
@@ -123,7 +120,6 @@ public class BufferPlayer {
 	
 	public void fadeOut(int fadeOutDuration) {
 		if (fadeOutDuration <= 0) {
-			logger.log(Level.SEVERE, "fadeOutDuration is 0");
 			stop();
 			return;
 		}
@@ -131,7 +127,7 @@ public class BufferPlayer {
 		final int changeInterval = 100;
 		// get number of increases based on doing it every 100 ms
 		int numGainChanges = fadeOutDuration / changeInterval;
-		if (fadeOutDuration % 100 != 0) {
+		if (fadeOutDuration % changeInterval != 0) {
 			numGainChanges++;
 		}
 		double gainPerChange = (output.getGain() - minGain) / numGainChanges;
@@ -144,6 +140,7 @@ public class BufferPlayer {
 	
 	private void fadeOutR(final int numLoops, final int loopInterval, final double gainDecrease, boolean runImmediately) {
 		if (output.getGain() <= 0) {
+			output.setGain(0);
 			return;
 		}
 		Timer timer = new Timer() {
@@ -237,23 +234,23 @@ public class BufferPlayer {
 	
 	public void setVolume(double volume) {
 		Log.message(this, "set volume to " + volume);
-		this.volume = volume;
+		output.setGain(volume);
 	}
 	
 	public double getVolume() {
-		return volume;
+		return output.getGain();
 	}
 	
 	public void setPlaybackSpeed(double speed_scale) {
 		Log.message(this, "set speed scale " + speed_scale);
-		speed = speed_scale;
+		source.setPlaybackRate(speed_scale);
 		
 		// TODO: keep normal pitch if speed is changed, normally the pitch also changes
 		// when the speed is changed
 	}
 	
 	public double getPlaybackSpeed() {
-		return speed;
+		return source.getPlaybackRate();
 	}
 	
 	public void setBalance(double balance) {

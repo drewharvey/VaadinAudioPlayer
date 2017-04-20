@@ -27,18 +27,20 @@ public class AudioStreamPlayer {
 	private int timePerChunk = 5000;
 	private int chunkOverlapTime = 500; // extra time added to end of each chunk
 	
-	private ClientStream stream;
-	BufferPlayer[] players = new BufferPlayer[MAX_PLAYERS];
 	private int currentPlayer = 0;
-	
-	private List<Effect> effects = new ArrayList<Effect>();
-	
 	private int position = 0;
 	private int chunkPosition = 0;
 	
+	private double volume = 1;
+	private double playbackSpeed = 1;
+	
+	private ClientStream stream;
+	BufferPlayer[] players = new BufferPlayer[MAX_PLAYERS];
 	private Timer playNextChunkTimer;
 	private Duration chunkPositionClock;
 	
+	private List<Effect> effects = new ArrayList<Effect>();
+
 	public AudioStreamPlayer(ClientStream stream) {
 		logError("create");
 		
@@ -52,6 +54,8 @@ public class AudioStreamPlayer {
 			public void onDataReceived(ChunkDescriptor chunk) {
 				BufferPlayer player = new BufferPlayer();
 				player.setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk));
+				player.setVolume(volume);
+				player.setPlaybackSpeed(playbackSpeed);
 				setCurrentPlayer(player);
 				// TODO: get chunk overlap time from chunk descriptor
 				//chunkOverlapTime = chunk.getLeadOutDuration();
@@ -89,6 +93,8 @@ public class AudioStreamPlayer {
 			public void onDataReceived(ChunkDescriptor chunk) {
 				BufferPlayer player = new BufferPlayer();
 				player.setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk));
+				player.setVolume(volume);
+				player.setPlaybackSpeed(playbackSpeed);
 				setCurrentPlayer(player);
 				int offset = millis % timePerChunk;
 				position = millis - offset;
@@ -134,7 +140,7 @@ public class AudioStreamPlayer {
 		// start timer to play next chunk of audio
 		playNextChunkTimer.schedule(timePerChunk - chunkPosition);
 		
-		// start loading next chunk (add 1 to ask for the next chunk)
+		// start loading next chunk
 		int nextChunkTime = position + timePerChunk + chunkOverlapTime;
 		logError("nextChunkTime: " + nextChunkTime);
 		stream.requestChunkByTimestamp(nextChunkTime, new DataCallback() {
@@ -166,6 +172,10 @@ public class AudioStreamPlayer {
 		if (getPosition() > getDuration()) {
 			stop();
 		} else {
+			// copy persisting settings to next audio node
+			getNextPlayer().setVolume(volume);
+			getNextPlayer().setPlaybackSpeed(playbackSpeed);
+			// fade out current and fade in next node
 			getCurrentPlayer().fadeOut(chunkOverlapTime);
 			moveToNextPlayer();
 			play(true);
@@ -254,6 +264,7 @@ public class AudioStreamPlayer {
 	}
 	
 	public void setVolume(double volume) {
+		this.volume = volume;
 		if(getCurrentPlayer() == null) {
 			Log.error(this, "current player is null");
 			return;
@@ -262,14 +273,11 @@ public class AudioStreamPlayer {
 	}
 	
 	public double getVolume() {
-		if(getCurrentPlayer() == null) {
-			logError("current player is null");
-			return 0;
-		}
-		return getCurrentPlayer().getVolume();
+		return volume;
 	}
 	
 	public void setPlaybackSpeed(double playbackSpeed) {
+		this.playbackSpeed = playbackSpeed;
 		if(getCurrentPlayer() == null) {
 			logError("current player is null");
 			return;
@@ -278,11 +286,7 @@ public class AudioStreamPlayer {
 	}
 	
 	public double getPlaybackSpeed() {
-		if(getCurrentPlayer() == null) {
-			logError("current player is null");
-			return 0;
-		}
-		return getCurrentPlayer().getPlaybackSpeed();
+		return playbackSpeed;
 	}
 	
 	public void setBalance(double balance) {
