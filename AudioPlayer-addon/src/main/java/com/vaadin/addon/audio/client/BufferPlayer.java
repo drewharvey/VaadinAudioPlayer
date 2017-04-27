@@ -76,7 +76,7 @@ public class BufferPlayer {
 	
 	// TODO: use crossfade curve instead of linear curve to keep volume consistant
 	// TODO: handle fade in/out when paused
-	public void fadeIn(int offsetMillis, int fadeInDuration) {
+	public void fadeIn(int offsetMillis, int fadeInDuration) { 
 		if (fadeInDuration <= 0) {
 			play(offsetMillis);
 			return;
@@ -90,8 +90,8 @@ public class BufferPlayer {
 		}
 		double gainPerChange = maxGain / numGainChanges;
 		
-		logger.log(Level.SEVERE, "IN - numGainChanges: " + numGainChanges
-				+ " , gainPerChange: " + gainPerChange);
+//		logger.log(Level.SEVERE, "IN - numGainChanges: " + numGainChanges
+//				+ " , gainPerChange: " + gainPerChange);
 		
 		output.setGain(0);
 		play(offsetMillis);
@@ -106,7 +106,7 @@ public class BufferPlayer {
 		Timer timer = new Timer() {
 			@Override
 			public void run() {
-				logger.log(Level.SEVERE, "Increasing gain " + output.getGain() + " => " + (output.getGain()+gainIncrease));
+//				logger.log(Level.SEVERE, "Increasing gain " + output.getGain() + " => " + (output.getGain()+gainIncrease));
 				output.setGain(output.getGain() + gainIncrease);
 				fadeInR(numLoops - 1, loopInterval, gainIncrease, maxGain, false);
 			}
@@ -132,8 +132,8 @@ public class BufferPlayer {
 		}
 		double gainPerChange = (output.getGain() - minGain) / numGainChanges;
 		
-		logger.log(Level.SEVERE, "OUT - numGainChanges: " + numGainChanges
-				+ " , gainPerChange: " + gainPerChange);
+//		logger.log(Level.SEVERE, "OUT - numGainChanges: " + numGainChanges
+//				+ " , gainPerChange: " + gainPerChange);
 
 		fadeOutR(numGainChanges, changeInterval, gainPerChange, true);
 	}
@@ -146,7 +146,7 @@ public class BufferPlayer {
 		Timer timer = new Timer() {
 			@Override
 			public void run() {
-				logger.log(Level.SEVERE, "Decreasing gain " + output.getGain() + " => " + (output.getGain()-gainDecrease));
+//				logger.log(Level.SEVERE, "Decreasing gain " + output.getGain() + " => " + (output.getGain()-gainDecrease));
 				output.setGain(output.getGain() - gainDecrease);
 				fadeOutR(numLoops - 1, loopInterval, gainDecrease, false);
 			}

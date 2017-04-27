@@ -22,6 +22,8 @@ public class AudioStreamPlayer {
 	// TODO: improve log messages
 	//
 	
+	Duration overheadTime = null;
+	
 	private static final int MAX_PLAYERS = 3;	// Maximum number of players
 	//TODO: get values from ChunkDescriptions
 	private int timePerChunk = 5000;
@@ -68,6 +70,7 @@ public class AudioStreamPlayer {
 		playNextChunkTimer = new Timer() {
 			@Override
 			public void run() {
+				overheadTime = new Duration();
 				playNextChunk();
 			}
 		};
@@ -116,8 +119,7 @@ public class AudioStreamPlayer {
 	}
 	
 	public void play(boolean fadeIn) {
-		chunkPosition = 0;
-		play(chunkPosition, fadeIn);
+		play(0, fadeIn);
 	}
 	
 	private void play(int timeOffset, boolean fadeIn) {
@@ -129,8 +131,10 @@ public class AudioStreamPlayer {
 		chunkPosition = timeOffset;
 		// start player current chunk
 		if (fadeIn) {
+			if (overheadTime != null) logError("play(): " + overheadTime.elapsedMillis());
 			getCurrentPlayer().fadeIn(chunkPosition, chunkOverlapTime);
 		} else {
+			if (overheadTime != null) logError("play(): " + overheadTime.elapsedMillis());
 			getCurrentPlayer().play(chunkPosition);
 		}
 		
@@ -138,7 +142,18 @@ public class AudioStreamPlayer {
 		chunkPositionClock = new Duration();
 
 		// start timer to play next chunk of audio
-		playNextChunkTimer.schedule(timePerChunk - chunkPosition);
+		//int overhead = (overheadTime != null) ? overheadTime.elapsedMillis() : 0;
+		
+		// TODO: first chunk should work the same way as others
+		// for some reason the first chunk is fading out 500ms early (or the second chunk is 500ms late)
+		
+		if (position < timePerChunk) {
+			logError("Scheduling for " + (timePerChunk - chunkPosition - chunkOverlapTime));
+			playNextChunkTimer.schedule(timePerChunk - chunkPosition - chunkOverlapTime);
+		} else {
+			logError("Scheduling for " + (timePerChunk - chunkPosition));
+			playNextChunkTimer.schedule(timePerChunk - chunkPosition);
+		}
 		
 		// start loading next chunk
 		int nextChunkTime = position + timePerChunk + chunkOverlapTime;
@@ -147,7 +162,7 @@ public class AudioStreamPlayer {
 			@Override
 			public void onDataReceived(ChunkDescriptor chunk) {
 				BufferPlayer player = new BufferPlayer();
-				player.setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk));
+				player.setBuffer(stream.getBufferForChunk(chunk));
 				setNextPlayer(player);
 			}
 		});
@@ -167,9 +182,10 @@ public class AudioStreamPlayer {
 	
 	private void playNextChunk() {
 		logError("PLAY NEXT CHUNK");
+		if (overheadTime != null) logError("playNextChunk(): " + overheadTime.elapsedMillis());
 		position += timePerChunk;
 		// stop the audio if we've reached the end
-		if (getPosition() > getDuration()) {
+		if (getPosition() >= getDuration()) {
 			stop();
 		} else {
 			// copy persisting settings to next audio node
@@ -178,6 +194,7 @@ public class AudioStreamPlayer {
 			// fade out current and fade in next node
 			getCurrentPlayer().fadeOut(chunkOverlapTime);
 			moveToNextPlayer();
+			if (overheadTime != null) logError("playNextChunk() call play(true): " + overheadTime.elapsedMillis());
 			play(true);
 		}
 	}
