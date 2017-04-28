@@ -82,6 +82,10 @@ public class Context {
 		return new GainNode(ctx);
 	}
 	
+	public BiquadFilterNode createBiquadFilter() {
+		return new BiquadFilterNode(ctx);
+	}
+	
 	// TODO: add more node types as you need them
 	
 }

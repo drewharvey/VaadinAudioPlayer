@@ -1,7 +1,7 @@
 package com.vaadin.addon.audio.client;
 
 import elemental.html.AudioContext;
-import elemental.html.AudioNode;
+import com.vaadin.addon.audio.client.webaudio.AudioNode;
 
 /**
  * Base class for a pluggable effect

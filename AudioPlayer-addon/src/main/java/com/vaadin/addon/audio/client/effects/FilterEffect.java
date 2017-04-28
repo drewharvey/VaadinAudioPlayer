@@ -3,19 +3,16 @@ package com.vaadin.addon.audio.client.effects;
 import java.util.List;
 
 import com.vaadin.addon.audio.client.Effect;
+import com.vaadin.addon.audio.client.webaudio.BiquadFilterNode;
+import com.vaadin.addon.audio.client.webaudio.Context;
 import com.vaadin.addon.audio.shared.SharedEffectProperty;
 import com.vaadin.addon.audio.shared.SharedEffectProperty.PropertyName;
 import com.vaadin.addon.audio.shared.util.Log;
 
 import elemental.html.AudioContext;
-import elemental.html.BiquadFilterNode;
+
 
 public class FilterEffect extends Effect {
-	
-	public enum Type {
-		LOWPASS,
-		HIGHPASS
-	}
 	
 	public FilterEffect(String id) {
 		
@@ -24,7 +21,14 @@ public class FilterEffect extends Effect {
 	public FilterEffect(List<SharedEffectProperty> props) {
 		for (SharedEffectProperty prop : props) {
 			if (prop.getProperty() == PropertyName.FilterType) {
-				
+				// make sure we have a value Type
+				String type = prop.getValue();
+				for (BiquadFilterNode.Type t : BiquadFilterNode.Type.values()) {
+					if (t.name().equalsIgnoreCase(type)) {
+						setType(t);
+						break;
+					}
+				}
 			} else if (prop.getProperty() == PropertyName.Frequency) {
 				setFrequency(Float.parseFloat(prop.getValue()));
 			} else if (prop.getProperty() == PropertyName.Gain) {
@@ -38,67 +42,45 @@ public class FilterEffect extends Effect {
 	@Override
 	public void init(AudioContext context) {
 		Log.message(this, "Creating BiquadFilterNode");
-		setAudioNode(context.createBiquadFilter());
+		// TODO: provide context via param?
+		setAudioNode(Context.get().createBiquadFilter());
 	}
 	
-	public float getQ() {
-		return ((BiquadFilterNode) getAudioNode()).getQ().getValue();
+	@Override
+	public BiquadFilterNode getAudioNode() {
+		return ((BiquadFilterNode) getAudioNode());
 	}
 	
-	public void setQ(float q) {
-		((BiquadFilterNode) getAudioNode()).getQ().setValue(q);
+	public double getQ() {
+		return getAudioNode().getQ();
 	}
 	
-	public float getFrequency() {
-		return ((BiquadFilterNode) getAudioNode()).getFrequency().getValue();
+	public void setQ(double q) {
+		getAudioNode().setQ(q);
 	}
 	
-	public void setFrequency(float frequency) {
-		((BiquadFilterNode) getAudioNode()).getFrequency().setValue(frequency);
+	public double getFrequency() {
+		return getAudioNode().getFrequency();
 	}
 	
-	public float getGain() {
-		return ((BiquadFilterNode) getAudioNode()).getGain().getValue();
+	public void setFrequency(double frequency) {
+		getAudioNode().setFrequency(frequency);
 	}
 	
-	public void setGain(float gain) {
-		((BiquadFilterNode) getAudioNode()).getGain().setValue(gain);
+	public double getGain() {
+		return getAudioNode().getGain();
 	}
 	
-	public Type getType() {
-		 return typeIntToEnum(((BiquadFilterNode) getAudioNode()).getType());
+	public void setGain(double gain) {
+		getAudioNode().setGain(gain);
 	}
 	
-	public void setType(Type type) {
-		((BiquadFilterNode) getAudioNode()).setType(typeEnumToInt(type));
+	public BiquadFilterNode.Type getType() {
+		 return getAudioNode().getType();
 	}
 	
-	public void setType(String type) {
-		type = type.toUpperCase();
-		Type typeEnum = Type.valueOf(type);
-		if (typeEnum != null) {
-			setType(typeEnum);
-		}
-	}
-	
-	private int typeEnumToInt(Type type) {
-		if (type == Type.HIGHPASS) {
-			return BiquadFilterNode.HIGHPASS;
-		}
-		if (type == Type.LOWPASS) {
-			return BiquadFilterNode.LOWPASS;
-		}
-		return 0;
-	}
-	
-	private Type typeIntToEnum(int type) {
-		if (type == BiquadFilterNode.HIGHPASS) {
-			return Type.HIGHPASS;
-		}
-		if (type == BiquadFilterNode.LOWPASS) {
-			return Type.LOWPASS;
-		}
-		return null;
+	public void setType(BiquadFilterNode.Type type) {
+		getAudioNode().setType(type);
 	}
 	
 	public String toString() {
