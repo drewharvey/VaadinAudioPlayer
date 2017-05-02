@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 import com.google.gwt.user.client.Timer;
 import com.vaadin.addon.audio.client.effects.BalanceEffect;
 import com.vaadin.addon.audio.client.webaudio.AudioNode;
+import com.vaadin.addon.audio.client.webaudio.BiquadFilterNode;
 import com.vaadin.addon.audio.client.webaudio.Buffer;
 import com.vaadin.addon.audio.client.webaudio.BufferSourceNode;
 import com.vaadin.addon.audio.client.webaudio.Context;
@@ -31,14 +32,14 @@ public class BufferPlayer {
 		STOPPED
 	}
 
-	//private List<Effect> effects;
+	private List<Effect> effects = new ArrayList<Effect>();
 	//private BalanceEffect balanceEffect;
 	
 	private BufferSourceNode source;
 	private GainNode output;
 	private State state = State.STOPPED;
 	
-	//private boolean dirty;
+	private boolean dirty = true;
 	
 	public BufferPlayer() {
 		this(null);
@@ -52,13 +53,10 @@ public class BufferPlayer {
 		if(buffer != null) {
 			source.setNativeBuffer(buffer.getAudioBuffer());
 		}
-		output = context.createGainNode();
-		
-		// XXX, TODO: rework this
-		source.connect(output);
-		output.connect(context.getDestination());
+		output = ((GainNode) getOutput());
 	}
 	
+	// TODO: unused, remove?
 	public void resetBufferPlayer(Buffer buffer) {
 		Log.message(this, "reset");
 		
@@ -74,114 +72,37 @@ public class BufferPlayer {
 		output.connect(context.getDestination());
 	}
 	
-	// TODO: use crossfade curve instead of linear curve to keep volume consistant
-	// TODO: handle fade in/out when paused
-	public void fadeIn(int offsetMillis, int fadeInDuration) { 
-		if (fadeInDuration <= 0) {
-			play(offsetMillis);
-			return;
-		}
-		final double maxGain = output.getGain();
-		final int changeInterval = 100;
-		// get number of increases based on doing it every 100 ms
-		int numGainChanges = fadeInDuration / changeInterval;
-		if (fadeInDuration % 100 != 0) {
-			numGainChanges++;
-		}
-		double gainPerChange = maxGain / numGainChanges;
-		
-//		logger.log(Level.SEVERE, "IN - numGainChanges: " + numGainChanges
-//				+ " , gainPerChange: " + gainPerChange);
-		
-		output.setGain(0);
-		play(offsetMillis);
-		fadeInR(numGainChanges, changeInterval, gainPerChange, maxGain, true);
-	}
-	
-	private void fadeInR(final int numLoops, final int loopInterval, final double gainIncrease, final double maxGain, boolean runImmediately) {
-		if (output.getGain() >= maxGain) {
-			output.setGain(maxGain);
-			return;
-		}
-		Timer timer = new Timer() {
-			@Override
-			public void run() {
-//				logger.log(Level.SEVERE, "Increasing gain " + output.getGain() + " => " + (output.getGain()+gainIncrease));
-				output.setGain(output.getGain() + gainIncrease);
-				fadeInR(numLoops - 1, loopInterval, gainIncrease, maxGain, false);
-			}
-		};
-		if (runImmediately) {
-			timer.run();
-		} else {
-			timer.schedule(loopInterval);
-		}
-	}
-	
-	public void fadeOut(int fadeOutDuration) {
-		if (fadeOutDuration <= 0) {
-			stop();
-			return;
-		}
-		final double minGain = 0;
-		final int changeInterval = 100;
-		// get number of increases based on doing it every 100 ms
-		int numGainChanges = fadeOutDuration / changeInterval;
-		if (fadeOutDuration % changeInterval != 0) {
-			numGainChanges++;
-		}
-		double gainPerChange = (output.getGain() - minGain) / numGainChanges;
-		
-//		logger.log(Level.SEVERE, "OUT - numGainChanges: " + numGainChanges
-//				+ " , gainPerChange: " + gainPerChange);
-
-		fadeOutR(numGainChanges, changeInterval, gainPerChange, true);
-	}
-	
-	private void fadeOutR(final int numLoops, final int loopInterval, final double gainDecrease, boolean runImmediately) {
-		if (output.getGain() <= 0) {
-			output.setGain(0);
-			return;
-		}
-		Timer timer = new Timer() {
-			@Override
-			public void run() {
-//				logger.log(Level.SEVERE, "Decreasing gain " + output.getGain() + " => " + (output.getGain()-gainDecrease));
-				output.setGain(output.getGain() - gainDecrease);
-				fadeOutR(numLoops - 1, loopInterval, gainDecrease, false);
-			}
-		};
-		if (runImmediately) {
-			timer.run();
-		} else {
-			timer.schedule(loopInterval);
-		}
-	}
-	
 	public AudioNode getOutput() {
-//		if(dirty) {
-//			Log.message(this, "marked as dirty, reconfigure output");
-//			// TODO: build audio processing chain
-//			AudioNode current = source;
-//			AudioNode prev = null;
-//			for(Effect e : effects) {
-//				
-//				// TODO: uh.. is this the right order?
-//				
-//				prev = current;
-//				current = e.getAudioNode();
-//				prev.connect(current, 0, 0);
-//			}
-//			// connect predefined balance node
-//			current.connect(balanceEffect.getAudioNode(), 0, 0);
-//			current = balanceEffect.getAudioNode();
-//			// connect predefined gain node
-//			current.connect(output, 0, 0);
-//			// do we need to connect to the context destination here or somewhere else?
-//			output.connect(AudioPlayerConnector.getAudioContext().getDestination(), 0, 0);
-//			dirty = false;
-//		}
+		Context ctx = Context.get();
+		// first run we need to create the output node
+		if (output == null) {
+			output = ctx.createGainNode();
+			output.connect(ctx.getDestination());
+			dirty = true;
+		}
+		// if anything has changed, reconstruct the entire chain of audio nodes and effects
+		if (dirty) {
+			Log.message(this, "marked as dirty, reconfigure output");
+			buildAudioNodeChain();
+			dirty = false;
+		}
 		return output;
+	}
+	
+	private void buildAudioNodeChain() {
+		AudioNode current = source;
+		AudioNode prev = null;
+//		for(Effect e : effects) {
+//			prev = current;
+//			current = e.getAudioNode();
+//			prev.connect(current);
+//		}
+		// connect predefined balance node
+//		current.connect(balanceEffect.getAudioNode(), 0, 0);
+//		current = balanceEffect.getAudioNode();
+		
+		// finally connect to last node
+		current.connect(output);
 	}
 
 	public boolean isPlaying() {
@@ -211,6 +132,90 @@ public class BufferPlayer {
 		resetSourceNode(buffer);
 		state = State.STOPPED;
 	}
+	
+	// TODO: use crossfade curve instead of linear curve to keep volume consistant
+		// TODO: handle fade in/out when paused
+		public void fadeIn(int offsetMillis, int fadeInDuration) { 
+			if (fadeInDuration <= 0) {
+				play(offsetMillis);
+				return;
+			}
+			final double maxGain = output.getGain();
+			final int changeInterval = 100;
+			// get number of increases based on doing it every 100 ms
+			int numGainChanges = fadeInDuration / changeInterval;
+			if (fadeInDuration % 100 != 0) {
+				numGainChanges++;
+			}
+			double gainPerChange = maxGain / numGainChanges;
+			
+//			logger.log(Level.SEVERE, "IN - numGainChanges: " + numGainChanges
+//					+ " , gainPerChange: " + gainPerChange);
+			
+			output.setGain(0);
+			play(offsetMillis);
+			fadeInR(numGainChanges, changeInterval, gainPerChange, maxGain, true);
+		}
+		
+		private void fadeInR(final int numLoops, final int loopInterval, final double gainIncrease, final double maxGain, boolean runImmediately) {
+			if (output.getGain() >= maxGain) {
+				output.setGain(maxGain);
+				return;
+			}
+			Timer timer = new Timer() {
+				@Override
+				public void run() {
+//					logger.log(Level.SEVERE, "Increasing gain " + output.getGain() + " => " + (output.getGain()+gainIncrease));
+					output.setGain(output.getGain() + gainIncrease);
+					fadeInR(numLoops - 1, loopInterval, gainIncrease, maxGain, false);
+				}
+			};
+			if (runImmediately) {
+				timer.run();
+			} else {
+				timer.schedule(loopInterval);
+			}
+		}
+		
+		public void fadeOut(int fadeOutDuration) {
+			if (fadeOutDuration <= 0) {
+				stop();
+				return;
+			}
+			final double minGain = 0;
+			final int changeInterval = 100;
+			// get number of increases based on doing it every 100 ms
+			int numGainChanges = fadeOutDuration / changeInterval;
+			if (fadeOutDuration % changeInterval != 0) {
+				numGainChanges++;
+			}
+			double gainPerChange = (output.getGain() - minGain) / numGainChanges;
+			
+//			logger.log(Level.SEVERE, "OUT - numGainChanges: " + numGainChanges
+//					+ " , gainPerChange: " + gainPerChange);
+
+			fadeOutR(numGainChanges, changeInterval, gainPerChange, true);
+		}
+		
+		private void fadeOutR(final int numLoops, final int loopInterval, final double gainDecrease, boolean runImmediately) {
+			if (output.getGain() <= 0) {
+				output.setGain(0);
+				return;
+			}
+			Timer timer = new Timer() {
+				@Override
+				public void run() {
+//					logger.log(Level.SEVERE, "Decreasing gain " + output.getGain() + " => " + (output.getGain()-gainDecrease));
+					output.setGain(output.getGain() - gainDecrease);
+					fadeOutR(numLoops - 1, loopInterval, gainDecrease, false);
+				}
+			};
+			if (runImmediately) {
+				timer.run();
+			} else {
+				timer.schedule(loopInterval);
+			}
+		}
 
 	private void resetSourceNode(Buffer buffer) {
 		Context context = Context.get();
@@ -261,10 +266,7 @@ public class BufferPlayer {
 		//return balanceEffect.getBalance();
 		return 0;
 	}
-	
-	/*
-	 // TODO: get the following back into action 
-	  * 
+
 	public void setEffects(List<Effect> effects) {
 		// TODO: only replace/remove effects based on if there are matching IDs
 		this.effects.clear();
@@ -288,7 +290,6 @@ public class BufferPlayer {
 		effects.remove(effect);
 		dirty = true;
 	}
-	*/
 	
 	public String toString() {
 		return "BufferPlayer";

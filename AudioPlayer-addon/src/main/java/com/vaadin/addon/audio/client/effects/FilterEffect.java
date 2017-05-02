@@ -14,11 +14,18 @@ import elemental.html.AudioContext;
 
 public class FilterEffect extends Effect {
 	
-	public FilterEffect(String id) {
-		
+
+	@Override
+	public void init(AudioContext context) {
+		Log.message(this, "Creating BiquadFilterNode");
+		// TODO: provide context via param?
+		setAudioNode(Context.get().createBiquadFilter());
 	}
 	
-	public FilterEffect(List<SharedEffectProperty> props) {
+	public void setProperties(List<SharedEffectProperty> props) {
+		if (getAudioNode() == null) {
+			return;
+		}
 		for (SharedEffectProperty prop : props) {
 			if (prop.getProperty() == PropertyName.FilterType) {
 				// make sure we have a value Type
@@ -30,57 +37,45 @@ public class FilterEffect extends Effect {
 					}
 				}
 			} else if (prop.getProperty() == PropertyName.Frequency) {
-				setFrequency(Float.parseFloat(prop.getValue()));
+				setFrequency(Double.parseDouble(prop.getValue()));
 			} else if (prop.getProperty() == PropertyName.Gain) {
-				setGain(Float.parseFloat(prop.getValue()));
+				setGain(Double.parseDouble(prop.getValue()));
 			} else if (prop.getProperty() == PropertyName.Q) {
-				setQ(Float.parseFloat(prop.getValue()));
+				setQ(Double.parseDouble(prop.getValue()));
 			}
 		}
 	}
-
-	@Override
-	public void init(AudioContext context) {
-		Log.message(this, "Creating BiquadFilterNode");
-		// TODO: provide context via param?
-		setAudioNode(Context.get().createBiquadFilter());
-	}
-	
-	@Override
-	public BiquadFilterNode getAudioNode() {
-		return ((BiquadFilterNode) getAudioNode());
-	}
 	
 	public double getQ() {
-		return getAudioNode().getQ();
+		return ((BiquadFilterNode) getAudioNode()).getQ();
 	}
 	
 	public void setQ(double q) {
-		getAudioNode().setQ(q);
+		((BiquadFilterNode) getAudioNode()).setQ(q);
 	}
 	
 	public double getFrequency() {
-		return getAudioNode().getFrequency();
+		return ((BiquadFilterNode) getAudioNode()).getFrequency();
 	}
 	
 	public void setFrequency(double frequency) {
-		getAudioNode().setFrequency(frequency);
+		((BiquadFilterNode) getAudioNode()).setFrequency(frequency);
 	}
 	
 	public double getGain() {
-		return getAudioNode().getGain();
+		return ((BiquadFilterNode) getAudioNode()).getGain();
 	}
 	
 	public void setGain(double gain) {
-		getAudioNode().setGain(gain);
+		((BiquadFilterNode) getAudioNode()).setGain(gain);
 	}
 	
 	public BiquadFilterNode.Type getType() {
-		 return getAudioNode().getType();
+		 return ((BiquadFilterNode) getAudioNode()).getType();
 	}
 	
 	public void setType(BiquadFilterNode.Type type) {
-		getAudioNode().setType(type);
+		((BiquadFilterNode) getAudioNode()).setType(type);
 	}
 	
 	public String toString() {

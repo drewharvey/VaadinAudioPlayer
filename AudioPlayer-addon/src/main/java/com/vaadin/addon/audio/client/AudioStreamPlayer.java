@@ -35,6 +35,7 @@ public class AudioStreamPlayer {
 	
 	private double volume = 1;
 	private double playbackSpeed = 1;
+	private double balance = 0;
 	
 	private ClientStream stream;
 	BufferPlayer[] players = new BufferPlayer[MAX_PLAYERS];
@@ -191,6 +192,10 @@ public class AudioStreamPlayer {
 			// copy persisting settings to next audio node
 			getNextPlayer().setVolume(volume);
 			getNextPlayer().setPlaybackSpeed(playbackSpeed);
+			getNextPlayer().setEffects(getEffects());
+			// TODO: should players auto build chain when changed?
+			// force player to rebuild audio node chain
+			getNextPlayer().getOutput();
 			// fade out current and fade in next node
 			getCurrentPlayer().fadeOut(chunkOverlapTime);
 			moveToNextPlayer();
@@ -286,7 +291,9 @@ public class AudioStreamPlayer {
 			Log.error(this, "current player is null");
 			return;
 		}
-		getCurrentPlayer().setVolume(volume);
+		if (getCurrentPlayer() != null) {
+			getCurrentPlayer().setVolume(volume);
+		}
 	}
 	
 	public double getVolume() {
@@ -299,7 +306,9 @@ public class AudioStreamPlayer {
 			logError("current player is null");
 			return;
 		}
-		getCurrentPlayer().setPlaybackSpeed(playbackSpeed);
+		if (getCurrentPlayer() != null) {
+			getCurrentPlayer().setPlaybackSpeed(playbackSpeed);
+		}
 	}
 	
 	public double getPlaybackSpeed() {
@@ -307,26 +316,29 @@ public class AudioStreamPlayer {
 	}
 	
 	public void setBalance(double balance) {
+		this.balance = balance;
 		if(getCurrentPlayer() == null) {
 			logError("current player is null");
 			return;
 		}
-		getCurrentPlayer().setBalance(balance);
+		if (getCurrentPlayer() != null) {
+			getCurrentPlayer().setBalance(balance);
+		}
 	}
 	
 	public double getBalance() {
-		if(getCurrentPlayer() == null) {
-			logError("current player is null");
-			return 0;
-		}
-		return getCurrentPlayer().getBalance();
+		return balance;
 	}
 	
 	public void setEffects(List<Effect> effects) {
 		logError("AudioStreamPlayer adding effects");
 		this.effects.clear();
-		this.effects.addAll(effects);
-		//player.setEffects(effects);
+		if (effects != null) {
+			this.effects.addAll(effects);
+		}
+		if (getCurrentPlayer() != null) {
+			getCurrentPlayer().setEffects(effects);
+		}
 		
 	}
 	

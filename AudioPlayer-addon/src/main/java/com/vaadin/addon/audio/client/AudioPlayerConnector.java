@@ -1,5 +1,8 @@
 package com.vaadin.addon.audio.client;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.google.gwt.user.client.Timer;
 import com.vaadin.addon.audio.client.effects.BalanceEffect;
 import com.vaadin.addon.audio.client.effects.FilterEffect;
@@ -12,6 +15,7 @@ import com.vaadin.addon.audio.shared.AudioPlayerServerRpc;
 import com.vaadin.addon.audio.shared.AudioPlayerState;
 import com.vaadin.addon.audio.shared.SharedEffect;
 import com.vaadin.addon.audio.shared.SharedEffect.EffectName;
+import com.vaadin.addon.audio.shared.SharedEffectProperty;
 import com.vaadin.addon.audio.shared.util.Log;
 import com.vaadin.annotations.JavaScript;
 import com.vaadin.client.ServerConnector;
@@ -59,20 +63,16 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
     	Log.message(this, "shared state effects list changed");
     	// TODO: don't rebuild list every time
     	
-    	// TODO: for now we return early; this method causes a NullPointerException
-    	return;
-    	
-    	/*
 		List<Effect> effects = new ArrayList<Effect>();
     	for (SharedEffect e : getState().effects) {
-    		Log.message(this, "adding " + e.getName().name());
-    		for (SharedEffectProperty prop : e.getProperties()) {
-    			Log.message(this, prop.getProperty().name() + " : " + prop.getValue());
-    		}
-    		effects.add(getEffectFromSharedEffect(e));
+    		final Effect effect = getEffectFromSharedEffect(e);
+			if (effect != null) {
+				Log.message(this, "Adding effect: " + e.getName().name());
+    			Log.message(this, e.toString());
+				effects.add(effect);
+			}
     	}
     	player.setEffects(effects);
-    	*/
     }
     
     private Effect getEffectFromSharedEffect(SharedEffect sharedEffect) {
@@ -82,8 +82,10 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
     		effect.setID(sharedEffect.getID());
     		return effect;
     	} else if (sharedEffect.getName() == EffectName.FilterEffect) {
-    		FilterEffect effect = new FilterEffect(sharedEffect.getProperties());
+    		FilterEffect effect = new FilterEffect();
+    		effect.init(context);
     		effect.setID(sharedEffect.getID());
+    		effect.setProperties(sharedEffect.getProperties());
     		return effect;
     	} else if (sharedEffect.getName() == EffectName.PitchEffect) {
     		PitchEffect effect = new PitchEffect();
