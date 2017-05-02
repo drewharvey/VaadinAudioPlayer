@@ -105,6 +105,7 @@ public class BufferPlayer {
 		current.connect(output);
 	}
 
+	// TODO: is this needed?
 	public boolean isPlaying() {
 		return false;
 		//return source.getPlaybackState() == AudioBufferSourceNode.PLAYING_STATE;
@@ -132,90 +133,6 @@ public class BufferPlayer {
 		resetSourceNode(buffer);
 		state = State.STOPPED;
 	}
-	
-	// TODO: use crossfade curve instead of linear curve to keep volume consistant
-		// TODO: handle fade in/out when paused
-		public void fadeIn(int offsetMillis, int fadeInDuration) { 
-			if (fadeInDuration <= 0) {
-				play(offsetMillis);
-				return;
-			}
-			final double maxGain = output.getGain();
-			final int changeInterval = 100;
-			// get number of increases based on doing it every 100 ms
-			int numGainChanges = fadeInDuration / changeInterval;
-			if (fadeInDuration % 100 != 0) {
-				numGainChanges++;
-			}
-			double gainPerChange = maxGain / numGainChanges;
-			
-//			logger.log(Level.SEVERE, "IN - numGainChanges: " + numGainChanges
-//					+ " , gainPerChange: " + gainPerChange);
-			
-			output.setGain(0);
-			play(offsetMillis);
-			fadeInR(numGainChanges, changeInterval, gainPerChange, maxGain, true);
-		}
-		
-		private void fadeInR(final int numLoops, final int loopInterval, final double gainIncrease, final double maxGain, boolean runImmediately) {
-			if (output.getGain() >= maxGain) {
-				output.setGain(maxGain);
-				return;
-			}
-			Timer timer = new Timer() {
-				@Override
-				public void run() {
-//					logger.log(Level.SEVERE, "Increasing gain " + output.getGain() + " => " + (output.getGain()+gainIncrease));
-					output.setGain(output.getGain() + gainIncrease);
-					fadeInR(numLoops - 1, loopInterval, gainIncrease, maxGain, false);
-				}
-			};
-			if (runImmediately) {
-				timer.run();
-			} else {
-				timer.schedule(loopInterval);
-			}
-		}
-		
-		public void fadeOut(int fadeOutDuration) {
-			if (fadeOutDuration <= 0) {
-				stop();
-				return;
-			}
-			final double minGain = 0;
-			final int changeInterval = 100;
-			// get number of increases based on doing it every 100 ms
-			int numGainChanges = fadeOutDuration / changeInterval;
-			if (fadeOutDuration % changeInterval != 0) {
-				numGainChanges++;
-			}
-			double gainPerChange = (output.getGain() - minGain) / numGainChanges;
-			
-//			logger.log(Level.SEVERE, "OUT - numGainChanges: " + numGainChanges
-//					+ " , gainPerChange: " + gainPerChange);
-
-			fadeOutR(numGainChanges, changeInterval, gainPerChange, true);
-		}
-		
-		private void fadeOutR(final int numLoops, final int loopInterval, final double gainDecrease, boolean runImmediately) {
-			if (output.getGain() <= 0) {
-				output.setGain(0);
-				return;
-			}
-			Timer timer = new Timer() {
-				@Override
-				public void run() {
-//					logger.log(Level.SEVERE, "Decreasing gain " + output.getGain() + " => " + (output.getGain()-gainDecrease));
-					output.setGain(output.getGain() - gainDecrease);
-					fadeOutR(numLoops - 1, loopInterval, gainDecrease, false);
-				}
-			};
-			if (runImmediately) {
-				timer.run();
-			} else {
-				timer.schedule(loopInterval);
-			}
-		}
 
 	private void resetSourceNode(Buffer buffer) {
 		Context context = Context.get();

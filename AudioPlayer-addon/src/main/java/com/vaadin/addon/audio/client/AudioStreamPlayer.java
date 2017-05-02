@@ -6,6 +6,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.gwt.core.client.Duration;
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.user.client.Timer;
 import com.vaadin.addon.audio.client.ClientStream.DataCallback;
 import com.vaadin.addon.audio.shared.ChunkDescriptor;
@@ -80,22 +82,59 @@ public class AudioStreamPlayer {
 		play(false);
 	}
 	
-	public void play(boolean fadeIn) {
-		play(0, fadeIn);
+	public void play(boolean useCrossFade) {
+		play(0, useCrossFade);
 	}
 	
-	private void play(int timeOffset, boolean fadeIn) {
+	private void play(int timeOffset, boolean useCrossFade) {
 		logError("PLAY");
 		if (getCurrentPlayer() == null) {
 			Log.error(this, "current player is null");
 			return;
 		}
+		
 		chunkPosition = timeOffset;
-		// start player current chunk
-		if (fadeIn) {
+		
+		if (useCrossFade) {
+			// use cross fade to blend prev and current audio together
 			if (overheadTime != null) logError("play(): " + overheadTime.elapsedMillis());
-			getCurrentPlayer().fadeIn(chunkPosition, chunkOverlapTime);
+			// set volume to 0 and start playing
+			final BufferPlayer cur = getCurrentPlayer();
+			cur.setVolume(0);
+			cur.play(chunkPosition);
+			// if we have a prev player then we fade it out and fade our new player in
+			if (getPrevPlayer() != null) {
+				final BufferPlayer prev = getPrevPlayer();
+				Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+					@Override
+					public void execute() {
+						for (double t = 1; t >= -1; t-= 0.005) {
+							double[] gains = getCrossFadeValues(t);
+							cur.setVolume(gains[0]);
+							prev.setVolume(gains[1]);
+							logger.log(Level.SEVERE, "VOLUME: " + gains[0] + " / " + gains[1]);
+						}
+						// make sure we are at max/min volumes by the end
+						cur.setVolume(1);
+						prev.setVolume(0);
+					}
+				});
+			} else {
+				Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+					@Override
+					public void execute() {
+						for (double t = 1; t >= -1; t-= 0.005) {
+							double[] gains = getCrossFadeValues(t);
+							cur.setVolume(gains[0]);
+							logger.log(Level.SEVERE, "VOLUME: " + gains[0] + " / " + gains[1]);
+						}
+						// make sure we are at max volume by the end
+						cur.setVolume(1);
+					}
+				});
+			}
 		} else {
+			// simply play the audio
 			if (overheadTime != null) logError("play(): " + overheadTime.elapsedMillis());
 			getCurrentPlayer().play(chunkPosition);
 		}
@@ -128,6 +167,21 @@ public class AudioStreamPlayer {
 				setNextPlayer(player);
 			}
 		});
+	}
+	
+	/**
+	 * Takes a time value (between 1 and -1) and calculates
+	 * the volume level following a equal power crossfade curve.
+	 * 
+	 * @param t 
+	 * @param isIncreasing
+	 * @return volume (between 0 and 1)
+	 */
+	private double[] getCrossFadeValues(double t) {
+		double[] val = new double[2];
+	    val[0] = Math.sqrt(0.5 * (1 - t));
+	    val[1] = Math.sqrt(0.5 * (1 + t));
+	    return val;
 	}
 	
 	public void pause() {
@@ -233,8 +287,6 @@ public class AudioStreamPlayer {
 		} else {
 			// make sure the next player has the same options set as current
 			setPersistingPlayerOptions(getNextPlayer(), true);
-			// fade out current and fade in next node
-			getCurrentPlayer().fadeOut(chunkOverlapTime);
 			moveToNextPlayer();
 			play(true);
 		}
