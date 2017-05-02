@@ -72,7 +72,6 @@ public class AudioStreamPlayer {
 		playNextChunkTimer = new Timer() {
 			@Override
 			public void run() {
-				execTime = new Duration();
 				playNextChunk();
 			}
 		};
@@ -97,16 +96,15 @@ public class AudioStreamPlayer {
 		
 		if (useCrossFade) {
 			// use cross fade to blend prev and current audio together
-			crossFadePlayers(getCurrentPlayer(), getPrevPlayer());
+			crossFadePlayers(getCurrentPlayer(), getPrevPlayer(), getCurrentPlayer().getVolume());
 		} else {
 			// simply play the audio
 			getCurrentPlayer().play(chunkPosition);
 			// track execution time to offset scheduled time for next chunk
 			execTime = new Duration();
+			// starts counting MS when instantiated, used primarily for pausing
+			chunkPositionClock = new Duration();
 		}
-		
-		// starts counting MS when instantiated, used primarily for pausing
-		chunkPositionClock = new Duration();
 		
 		// start timer to play next chunk of audio
 		if (position < timePerChunk) {
@@ -139,7 +137,7 @@ public class AudioStreamPlayer {
 	 * @param currentPlayer
 	 * @param prevPlayer
 	 */
-	private void crossFadePlayers(final BufferPlayer currentPlayer, final BufferPlayer prevPlayer) {
+	private void crossFadePlayers(final BufferPlayer currentPlayer, final BufferPlayer prevPlayer, final double targetGain) {
 		// set volume to 0 and start playing
 		if (currentPlayer != null) {
 			currentPlayer.setVolume(0);
@@ -147,22 +145,26 @@ public class AudioStreamPlayer {
 		}
 		// track execution time to offset scheduled time for next chunk
 		execTime = new Duration();
+		// starts counting MS when instantiated, used primarily for pausing
+		chunkPositionClock = new Duration();
 		// if we have a prev player then we fade it out and fade our new player in
 		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 			@Override
 			public void execute() {
-				for (double t = 1; t >= -1; t-= 0.005) {
+				// TODO: use exponentialRampToValueAtTime() when IE supports it:
+				// https://developer.mozilla.org/en-US/docs/Web/API/AudioParam/exponentialRampToValueAtTime
+				for (double t = 1; t >= -1; t-= 0.001) {
 					double[] gains = getCrossFadeValues(t);
 					if (currentPlayer != null) {
-						currentPlayer.setVolume(gains[0]);
+						currentPlayer.setVolume(gains[0] * targetGain);
 					}
 					if (prevPlayer != null) {
-						prevPlayer.setVolume(gains[1]);
+						prevPlayer.setVolume(gains[1] * targetGain);
 					}
 				}
 				// make sure we are at max/min volumes by the end
 				if (currentPlayer != null) {
-					currentPlayer.setVolume(1);
+					currentPlayer.setVolume(targetGain);
 				}
 				if (prevPlayer != null) {
 					prevPlayer.setVolume(0);
@@ -208,6 +210,9 @@ public class AudioStreamPlayer {
 		logError("resume() - elapsed: " + chunkPosition);
 		logError("scheduled for " + (timePerChunk - chunkPosition));
 		getCurrentPlayer().play(chunkPosition);
+		// track execution time to offset scheduled time for next chunk
+		execTime = new Duration();
+		// schedule next chunk handoff
 		playNextChunkTimer.schedule(timePerChunk - chunkPosition);
 		// Duration object starts counting MS when instantiated
 		chunkPositionClock = new Duration();
