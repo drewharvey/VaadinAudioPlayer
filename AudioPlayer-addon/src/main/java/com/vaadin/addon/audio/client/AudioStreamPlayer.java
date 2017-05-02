@@ -57,8 +57,7 @@ public class AudioStreamPlayer {
 			public void onDataReceived(ChunkDescriptor chunk) {
 				BufferPlayer player = new BufferPlayer();
 				player.setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk));
-				player.setVolume(volume);
-				player.setPlaybackSpeed(playbackSpeed);
+				setPersistingPlayerOptions(player, true);
 				setCurrentPlayer(player);
 				// TODO: get chunk overlap time from chunk descriptor
 				//chunkOverlapTime = chunk.getLeadOutDuration();
@@ -75,44 +74,6 @@ public class AudioStreamPlayer {
 				playNextChunk();
 			}
 		};
-	}
-	
-	public int getDuration() {
-		return stream.getDuration();
-	}
-	
-	public void setPosition(final int millis) {
-		logError("set position to " + millis);
-		getCurrentPlayer().stop();
-		chunkPosition += chunkPositionClock.elapsedMillis();
-		// TODO: impl in a way we don't need the current chunk's playtime offset
-		int chunkTime = millis;
-		if (chunkTime < 0) {
-			chunkTime = 0;
-		}
-		logError("setPosition() - millis: " + millis + " / elapsedTime:  " + chunkPosition + " / chunkTime: " + chunkTime);
-		playNextChunkTimer.cancel();
-		stream.requestChunkByTimestamp(chunkTime, new DataCallback() {
-			@Override
-			public void onDataReceived(ChunkDescriptor chunk) {
-				BufferPlayer player = new BufferPlayer();
-				player.setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk));
-				player.setVolume(volume);
-				player.setPlaybackSpeed(playbackSpeed);
-				setCurrentPlayer(player);
-				int offset = millis % timePerChunk;
-				position = millis - offset;
-				play(offset, false);
-			}
-		});
-	}
-	
-	/**
-	 * Gets current playtime position of the entire audio file.
-	 * @return playtime position (milliseconds)
-	 */
-	public int getPosition() {
-		return position + getChunkPosition();
 	}
 	
 	public void play() {
@@ -167,41 +128,6 @@ public class AudioStreamPlayer {
 				setNextPlayer(player);
 			}
 		});
-	}
-	
-	/**
-	 * Gets playtime position of the current audio chunk.
-	 * @return playtime position (milliseconds)
-	 */
-	private int getChunkPosition() {
-		int pos = chunkPosition;
-		if (chunkPositionClock != null) {
-			pos += chunkPositionClock.elapsedMillis();
-		}
-		return pos;
-	}
-	
-	private void playNextChunk() {
-		logError("PLAY NEXT CHUNK");
-		if (overheadTime != null) logError("playNextChunk(): " + overheadTime.elapsedMillis());
-		position += timePerChunk;
-		// stop the audio if we've reached the end
-		if (getPosition() >= getDuration()) {
-			stop();
-		} else {
-			// copy persisting settings to next audio node
-			getNextPlayer().setVolume(volume);
-			getNextPlayer().setPlaybackSpeed(playbackSpeed);
-			getNextPlayer().setEffects(getEffects());
-			// TODO: should players auto build chain when changed?
-			// force player to rebuild audio node chain
-			getNextPlayer().getOutput();
-			// fade out current and fade in next node
-			getCurrentPlayer().fadeOut(chunkOverlapTime);
-			moveToNextPlayer();
-			if (overheadTime != null) logError("playNextChunk() call play(true): " + overheadTime.elapsedMillis());
-			play(true);
-		}
 	}
 	
 	public void pause() {
@@ -283,6 +209,89 @@ public class AudioStreamPlayer {
 	private BufferPlayer getPrevPlayer() {
 		int i = (currentPlayer == 0 ? MAX_PLAYERS - 1 : currentPlayer - 1);
 		return players[i];
+	}
+	
+	/**
+	 * Gets playtime position of the current audio chunk.
+	 * @return playtime position (milliseconds)
+	 */
+	private int getChunkPosition() {
+		int pos = chunkPosition;
+		if (chunkPositionClock != null) {
+			pos += chunkPositionClock.elapsedMillis();
+		}
+		return pos;
+	}
+	
+	private void playNextChunk() {
+		logError("PLAY NEXT CHUNK");
+		if (overheadTime != null) logError("playNextChunk(): " + overheadTime.elapsedMillis());
+		position += timePerChunk;
+		// stop the audio if we've reached the end
+		if (getPosition() >= getDuration()) {
+			stop();
+		} else {
+			// make sure the next player has the same options set as current
+			setPersistingPlayerOptions(getNextPlayer(), true);
+			// fade out current and fade in next node
+			getCurrentPlayer().fadeOut(chunkOverlapTime);
+			moveToNextPlayer();
+			play(true);
+		}
+	}
+	
+	private void setPersistingPlayerOptions(BufferPlayer player, boolean rebuildNodeChain) {
+		if (player == null) {
+			Log.error(this, "Cannot copy player options to null BufferPlayer");
+			return;
+		}
+		// copy persisting settings to next audio node
+		player.setVolume(volume);
+		player.setPlaybackSpeed(playbackSpeed);
+		player.setBalance(balance);
+		player.setEffects(getEffects());
+		// TODO: should players auto build chain when changed?
+		// force player to rebuild audio node chain
+		if (rebuildNodeChain) {
+			player.getOutput();
+		}
+	}
+	
+	public int getDuration() {
+		return stream.getDuration();
+	}
+	
+	public void setPosition(final int millis) {
+		logError("set position to " + millis);
+		getCurrentPlayer().stop();
+		chunkPosition += chunkPositionClock.elapsedMillis();
+		// TODO: impl in a way we don't need the current chunk's playtime offset
+		int chunkTime = millis;
+		if (chunkTime < 0) {
+			chunkTime = 0;
+		}
+		logError("setPosition() - millis: " + millis + " / elapsedTime:  " + chunkPosition + " / chunkTime: " + chunkTime);
+		playNextChunkTimer.cancel();
+		stream.requestChunkByTimestamp(chunkTime, new DataCallback() {
+			@Override
+			public void onDataReceived(ChunkDescriptor chunk) {
+				BufferPlayer player = new BufferPlayer();
+				player.setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk));
+				setPersistingPlayerOptions(player, true);
+				setCurrentPlayer(player);
+				int offset = millis % timePerChunk;
+				position = millis - offset;
+				play(offset, false);
+			}
+		});
+	}
+	
+	/**
+	 * Gets current playtime position of the entire audio file.
+	 * @return playtime position (milliseconds)
+	 */
+	public int getPosition() {
+		return position + getChunkPosition();
 	}
 	
 	public void setVolume(double volume) {
