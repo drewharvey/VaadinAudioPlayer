@@ -97,43 +97,7 @@ public class AudioStreamPlayer {
 		
 		if (useCrossFade) {
 			// use cross fade to blend prev and current audio together
-			final BufferPlayer cur = getCurrentPlayer();
-			// set volume to 0 and start playing
-			cur.setVolume(0);
-			cur.play(chunkPosition);
-			// track execution time to offset scheduled time for next chunk
-			execTime = new Duration();
-			// if we have a prev player then we fade it out and fade our new player in
-			if (getPrevPlayer() != null) {
-				final BufferPlayer prev = getPrevPlayer();
-				Scheduler.get().scheduleDeferred(new ScheduledCommand() {
-					@Override
-					public void execute() {
-						for (double t = 1; t >= -1; t-= 0.005) {
-							double[] gains = getCrossFadeValues(t);
-							cur.setVolume(gains[0]);
-							prev.setVolume(gains[1]);
-							logger.log(Level.SEVERE, "VOLUME: " + gains[0] + " / " + gains[1]);
-						}
-						// make sure we are at max/min volumes by the end
-						cur.setVolume(1);
-						prev.setVolume(0);
-					}
-				});
-			} else {
-				Scheduler.get().scheduleDeferred(new ScheduledCommand() {
-					@Override
-					public void execute() {
-						for (double t = 1; t >= -1; t-= 0.005) {
-							double[] gains = getCrossFadeValues(t);
-							cur.setVolume(gains[0]);
-							logger.log(Level.SEVERE, "VOLUME: " + gains[0] + " / " + gains[1]);
-						}
-						// make sure we are at max volume by the end
-						cur.setVolume(1);
-					}
-				});
-			}
+			crossFadePlayers(getCurrentPlayer(), getPrevPlayer());
 		} else {
 			// simply play the audio
 			getCurrentPlayer().play(chunkPosition);
@@ -164,6 +128,45 @@ public class AudioStreamPlayer {
 				BufferPlayer player = new BufferPlayer();
 				player.setBuffer(stream.getBufferForChunk(chunk));
 				setNextPlayer(player);
+			}
+		});
+	}
+	
+	/**
+	 * Uses a equal power crossfade curve to blend two audio players together.
+	 * After the crossfade the currentPlayer will have volume and the prevPlayer
+	 * will have a volume of 0.
+	 * @param currentPlayer
+	 * @param prevPlayer
+	 */
+	private void crossFadePlayers(final BufferPlayer currentPlayer, final BufferPlayer prevPlayer) {
+		// set volume to 0 and start playing
+		if (currentPlayer != null) {
+			currentPlayer.setVolume(0);
+			currentPlayer.play(chunkPosition);
+		}
+		// track execution time to offset scheduled time for next chunk
+		execTime = new Duration();
+		// if we have a prev player then we fade it out and fade our new player in
+		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+			@Override
+			public void execute() {
+				for (double t = 1; t >= -1; t-= 0.005) {
+					double[] gains = getCrossFadeValues(t);
+					if (currentPlayer != null) {
+						currentPlayer.setVolume(gains[0]);
+					}
+					if (prevPlayer != null) {
+						prevPlayer.setVolume(gains[1]);
+					}
+				}
+				// make sure we are at max/min volumes by the end
+				if (currentPlayer != null) {
+					currentPlayer.setVolume(1);
+				}
+				if (prevPlayer != null) {
+					prevPlayer.setVolume(0);
+				}
 			}
 		});
 	}
