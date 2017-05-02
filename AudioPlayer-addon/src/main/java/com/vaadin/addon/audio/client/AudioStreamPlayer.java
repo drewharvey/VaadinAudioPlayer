@@ -24,7 +24,7 @@ public class AudioStreamPlayer {
 	// TODO: improve log messages
 	//
 	
-	Duration overheadTime = null;
+	Duration execTime = null;
 	
 	private static final int MAX_PLAYERS = 3;	// Maximum number of players
 	//TODO: get values from ChunkDescriptions
@@ -72,14 +72,14 @@ public class AudioStreamPlayer {
 		playNextChunkTimer = new Timer() {
 			@Override
 			public void run() {
-				overheadTime = new Duration();
+				execTime = new Duration();
 				playNextChunk();
 			}
 		};
 	}
 	
 	public void play() {
-		play(false);
+		play(true);
 	}
 	
 	public void play(boolean useCrossFade) {
@@ -97,11 +97,12 @@ public class AudioStreamPlayer {
 		
 		if (useCrossFade) {
 			// use cross fade to blend prev and current audio together
-			if (overheadTime != null) logError("play(): " + overheadTime.elapsedMillis());
-			// set volume to 0 and start playing
 			final BufferPlayer cur = getCurrentPlayer();
+			// set volume to 0 and start playing
 			cur.setVolume(0);
 			cur.play(chunkPosition);
+			// track execution time to offset scheduled time for next chunk
+			execTime = new Duration();
 			// if we have a prev player then we fade it out and fade our new player in
 			if (getPrevPlayer() != null) {
 				final BufferPlayer prev = getPrevPlayer();
@@ -135,25 +136,23 @@ public class AudioStreamPlayer {
 			}
 		} else {
 			// simply play the audio
-			if (overheadTime != null) logError("play(): " + overheadTime.elapsedMillis());
 			getCurrentPlayer().play(chunkPosition);
+			// track execution time to offset scheduled time for next chunk
+			execTime = new Duration();
 		}
 		
 		// starts counting MS when instantiated, used primarily for pausing
 		chunkPositionClock = new Duration();
-
+		
 		// start timer to play next chunk of audio
-		//int overhead = (overheadTime != null) ? overheadTime.elapsedMillis() : 0;
-		
-		// TODO: first chunk should work the same way as others
-		// for some reason the first chunk is fading out 500ms early (or the second chunk is 500ms late)
-		
 		if (position < timePerChunk) {
+			// for some reason the first chunk is fading out 500ms early (or the second chunk is 500ms late)
+			// TODO: first chunk should work the same way as others
 			logError("Scheduling for " + (timePerChunk - chunkPosition - chunkOverlapTime));
-			playNextChunkTimer.schedule(timePerChunk - chunkPosition - chunkOverlapTime);
+			playNextChunkTimer.schedule(timePerChunk - chunkPosition - chunkOverlapTime - execTime.elapsedMillis());
 		} else {
 			logError("Scheduling for " + (timePerChunk - chunkPosition));
-			playNextChunkTimer.schedule(timePerChunk - chunkPosition);
+			playNextChunkTimer.schedule(timePerChunk - chunkPosition - execTime.elapsedMillis());
 		}
 		
 		// start loading next chunk
@@ -279,7 +278,7 @@ public class AudioStreamPlayer {
 	
 	private void playNextChunk() {
 		logError("PLAY NEXT CHUNK");
-		if (overheadTime != null) logError("playNextChunk(): " + overheadTime.elapsedMillis());
+		if (execTime != null) logError("playNextChunk(): " + execTime.elapsedMillis());
 		position += timePerChunk;
 		// stop the audio if we've reached the end
 		if (getPosition() >= getDuration()) {
