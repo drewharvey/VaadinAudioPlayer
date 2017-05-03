@@ -18,7 +18,7 @@ public class AudioPositionSlider extends Slider {
 	
 	public void setValueSecretly(double newValue) {
 	  setInternalValue(newValue);
-	  requestRepaint();
+	  markAsDirty();
 	}
 	
 }
