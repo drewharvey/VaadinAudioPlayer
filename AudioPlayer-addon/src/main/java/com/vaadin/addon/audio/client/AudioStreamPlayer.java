@@ -47,12 +47,9 @@ public class AudioStreamPlayer {
 	private List<Effect> effects = new ArrayList<Effect>();
 
 	public AudioStreamPlayer(ClientStream stream) {
-		logError("create");
 		
 		// Warm up the stream
 		this.stream = stream;
-		
-		logError("Duration: " + getDuration());
 		
 		stream.requestChunkByTimestamp(0, new DataCallback() {
 			@Override
@@ -286,7 +283,6 @@ public class AudioStreamPlayer {
 	
 	private void playNextChunk() {
 		logError("PLAY NEXT CHUNK");
-		if (execTime != null) logError("playNextChunk(): " + execTime.elapsedMillis());
 		position += timePerChunk;
 		// stop the audio if we've reached the end
 		if (getPosition() >= getDuration()) {

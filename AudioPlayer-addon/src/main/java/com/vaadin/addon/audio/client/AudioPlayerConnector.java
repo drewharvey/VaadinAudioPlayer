@@ -195,6 +195,10 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
     	stream = new ClientStream(this);
     	player = new AudioStreamPlayer(stream);
     	
+    	// expose this audio player to the client side thru a custom js api
+    	JavaScriptPublicAPI.exposeMethods();
+    	JavaScriptPublicAPI.addAudioPlayerInstance(player);
+    	
     	// create timer that reports playback to server
     	Timer reportPositionTimer = new Timer() {
 			@Override
@@ -203,10 +207,6 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 			}
     	};
     	reportPositionTimer.scheduleRepeating(REPORT_POSITION_REPEAT_TIME);
-    	
-    	// expose this audio player to the client side thru a custom js api
-    	JavaScriptPublicAPI.exposeMethods();
-    	JavaScriptPublicAPI.addAudioPlayerInstance(player);
 	}
 
 	@Override
