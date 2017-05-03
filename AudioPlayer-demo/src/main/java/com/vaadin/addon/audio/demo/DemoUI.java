@@ -56,13 +56,7 @@ import com.vaadin.ui.Button.ClickEvent;
 @SuppressWarnings("serial")
 public class DemoUI extends UI {
 
-	//
-	// Main TODO list
-	//
-	//
-	// X: detect when a session dies and kill any work pending in Stream
-	//
-	//
+	// TODO: detect when a session dies and kill any work pending in Stream
 	
 	public static final String BUTTON_SIZE_CLASS = "small";
 	public static final int SKIP_TIME_SEC = 5;
@@ -72,7 +66,7 @@ public class DemoUI extends UI {
 
 		private AudioPlayer player;
 
-		private Slider positionSlider;
+		private AudioPositionSlider positionSlider;
 		private Slider volumeSlider;
 		private Slider balanceSlider;
 		private Slider speedSlider;
@@ -92,15 +86,11 @@ public class DemoUI extends UI {
 
 			this.player = player;
 
-			positionSlider = new Slider("Position");
+			positionSlider = new AudioPositionSlider("Position");
 			positionSlider.setSizeFull();
 			positionSlider.setEnabled(true);
-			// TODO: rethink the entire position-as-slider. We should rather have a progress indicator
 			positionSlider.addValueChangeListener(e -> {
-				// TODO: this will cause an infinite loop because the slider
-				// gets updated when the player.setPosition is called, and vice versa
-				 // player.setPosition(positionSlider.getValue().intValue());
-				positionSlider.setCaption(player.getPositionString() + " / " + player.getDurationString());
+				player.setPosition(positionSlider.getValue().intValue());
 			});
 			layout.addComponent(positionSlider);
 
@@ -299,7 +289,9 @@ public class DemoUI extends UI {
 							}
 							positionSlider.setMax(duration);
 							positionSlider.setMin(0);
-							positionSlider.setValue((double) new_position_millis);
+							// set value without trigger value change event
+							positionSlider.setValueSecretly((double) new_position_millis);
+							positionSlider.setCaption(player.getPositionString() + " / " + player.getDurationString());
 						}
 					});
 				}

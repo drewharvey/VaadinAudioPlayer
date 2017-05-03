@@ -194,11 +194,11 @@ public class AudioStreamPlayer {
 			Log.error(this, "current player is null");
 			return;
 		}
-		getCurrentPlayer().stop();
 		chunkPosition += chunkPositionClock.elapsedMillis();
 		chunkPositionClock = null;
-		logError("pause() - elapsedTime:  " + chunkPosition);
+		getCurrentPlayer().stop();
 		playNextChunkTimer.cancel();
+		logError("pause() - elapsedTime:  " + chunkPosition);
 	}
 	
 	public void resume() {
