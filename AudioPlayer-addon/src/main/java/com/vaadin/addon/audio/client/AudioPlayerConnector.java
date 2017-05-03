@@ -191,9 +191,11 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 
         });
         
+        // create stream and the client side audio player
     	stream = new ClientStream(this);
     	player = new AudioStreamPlayer(stream);
     	
+    	// create timer that reports playback to server
     	Timer reportPositionTimer = new Timer() {
 			@Override
 			public void run() {
@@ -202,7 +204,17 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
     	};
     	reportPositionTimer.scheduleRepeating(REPORT_POSITION_REPEAT_TIME);
     	
+    	// expose this audio player to the client side thru a custom js api
     	JavaScriptPublicAPI.exposeMethods();
+    	JavaScriptPublicAPI.addAudioPlayerInstance(player);
+	}
+
+	@Override
+	public void onUnregister() {
+		if (player != null) {
+			// TODO: test this once delete stream is implemented
+			JavaScriptPublicAPI.removeAudioPlayerInstance(player);
+		}
 	}
 	
 	public String toString() {
