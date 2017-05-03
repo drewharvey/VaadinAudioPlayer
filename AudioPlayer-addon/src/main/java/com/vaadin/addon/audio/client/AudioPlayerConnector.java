@@ -201,6 +201,8 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 			}
     	};
     	reportPositionTimer.scheduleRepeating(REPORT_POSITION_REPEAT_TIME);
+    	
+    	JavaScriptPublicAPI.exposeMethods();
 	}
 	
 	public String toString() {
