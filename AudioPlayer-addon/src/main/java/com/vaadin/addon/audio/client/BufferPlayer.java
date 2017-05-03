@@ -104,12 +104,6 @@ public class BufferPlayer {
 		// finally connect to last node
 		current.connect(output);
 	}
-
-	// TODO: is this needed?
-	public boolean isPlaying() {
-		return false;
-		//return source.getPlaybackState() == AudioBufferSourceNode.PLAYING_STATE;
-	}
 	
 	public void play(int offset_millis) {
 		Log.message(this, "start playback at " + offset_millis);
