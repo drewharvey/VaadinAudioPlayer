@@ -10,6 +10,8 @@ import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.user.client.Timer;
 import com.vaadin.addon.audio.client.ClientStream.DataCallback;
+import com.vaadin.addon.audio.client.webaudio.Buffer;
+import com.vaadin.addon.audio.client.webaudio.BufferSourceNode;
 import com.vaadin.addon.audio.shared.ChunkDescriptor;
 import com.vaadin.addon.audio.shared.util.Log;
 
@@ -62,7 +64,7 @@ public class AudioStreamPlayer {
 				//chunkOverlapTime = chunk.getLeadOutDuration();
 				// TODO: shouldn't need to add 1 here
 				timePerChunk = chunk.getEndTimeOffset() - chunk.getStartSampleOffset() + 1 - chunkOverlapTime;
-				logError("timePerChunk: " + timePerChunk + " / chunkLeadTime: " + chunkOverlapTime);
+				logError("timePerChunk: " + timePerChunk + "\r\n" + "chunkLeadTime: " + chunkOverlapTime);
 			}
 		});
 		// setup timer for moving to next chunk after current chunk finishes playing
@@ -122,9 +124,11 @@ public class AudioStreamPlayer {
 			public void onDataReceived(ChunkDescriptor chunk) {
 				BufferPlayer player = new BufferPlayer();
 				player.setBuffer(stream.getBufferForChunk(chunk));
-				setNextPlayer(player);
+				AudioStreamPlayer.this.setPersistingPlayerOptions(player, true);
+				AudioStreamPlayer.this.setNextPlayer(player);
 			}
 		});
+		
 	}
 	
 	/**
@@ -233,7 +237,8 @@ public class AudioStreamPlayer {
 			public void onDataReceived(ChunkDescriptor chunk) {
 				BufferPlayer player = new BufferPlayer();
 				player.setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk));
-				setCurrentPlayer(player);
+				AudioStreamPlayer.this.setPersistingPlayerOptions(player, true);
+				AudioStreamPlayer.this.setCurrentPlayer(player);
 			}
 		});
 	}
@@ -319,24 +324,26 @@ public class AudioStreamPlayer {
 	public void setPosition(final int millis) {
 		logError("set position to " + millis);
 		getCurrentPlayer().stop();
-		chunkPosition += chunkPositionClock.elapsedMillis();
-		// TODO: impl in a way we don't need the current chunk's playtime offset
-		int chunkTime = millis;
-		if (chunkTime < 0) {
-			chunkTime = 0;
-		}
-		logError("setPosition() - millis: " + millis + " / elapsedTime:  " + chunkPosition + " / chunkTime: " + chunkTime);
 		playNextChunkTimer.cancel();
-		stream.requestChunkByTimestamp(chunkTime, new DataCallback() {
+		// calculate the offset time within this audio chunk
+		final int offset = millis % timePerChunk;
+		position = millis - offset;
+		// get audio chunk needed for this time position
+		stream.requestChunkByTimestamp(millis, new DataCallback() {
 			@Override
 			public void onDataReceived(ChunkDescriptor chunk) {
-				BufferPlayer player = new BufferPlayer();
-				player.setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk));
-				setPersistingPlayerOptions(player, true);
-				setCurrentPlayer(player);
-				int offset = millis % timePerChunk;
-				position = millis - offset;
-				play(offset, false);
+				// create new buffer player
+				final BufferPlayer player = new BufferPlayer();
+				// request required chunk of audio
+				player.setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk), new BufferSourceNode.BufferReadyListener() {
+					@Override
+					public void onBufferReady(Buffer b) {
+						// setup buffer player and play when ready
+						AudioStreamPlayer.this.setPersistingPlayerOptions(player, true);
+						AudioStreamPlayer.this.setCurrentPlayer(player);
+						AudioStreamPlayer.this.play(offset, true);
+					}
+				});
 			}
 		});
 	}

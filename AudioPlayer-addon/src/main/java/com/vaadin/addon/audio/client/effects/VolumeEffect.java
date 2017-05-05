@@ -5,14 +5,13 @@ import com.vaadin.addon.audio.client.webaudio.Context;
 import com.vaadin.addon.audio.client.webaudio.GainNode;
 import com.vaadin.addon.audio.shared.util.Log;
 
-import elemental.html.AudioContext;
 
 public class VolumeEffect extends Effect {
 	
 	@Override
-	public void init(AudioContext context) {
+	public void init(Context context) {
 		Log.message(this, "Creating AudioGainNode");
-		this.setAudioNode(Context.get().createGainNode());
+		this.setAudioNode(context.createGainNode());
 	}
 	
 	public GainNode getGainNode() {

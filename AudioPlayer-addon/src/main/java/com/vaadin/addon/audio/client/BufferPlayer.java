@@ -46,7 +46,7 @@ public class BufferPlayer {
 	}
 	
 	public BufferPlayer(Buffer buffer) {
-		Log.message(this, "create");
+		//logger.log(Level.SEVERE, "create");
 		
 		Context context = Context.get();
 		source = context.createBufferSourceNode();
@@ -58,7 +58,7 @@ public class BufferPlayer {
 	
 	// TODO: unused, remove?
 	public void resetBufferPlayer(Buffer buffer) {
-		Log.message(this, "reset");
+		//logger.log(Level.SEVERE, "reset");
 		
 		Context context = Context.get();
 		source = context.createBufferSourceNode();
@@ -82,7 +82,7 @@ public class BufferPlayer {
 		}
 		// if anything has changed, reconstruct the entire chain of audio nodes and effects
 		if (dirty) {
-			Log.message(this, "marked as dirty, reconfigure output");
+			//logger.log(Level.SEVERE, "marked as dirty, reconfigure output");
 			buildAudioNodeChain();
 			dirty = false;
 		}
@@ -106,7 +106,8 @@ public class BufferPlayer {
 	}
 	
 	public void play(int offset_millis) {
-		Log.message(this, "start playback at " + offset_millis);
+		logger.log(Level.SEVERE, "start playback at " + offset_millis);
+		logger.log(Level.SEVERE, " ==== PLAY CALLED ==== ");
 		if (state == State.PLAYING) {
 			stop();
 		}
@@ -117,7 +118,7 @@ public class BufferPlayer {
 	}
 	
 	public void stop() {
-		Log.message(this, "stop playback");
+		//logger.log(Level.SEVERE, "stop playback");
 		if (state == State.STOPPED) {
 			return;
 		}
@@ -141,8 +142,12 @@ public class BufferPlayer {
 	}
 	
 	public void setBuffer(Buffer buffer) {
-		Log.message(this, "buffer reassigned");
-		source.setBuffer(buffer);
+		setBuffer(buffer, null);
+	}
+	
+	public void setBuffer(Buffer buffer, BufferSourceNode.BufferReadyListener cb) {
+		//logger.log(Level.SEVERE, "buffer reassigned");
+		source.setBuffer(buffer, cb);
 	}
 	
 	public Buffer getBuffer() {
@@ -150,7 +155,7 @@ public class BufferPlayer {
 	}
 	
 	public void setVolume(double volume) {
-		Log.message(this, "set volume to " + volume);
+		//logger.log(Level.SEVERE, "set volume to " + volume);
 		output.setGain(volume);
 	}
 	
@@ -159,7 +164,7 @@ public class BufferPlayer {
 	}
 	
 	public void setPlaybackSpeed(double speed_scale) {
-		Log.message(this, "set speed scale " + speed_scale);
+		//logger.log(Level.SEVERE, "set speed scale " + speed_scale);
 		source.setPlaybackRate(speed_scale);
 		
 		// TODO: keep normal pitch if speed is changed, normally the pitch also changes
@@ -185,20 +190,20 @@ public class BufferPlayer {
 		this.effects.addAll(effects);
 		for (Effect e : effects) {
 			e.setPlayer(this);
-			Log.message(this, "BufferPlayer adding effect " + e.getClass().getName());
+			//logger.log(Level.SEVERE, "BufferPlayer adding effect " + e.getClass().getName());
 		}
 		dirty = true;
 	}
 	
 	public void addEffect(Effect effect) {
-		Log.message(this, "add effect " + effect);
+		//logger.log(Level.SEVERE, "add effect " + effect);
 		effect.setPlayer(this);
 		effects.add(effect);
 		dirty = true;
 	}
 
 	public void removeEffect(Effect effect) {
-		Log.message(this, "remove effect " + effect);
+		//logger.log(Level.SEVERE, "remove effect " + effect);
 		effects.remove(effect);
 		dirty = true;
 	}

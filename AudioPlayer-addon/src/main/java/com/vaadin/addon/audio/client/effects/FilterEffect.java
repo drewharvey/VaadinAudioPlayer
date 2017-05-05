@@ -16,10 +16,10 @@ public class FilterEffect extends Effect {
 	
 
 	@Override
-	public void init(AudioContext context) {
+	public void init(Context context) {
 		Log.message(this, "Creating BiquadFilterNode");
 		// TODO: provide context via param?
-		setAudioNode(Context.get().createBiquadFilter());
+		setAudioNode(context.createBiquadFilter());
 	}
 	
 	public void setProperties(List<SharedEffectProperty> props) {
@@ -78,8 +78,15 @@ public class FilterEffect extends Effect {
 		((BiquadFilterNode) getAudioNode()).setType(type);
 	}
 	
+	@Override
 	public String toString() {
-		return "FilterEffect";
+		String str = "";
+		str += "FilterEffect:\r\n";
+		str += " Gain: " + getGain() + "\n\r";
+		str += " Frequency: " + getFrequency() + "\n\r";;
+		str += " Q: " + getQ() + "\n\r";;
+		str += " Type: " + getType().name();
+		return str;
 	}
 
 }

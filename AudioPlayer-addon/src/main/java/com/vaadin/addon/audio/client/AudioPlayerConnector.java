@@ -9,6 +9,7 @@ import com.vaadin.addon.audio.client.effects.FilterEffect;
 import com.vaadin.addon.audio.client.effects.PitchEffect;
 import com.vaadin.addon.audio.client.effects.VolumeEffect;
 import com.vaadin.addon.audio.client.webaudio.Buffer;
+import com.vaadin.addon.audio.client.webaudio.Context;
 import com.vaadin.addon.audio.server.AudioPlayer;
 import com.vaadin.addon.audio.shared.AudioPlayerClientRpc;
 import com.vaadin.addon.audio.shared.AudioPlayerServerRpc;
@@ -83,7 +84,7 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
     		return effect;
     	} else if (sharedEffect.getName() == EffectName.FilterEffect) {
     		FilterEffect effect = new FilterEffect();
-    		effect.init(context);
+    		effect.init(Context.get());
     		effect.setID(sharedEffect.getID());
     		effect.setProperties(sharedEffect.getProperties());
     		return effect;

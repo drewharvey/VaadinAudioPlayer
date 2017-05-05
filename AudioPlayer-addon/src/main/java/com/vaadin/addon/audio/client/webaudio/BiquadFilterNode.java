@@ -1,6 +1,9 @@
 package com.vaadin.addon.audio.client.webaudio;
 
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import elemental.html.AudioContext;
 
 public class BiquadFilterNode extends AudioNode {
@@ -15,7 +18,7 @@ public class BiquadFilterNode extends AudioNode {
 		NOTCH,
 		ALLPASS
 	}
-
+	
 	private static final native elemental.html.AudioNode
 	createBiquadFilterNode(AudioContext ctx) /*-{
 		return ctx.createBiquadFilter();
@@ -77,20 +80,30 @@ public class BiquadFilterNode extends AudioNode {
 		setType(getNativeNode(), type.name());
 	}
 	private static final native void setType(elemental.html.AudioNode node, String type) /*-{
-		node.type.value = type;
+		node.type = type;
 	}-*/;
 	
 	
 	public Type getType() {
 		String type = getType(getNativeNode());
 		if (type != null && !type.isEmpty()) {
-			return Type.valueOf(type);
+			return Type.valueOf(type.toUpperCase());
 		}
 		return null;
 	}
 	private static final native String getType(elemental.html.AudioNode node) /*-{
-		return node.type.value;
+		return node.type;
 	}-*/;
 	
+	@Override
+	public String toString() {
+		String str = "";
+		str += "BiquadFilterNode:\r\n";
+		str += " Gain: " + getGain() + "\n\r";
+		str += " Frequency: " + getFrequency() + "\n\r";;
+		str += " Q: " + getQ() + "\n\r";;
+		str += " Type: " + getType().name();
+		return str;
+	}
 	
 }

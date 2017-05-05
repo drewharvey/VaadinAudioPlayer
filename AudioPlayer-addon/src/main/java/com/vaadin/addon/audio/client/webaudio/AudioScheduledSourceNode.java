@@ -30,4 +30,8 @@ public abstract class AudioScheduledSourceNode extends AudioNode {
 		node.stop(delay);
 	}-*/;
 
+	@Override
+	public String toString() {
+		return "AudioScheduledSourceNode";
+	}
 }

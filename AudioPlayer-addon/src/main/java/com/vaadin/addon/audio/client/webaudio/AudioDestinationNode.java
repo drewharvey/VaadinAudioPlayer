@@ -6,4 +6,8 @@ public class AudioDestinationNode extends AudioNode {
 		super(nativeNode);
 	}
 
+	@Override
+	public String toString() {
+		return "AudioDestinationNode";
+	}
 }

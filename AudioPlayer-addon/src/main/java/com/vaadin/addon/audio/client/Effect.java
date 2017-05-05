@@ -2,6 +2,7 @@ package com.vaadin.addon.audio.client;
 
 import elemental.html.AudioContext;
 import com.vaadin.addon.audio.client.webaudio.AudioNode;
+import com.vaadin.addon.audio.client.webaudio.Context;
 
 /**
  * Base class for a pluggable effect
@@ -39,7 +40,7 @@ public abstract class Effect {
 		return node;
 	}
 	
-	public abstract void init(AudioContext context);
+	public abstract void init(Context context);
 	
 	public String toString() {
 		return "Effect";

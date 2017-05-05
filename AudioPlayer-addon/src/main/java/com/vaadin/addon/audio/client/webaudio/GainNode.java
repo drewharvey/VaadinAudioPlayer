@@ -28,4 +28,12 @@ public class GainNode extends AudioNode {
 	private static final native double getGain(elemental.html.AudioNode node) /*-{
 		return node.gain.value;
 	}-*/;
+	
+	@Override
+	public String toString() {
+		String str = "";
+		str += "GainNode:\n\r";
+		str += " Gain: " + getGain();
+		return str;
+	}
 }

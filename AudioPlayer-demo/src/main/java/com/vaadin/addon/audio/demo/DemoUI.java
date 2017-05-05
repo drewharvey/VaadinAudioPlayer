@@ -352,8 +352,8 @@ public class DemoUI extends UI {
 
 		protected static HorizontalLayout createFilterEffectElement(AudioPlayer player, FilterEffect filterEffect) {
 			// set filter defaults
-			filterEffect.setType(FilterEffect.Type.HIGHPASS);
-			filterEffect.setFrequency(0);
+			filterEffect.setType(FilterEffect.Type.LOWPASS);
+			filterEffect.setFrequency(500);
 			player.addEffect(filterEffect);
 			// build filter ui component
 			HorizontalLayout effectUi = createEffectContainer("Filter Effect");
@@ -362,19 +362,22 @@ public class DemoUI extends UI {
 			typeSelector.addItems(FilterEffect.Type.HIGHPASS, FilterEffect.Type.LOWPASS);
 			typeSelector.setItemCaption(FilterEffect.Type.HIGHPASS, "High pass");
 			typeSelector.setItemCaption(FilterEffect.Type.LOWPASS, "Low pass");
-			typeSelector.select(FilterEffect.Type.HIGHPASS);
+			typeSelector.select(FilterEffect.Type.LOWPASS);
 			typeSelector.addValueChangeListener(e -> {
 				Log.message(player, "Set filter to " + ((FilterEffect.Type) typeSelector.getValue()));
 				filterEffect.setType((FilterEffect.Type) typeSelector.getValue());
+				//player.refreshEffect(filterEffect);
 			});
 			Slider frequency = new Slider();
 			effectUi.addComponent(frequency);
 			frequency.setMax(10000);
 			frequency.setMin(0);
 			frequency.setWidth("250px");
+			frequency.setValue(500d);
 			frequency.addValueChangeListener(e -> {
 				double freqVal = frequency.getValue();
 				filterEffect.setFrequency(freqVal);
+				//player.refreshEffect(filterEffect);
 				Log.message(player, "Frequency set to " + freqVal);
 			});
 			effectUi.setExpandRatio(frequency, 1);

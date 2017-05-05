@@ -45,6 +45,20 @@ public abstract class AudioNode {
 	}-*/;
 	
 	/**
+	 * Disconnect this AudioNode from all outputs.
+	 */
+	public void disconnect() {
+		if (getNumberOfOutputs() > 0) {
+			disconnect(this.wa_node);
+		}
+	}
+	
+	// See https://developer.mozilla.org/en-US/docs/Web/API/AudioNode/disconnect
+	private static final native void disconnect(elemental.html.AudioNode src) /*-{
+		src.disconnect();
+	}-*/;
+	
+	/**
 	 * Disconnect another AudioNode from this AudioNode
 	 * @param other another AudioNode
 	 */
@@ -77,7 +91,19 @@ public abstract class AudioNode {
 		return node.numberOfOutputs;
 	}-*/;
 	
+	/**
+	 * Prints the js audio node to the console as an error for debugging.
+	 */
+	public void printToConsole() {
+		printToConsole(wa_node);
+	}
+	private static final native void printToConsole(elemental.html.AudioNode node) /*-{
+		console.error(node);
+	}-*/;
 	
-	
+	@Override
+	public String toString() {
+		return "AudioNode";
+	}
 	
 }

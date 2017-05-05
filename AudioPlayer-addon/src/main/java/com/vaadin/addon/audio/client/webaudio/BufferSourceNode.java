@@ -1,14 +1,22 @@
 package com.vaadin.addon.audio.client.webaudio;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import com.google.gwt.user.client.Timer;
 import com.vaadin.addon.audio.shared.util.Log;
 
 import elemental.html.AudioBuffer;
 import elemental.html.AudioContext;
 
+//See https://developer.mozilla.org/en-US/docs/Web/API/AudioBufferSourceNode
 public class BufferSourceNode extends AudioScheduledSourceNode {
+	
+	private static final Logger logger = Logger.getLogger("BufferSourceNode");
 
-	// See https://developer.mozilla.org/en-US/docs/Web/API/AudioBufferSourceNode
+	public static interface BufferReadyListener {
+		void onBufferReady(Buffer b);
+	}
 	
 	private Buffer buffer;
 	private Timer bufferTimer; 
@@ -25,10 +33,10 @@ public class BufferSourceNode extends AudioScheduledSourceNode {
 	public void resetNode() {
 		// create new buffer source node and add the current buffer
 		setNativeNode(createBufferSource(getNativeContext()));
-		setBuffer(buffer);
+		setBuffer(buffer, null);
 	}
 	
-	public void setBuffer(Buffer buffer) {
+	public void setBuffer(final Buffer buffer, final BufferReadyListener cb) {
 		if(buffer == this.buffer) {
 			return;
 		}
@@ -47,8 +55,11 @@ public class BufferSourceNode extends AudioScheduledSourceNode {
 				if(!b.isReady()) {
 					bufferTimer.schedule(20);
 				} else {
-					Log.message(BufferSourceNode.this, "set audio buffer");
+					logger.log(Level.SEVERE, " === AUDIO BUFFER IS READY ==== ");
 					setNativeBuffer(b.getAudioBuffer());
+					if (cb != null) {
+						cb.onBufferReady(b);
+					}
 				}
 			}
 		};
@@ -108,4 +119,8 @@ public class BufferSourceNode extends AudioScheduledSourceNode {
 		return node.playbackRate;
 	}-*/;
 	
+	@Override
+	public String toString() {
+		return "BufferSourceNode";
+	}
 }
