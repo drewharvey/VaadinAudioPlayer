@@ -117,6 +117,7 @@ public class Stream {
 				cd.setLeadOutDuration(time_lead_out);
 				cd.setStartTimeOffset(time_start_offset);
 				cd.setEndTimeOffset(time_end_offset);
+				cd.setOverlapTime(chunkOverlapLength);
 
 				// Add descriptor to list
 				chunks.add(cd);

@@ -9,6 +9,7 @@ import com.google.gwt.core.client.Duration;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.Window;
 import com.vaadin.addon.audio.client.ClientStream.DataCallback;
 import com.vaadin.addon.audio.client.webaudio.Buffer;
 import com.vaadin.addon.audio.client.webaudio.BufferSourceNode;
@@ -58,12 +59,12 @@ public class AudioStreamPlayer {
 			public void onDataReceived(ChunkDescriptor chunk) {
 				BufferPlayer player = new BufferPlayer();
 				player.setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk));
-				setPersistingPlayerOptions(player, true);
-				setCurrentPlayer(player);
-				// TODO: get chunk overlap time from chunk descriptor
-				//chunkOverlapTime = chunk.getLeadOutDuration();
+				AudioStreamPlayer.this.setPersistingPlayerOptions(player, true);
+				AudioStreamPlayer.this.setCurrentPlayer(player);
+				AudioStreamPlayer.this.chunkOverlapTime = chunk.getOverlapTime();
 				// TODO: shouldn't need to add 1 here
-				timePerChunk = chunk.getEndTimeOffset() - chunk.getStartSampleOffset() + 1 - chunkOverlapTime;
+				AudioStreamPlayer.this.timePerChunk = 
+						chunk.getEndTimeOffset() - chunk.getStartSampleOffset() + 1 - chunkOverlapTime;
 				logError("timePerChunk: " + timePerChunk + "\r\n" + "chunkLeadTime: " + chunkOverlapTime);
 			}
 		});

@@ -1,6 +1,8 @@
 package com.vaadin.addon.audio.server;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import com.vaadin.addon.audio.shared.AudioPlayerClientRpc;
@@ -140,6 +142,10 @@ public class AudioPlayer extends AbstractExtension {
     	return stream.getDuration();
     }
     
+    /**
+     * Gets current audio players time position.
+     * @return int milliseconds
+     */
     public int getPosition() {
     	return currentPosition;
     }
@@ -230,49 +236,29 @@ public class AudioPlayer extends AbstractExtension {
 	}
 	
 	public String getPositionString() {
-		// TODO: use standard formatter
-		int hours = (getPosition() / 1000 / 60 / 60);
-		int minutes = (getPosition() / 1000 / 60) % 60;
-		int seconds = (getPosition() / 1000) % 60;
+		long second = (getPosition() / 1000) % 60;
+		long minute = (getPosition() / (1000 * 60)) % 60;
+		long hour = (getPosition() / (1000 * 60 * 60)) % 24;
 		
-		String text = "";
-		if(hours > 0) {
-			if(!text.isEmpty()) text += ":";
-			text += hours;
-		}
-		if(minutes >= 0) {
-			if(!text.isEmpty()) text += ":";
-			text += minutes;
-		}
-		if(seconds >= 0) {
-			if(!text.isEmpty()) text += ":";
-			text += seconds;
-		}
+		long durationHours = (getDuration() / (1000 * 60 * 60)) % 24;
 		
-		return text;
+		if (durationHours > 0) {
+			return String.format("%02d:%02d:%02d", hour, minute, second);
+		} else {
+			return String.format("%02d:%02d", minute, second);
+		}
 	}
 	
 	public String getDurationString() {
-		// TODO: use standard formatter
-		int hours = (getDuration() / 1000 / 60 / 60);
-		int minutes = (getDuration() / 1000 / 60) % 60;
-		int seconds = (getDuration() / 1000) % 60;
+		long second = (getDuration() / 1000) % 60;
+		long minute = (getDuration() / (1000 * 60)) % 60;
+		long hour = (getDuration() / (1000 * 60 * 60)) % 24;
 		
-		String text = "";
-		if(hours > 0) {
-			if(!text.isEmpty()) text += ":";
-			text += hours;
+		if (hour > 0) {
+			return String.format("%02d:%02d:%02d", hour, minute, second);
+		} else {
+			return String.format("%02d:%02d", minute, second);
 		}
-		if(minutes >= 0) {
-			if(!text.isEmpty()) text += ":";
-			text += minutes;
-		}
-		if(seconds >= 0) {
-			if(!text.isEmpty()) text += ":";
-			text += seconds;
-		}
-		
-		return text;
 	}
 	
 	//=========================================================================

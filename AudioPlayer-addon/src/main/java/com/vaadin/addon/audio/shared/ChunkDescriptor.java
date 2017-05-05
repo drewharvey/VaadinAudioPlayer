@@ -13,6 +13,7 @@ public class ChunkDescriptor implements Serializable {
 	private int endTimeOffset;
 	private int leadInDuration;
 	private int leadOutDuration;
+	private int overlapTime;
 
 	// PCM source stream data offsets
 	private int startSampleOffset;
@@ -36,6 +37,14 @@ public class ChunkDescriptor implements Serializable {
 
 	public void setLeadOutDuration(int leadOutDuration) {
 		this.leadOutDuration = leadOutDuration;
+	}
+	
+	public void setOverlapTime(int overlapTime) {
+		this.overlapTime = overlapTime;
+	}
+	
+	public int getOverlapTime() {
+		return overlapTime;
 	}
 
 	public void setStartSampleOffset(int startSampleOffset) {
