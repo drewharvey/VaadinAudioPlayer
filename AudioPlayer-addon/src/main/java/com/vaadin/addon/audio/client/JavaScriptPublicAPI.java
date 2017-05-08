@@ -40,7 +40,7 @@ public class JavaScriptPublicAPI {
 		players.remove(player);
 	}
 	
-	private static AudioStreamPlayer getPlayer(int index) {
+	private static AudioStreamPlayer getAudioPlayer(int index) {
 		if (index < 0) {
 			index = 0;
 		}
@@ -49,6 +49,14 @@ public class JavaScriptPublicAPI {
 			player = players.get(index);
 		} 
 		return player;
+	}
+	
+	public static AudioStreamPlayer[] getAudioPlayers() {
+		AudioStreamPlayer[] arr = new AudioStreamPlayer[players.size()];
+		for (int i = 0; i < players.size(); i++) {
+			arr[i] = players.get(i);
+		}
+		return arr;
 	}
 	
 	/**<p>Gets position of an audio player. If no player index is provided,
@@ -63,7 +71,7 @@ public class JavaScriptPublicAPI {
 	 */
 	private static int getPosition(int playerIndex) {
 		Logger.getLogger("JavaScriptPublicAPI").log(Level.SEVERE, "PLAYER INDEX: " + playerIndex);
-		AudioStreamPlayer player = getPlayer(playerIndex);
+		AudioStreamPlayer player = getAudioPlayer(playerIndex);
 		if (player != null) {
 			return player.getPosition();
 		}
@@ -82,7 +90,7 @@ public class JavaScriptPublicAPI {
 	 * 		Returns -1 if no valid audio player is found.
 	 */
 	private static int getDuration(int playerIndex) {
-		AudioStreamPlayer player = getPlayer(playerIndex);
+		AudioStreamPlayer player = getAudioPlayer(playerIndex);
 		if (player != null) {
 			return player.getDuration();
 		}
@@ -103,6 +111,10 @@ public class JavaScriptPublicAPI {
 		$wnd.vaadin_audioplayer.getDuration = function(index) {
 			index = index || 0;
 			return @com.vaadin.addon.audio.client.JavaScriptPublicAPI::getDuration(I)(index);
+		}
+		
+		$wnd.vaadin_audioplayer.getAudioPlayers = function() {
+			return @com.vaadin.addon.audio.client.JavaScriptPublicAPI::getAudioPlayers()();
 		}
 		
 	}-*/;
