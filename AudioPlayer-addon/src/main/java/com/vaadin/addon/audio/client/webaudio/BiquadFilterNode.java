@@ -77,7 +77,8 @@ public class BiquadFilterNode extends AudioNode {
 	
 	
 	public void setType(Type type) {
-		setType(getNativeNode(), type.name());
+		// type string must be all lowercase
+		setType(getNativeNode(), type.name().toLowerCase());
 	}
 	private static final native void setType(elemental.html.AudioNode node, String type) /*-{
 		node.type = type;

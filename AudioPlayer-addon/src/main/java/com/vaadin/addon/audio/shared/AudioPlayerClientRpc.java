@@ -1,5 +1,7 @@
 package com.vaadin.addon.audio.shared;
 
+import java.util.List;
+
 import com.vaadin.shared.communication.ClientRpc;
 
 // ClientRpc is used to pass events from server to client
@@ -34,5 +36,7 @@ public interface AudioPlayerClientRpc extends ClientRpc {
 	void setVolume(double volume);
 	
 	void setBalance(double balance);
+	
+	void updateEffects(List<SharedEffect> effects);
 	
 }

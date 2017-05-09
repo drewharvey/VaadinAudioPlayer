@@ -1,6 +1,7 @@
 package com.vaadin.addon.audio.client;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import com.google.gwt.user.client.Timer;
@@ -47,6 +48,7 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 	
 	private AudioStreamPlayer player;
 	private ClientStream stream;
+	private HashMap<String, Effect> effectsMap = new HashMap<String, Effect>();
 	
     public AudioPlayerConnector() {
     }
@@ -64,16 +66,32 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
     	Log.message(this, "shared state effects list changed");
     	// TODO: don't rebuild list every time
     	
-		List<Effect> effects = new ArrayList<Effect>();
-    	for (SharedEffect e : getState().effects) {
-    		final Effect effect = getEffectFromSharedEffect(e);
-			if (effect != null) {
-				Log.message(this, "Adding effect: " + e.getName().name());
-    			Log.message(this, e.toString());
-				effects.add(effect);
+//		List<Effect> effects = new ArrayList<Effect>();
+//    	for (SharedEffect e : getState().effects) {
+//    		final Effect effect = getEffectFromSharedEffect(e);
+//			if (effect != null) {
+//				Log.message(this, "Adding effect: " + e.getName().name());
+//    			Log.message(this, e.toString());
+//				effects.add(effect);
+//			}
+//    	}
+//    	player.setEffects(effects);
+    	
+    	List<SharedEffect> effects = getState().effects;
+    	for (SharedEffect sharedEffect : effects) {
+			Effect existingEffect = effectsMap.get(sharedEffect.getID());
+			// check if the effect already exists
+			if (existingEffect != null) {
+				existingEffect.setProperties(sharedEffect.getProperties());
+			} else {
+				// if it doesn't exist, create it and try to store it
+				existingEffect = getEffectFromSharedEffect(sharedEffect);
+				if (existingEffect != null) {
+					effectsMap.put(sharedEffect.getID(), existingEffect);
+					player.addEffect(existingEffect);
+				}
 			}
-    	}
-    	player.setEffects(effects);
+		}
     }
     
     private Effect getEffectFromSharedEffect(SharedEffect sharedEffect) {
@@ -188,6 +206,24 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 			public void setBalance(double balance) {
 				Log.message(AudioPlayerConnector.this, "set balance to " + balance);
 				player.setBalance(balance);
+			}
+			
+			@Override
+			public void updateEffects(List<SharedEffect> effects) {
+				for (SharedEffect sharedEffect : effects) {
+					Effect existingEffect = effectsMap.get(sharedEffect.getID());
+					// check if the effect already exists
+					if (existingEffect != null) {
+						existingEffect.setProperties(sharedEffect.getProperties());
+					} else {
+						// if it doesn't exist, create it and try to store it
+						existingEffect = getEffectFromSharedEffect(sharedEffect);
+						if (existingEffect != null) {
+							effectsMap.put(sharedEffect.getID(), existingEffect);
+							player.addEffect(existingEffect);
+						}
+					}
+				}
 			}
 
         });

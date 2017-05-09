@@ -11,8 +11,10 @@ import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.vaadin.addon.audio.client.ClientStream.DataCallback;
+import com.vaadin.addon.audio.client.webaudio.AudioNode;
 import com.vaadin.addon.audio.client.webaudio.Buffer;
 import com.vaadin.addon.audio.client.webaudio.BufferSourceNode;
+import com.vaadin.addon.audio.client.webaudio.Context;
 import com.vaadin.addon.audio.shared.ChunkDescriptor;
 import com.vaadin.addon.audio.shared.util.Log;
 
@@ -107,15 +109,7 @@ public class AudioStreamPlayer {
 		}
 		
 		// start timer to play next chunk of audio
-		if (position < timePerChunk) {
-			// for some reason the first chunk is fading out 500ms early (or the second chunk is 500ms late)
-			// TODO: first chunk should work the same way as others
-			logError("Scheduling for " + (timePerChunk - chunkPosition - chunkOverlapTime));
-			playNextChunkTimer.schedule(timePerChunk - chunkPosition - chunkOverlapTime - execTime.elapsedMillis());
-		} else {
-			logError("Scheduling for " + (timePerChunk - chunkPosition));
-			playNextChunkTimer.schedule(timePerChunk - chunkPosition - execTime.elapsedMillis());
-		}
+		scheduleNextChunk();
 		
 		// start loading next chunk
 		int nextChunkTime = position + timePerChunk + chunkOverlapTime;
@@ -211,11 +205,12 @@ public class AudioStreamPlayer {
 		}
 		logError("resume() - elapsed: " + chunkPosition);
 		logError("scheduled for " + (timePerChunk - chunkPosition));
+		connectBufferPlayerToEffectChain(getCurrentPlayer(), effects);
 		getCurrentPlayer().play(chunkPosition);
 		// track execution time to offset scheduled time for next chunk
 		execTime = new Duration();
 		// schedule next chunk handoff
-		playNextChunkTimer.schedule(timePerChunk - chunkPosition);
+		scheduleNextChunk();
 		// Duration object starts counting MS when instantiated
 		chunkPositionClock = new Duration();
 	}
@@ -242,6 +237,18 @@ public class AudioStreamPlayer {
 				AudioStreamPlayer.this.setCurrentPlayer(player);
 			}
 		});
+	}
+	
+	private void scheduleNextChunk() {
+		if (position < timePerChunk) {
+			// for some reason the first chunk is fading out 500ms early (or the second chunk is 500ms late)
+			// TODO: first chunk should work the same way as others
+			logError("Scheduling for " + (timePerChunk - chunkPosition - chunkOverlapTime));
+			playNextChunkTimer.schedule(timePerChunk - chunkPosition - chunkOverlapTime - execTime.elapsedMillis());
+		} else {
+			logError("Scheduling for " + (timePerChunk - chunkPosition));
+			playNextChunkTimer.schedule(timePerChunk - chunkPosition - execTime.elapsedMillis());
+		}
 	}
 	
 	private void setCurrentPlayer(BufferPlayer player) {
@@ -310,11 +317,36 @@ public class AudioStreamPlayer {
 		player.setVolume(volume);
 		player.setPlaybackSpeed(playbackSpeed);
 		player.setBalance(balance);
-		player.setEffects(getEffects());
-		// TODO: should players auto build chain when changed?
-		// force player to rebuild audio node chain
-		if (rebuildNodeChain) {
-			player.getOutput();
+		connectBufferPlayerToEffectChain(player, effects);
+	}
+	
+	/**
+	 * Connects a BufferPlayer to the current set of effects by connecting the 
+	 * BufferPlayer's source to the effects chain and then outputs to the BufferPlayer's
+	 * output node.
+	 * 
+	 * BufferPlayer.source -> [Effect Chain] -> BufferPlayer.output
+	 * 
+	 * @param player
+	 * @param effects
+	 */
+	private void connectBufferPlayerToEffectChain(BufferPlayer player, List<Effect> effects) {
+		logger.log(Level.SEVERE, "connecting BufferPlayer source and output to effects chain");
+		AudioNode source = player.getSourceNode();
+		AudioNode output = player.getOutput();
+		logger.log(Level.SEVERE, "source: " + source.toString());
+		logger.log(Level.SEVERE, "output: " + output.toString());
+		source.disconnect();
+		if (effects.size() > 0) {
+			AudioNode firstEffect = effects.get(0).getAudioNode();
+			AudioNode lastEffect = effects.get(effects.size()-1).getAudioNode();
+			logger.log(Level.SEVERE, "connecting source -> first effect: " + firstEffect.toString());
+			lastEffect.disconnect();
+			source.connect(firstEffect);
+			lastEffect.connect(output);
+		} else {
+			logger.log(Level.SEVERE, "connecting source -> output");
+			source.connect(output);
 		}
 	}
 	
@@ -402,20 +434,69 @@ public class AudioStreamPlayer {
 		return balance;
 	}
 	
+	public void addEffect(Effect effect) {
+		logError("AudioStreamPlayer add effect " + effect.getID());
+		effects.add(effect);
+		connectEffectNodes(effects);
+		BufferPlayer currentPlayer = getCurrentPlayer();
+		if (currentPlayer != null) {
+			connectBufferPlayerToEffectChain(currentPlayer, effects);
+		}
+	}
+	
+	public void removeEffect(Effect effect) {
+		logError("AudioStreamPlayer removing effect " + effect.getID());
+		effects.remove(effect);
+		connectEffectNodes(effects);
+		BufferPlayer currentPlayer = getCurrentPlayer();
+		if (currentPlayer != null) {
+			connectBufferPlayerToEffectChain(currentPlayer, effects);
+		}
+	}
+	
 	public void setEffects(List<Effect> effects) {
 		logError("AudioStreamPlayer adding effects");
 		this.effects.clear();
 		if (effects != null) {
 			this.effects.addAll(effects);
 		}
-		if (getCurrentPlayer() != null) {
-			getCurrentPlayer().setEffects(effects);
+		connectEffectNodes(effects);
+		BufferPlayer currentPlayer = getCurrentPlayer();
+		if (currentPlayer != null) {
+			connectBufferPlayerToEffectChain(currentPlayer, effects);
 		}
 		
 	}
 	
 	public List<Effect> getEffects() {
 		return effects;
+	}
+	
+	/**
+	 * Goes thru list of effects and connects their corresponding AudioNode's 
+	 * to enable us to connect the effects chain in between our source and
+	 * destination nodes.
+	 */
+	private void connectEffectNodes(List<Effect> effects) {
+		// TODO: optimize by not completely rebuilding unless neccessary
+		logger.log(Level.SEVERE, "connectEffectNodes()");
+		String msg = "";
+		AudioNode prev = null;
+		AudioNode current = null;
+		for (Effect effect : effects) {
+			prev = current;
+			current = effect.getAudioNode();
+			// disconnect any previous connections
+			if (current != null) {
+				current.disconnect();
+				msg += current.toString() + " -> ";
+				// connect two nodes
+				if (prev != null) {
+					prev.connect(current);
+				}
+			}
+		}
+		logger.log(Level.SEVERE, "Effects node chain: " + msg);
 	}
 
 	private static void logError(String msg) {

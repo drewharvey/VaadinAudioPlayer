@@ -366,7 +366,7 @@ public class DemoUI extends UI {
 			typeSelector.addValueChangeListener(e -> {
 				Log.message(player, "Set filter to " + ((FilterEffect.Type) typeSelector.getValue()));
 				filterEffect.setType((FilterEffect.Type) typeSelector.getValue());
-				//player.refreshEffect(filterEffect);
+				player.updateEffect(filterEffect);
 			});
 			Slider frequency = new Slider();
 			effectUi.addComponent(frequency);
@@ -377,7 +377,7 @@ public class DemoUI extends UI {
 			frequency.addValueChangeListener(e -> {
 				double freqVal = frequency.getValue();
 				filterEffect.setFrequency(freqVal);
-				//player.refreshEffect(filterEffect);
+				player.updateEffect(filterEffect);
 				Log.message(player, "Frequency set to " + freqVal);
 			});
 			effectUi.setExpandRatio(frequency, 1);

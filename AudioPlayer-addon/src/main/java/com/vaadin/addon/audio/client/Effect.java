@@ -1,8 +1,10 @@
 package com.vaadin.addon.audio.client;
 
-import elemental.html.AudioContext;
+import java.util.List;
+
 import com.vaadin.addon.audio.client.webaudio.AudioNode;
 import com.vaadin.addon.audio.client.webaudio.Context;
+import com.vaadin.addon.audio.shared.SharedEffectProperty;
 
 /**
  * Base class for a pluggable effect
@@ -12,6 +14,11 @@ public abstract class Effect {
 	private String id;
 	private BufferPlayer player;
 	private AudioNode node;
+	
+	
+	public abstract void init(Context context);
+	
+	public abstract void setProperties(List<SharedEffectProperty> props);
 	
 	public void setID(String id) {
 		this.id = id;
@@ -39,8 +46,6 @@ public abstract class Effect {
 	public AudioNode getAudioNode() {
 		return node;
 	}
-	
-	public abstract void init(Context context);
 	
 	public String toString() {
 		return "Effect";

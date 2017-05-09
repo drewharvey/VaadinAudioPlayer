@@ -1,8 +1,11 @@
 package com.vaadin.addon.audio.client.effects;
 
+import java.util.List;
+
 import com.vaadin.addon.audio.client.Effect;
 import com.vaadin.addon.audio.client.webaudio.Context;
 import com.vaadin.addon.audio.client.webaudio.GainNode;
+import com.vaadin.addon.audio.shared.SharedEffectProperty;
 import com.vaadin.addon.audio.shared.util.Log;
 
 
@@ -12,6 +15,11 @@ public class VolumeEffect extends Effect {
 	public void init(Context context) {
 		Log.message(this, "Creating AudioGainNode");
 		this.setAudioNode(context.createGainNode());
+	}
+	
+	@Override
+	public void setProperties(List<SharedEffectProperty> props) {
+		
 	}
 	
 	public GainNode getGainNode() {

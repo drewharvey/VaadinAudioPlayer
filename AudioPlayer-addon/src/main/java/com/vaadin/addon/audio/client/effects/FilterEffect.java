@@ -1,6 +1,8 @@
 package com.vaadin.addon.audio.client.effects;
 
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.vaadin.addon.audio.client.Effect;
 import com.vaadin.addon.audio.client.webaudio.BiquadFilterNode;
@@ -22,6 +24,7 @@ public class FilterEffect extends Effect {
 		setAudioNode(context.createBiquadFilter());
 	}
 	
+	@Override
 	public void setProperties(List<SharedEffectProperty> props) {
 		if (getAudioNode() == null) {
 			return;
@@ -30,12 +33,13 @@ public class FilterEffect extends Effect {
 			if (prop.getProperty() == PropertyName.FilterType) {
 				// make sure we have a value Type
 				String type = prop.getValue();
-				for (BiquadFilterNode.Type t : BiquadFilterNode.Type.values()) {
-					if (t.name().equalsIgnoreCase(type)) {
-						setType(t);
-						break;
-					}
-				}
+//				for (BiquadFilterNode.Type t : BiquadFilterNode.Type.values()) {
+//					if (t.name().equalsIgnoreCase(type)) {
+//						setType(t);
+//						break;
+//					}
+//				}
+				setType(prop.getValue());
 			} else if (prop.getProperty() == PropertyName.Frequency) {
 				setFrequency(Double.parseDouble(prop.getValue()));
 			} else if (prop.getProperty() == PropertyName.Gain) {
@@ -76,6 +80,12 @@ public class FilterEffect extends Effect {
 	
 	public void setType(BiquadFilterNode.Type type) {
 		((BiquadFilterNode) getAudioNode()).setType(type);
+	}
+	
+	public void setType(String type) {
+		Logger.getLogger("FilterEffect").log(Level.SEVERE, "setType: " + type);
+		// TODO: check if type is valid before setting
+		setType(BiquadFilterNode.Type.valueOf(type.toUpperCase()));
 	}
 	
 	@Override

@@ -32,7 +32,6 @@ public class BufferPlayer {
 		STOPPED
 	}
 
-	private List<Effect> effects = new ArrayList<Effect>();
 	//private BalanceEffect balanceEffect;
 	
 	private BufferSourceNode source;
@@ -47,62 +46,22 @@ public class BufferPlayer {
 	
 	public BufferPlayer(Buffer buffer) {
 		//logger.log(Level.SEVERE, "create");
-		
 		Context context = Context.get();
 		source = context.createBufferSourceNode();
-		if(buffer != null) {
+		if (buffer != null) {
 			source.setNativeBuffer(buffer.getAudioBuffer());
 		}
-		output = ((GainNode) getOutput());
-	}
-	
-	// TODO: unused, remove?
-	public void resetBufferPlayer(Buffer buffer) {
-		//logger.log(Level.SEVERE, "reset");
-		
-		Context context = Context.get();
-		source = context.createBufferSourceNode();
-		if(buffer != null) {
-			source.setNativeBuffer(buffer.getAudioBuffer());
-		}
+		// create output audio node
 		output = context.createGainNode();
-		
-		// XXX, TODO: rework this
-		source.connect(output);
 		output.connect(context.getDestination());
 	}
 	
-	public AudioNode getOutput() {
-		Context ctx = Context.get();
-		// first run we need to create the output node
-		if (output == null) {
-			output = ctx.createGainNode();
-			output.connect(ctx.getDestination());
-			dirty = true;
-		}
-		// if anything has changed, reconstruct the entire chain of audio nodes and effects
-		if (dirty) {
-			//logger.log(Level.SEVERE, "marked as dirty, reconfigure output");
-			buildAudioNodeChain();
-			dirty = false;
-		}
-		return output;
+	public AudioNode getSourceNode() {
+		return source;
 	}
 	
-	private void buildAudioNodeChain() {
-		AudioNode current = source;
-		AudioNode prev = null;
-//		for(Effect e : effects) {
-//			prev = current;
-//			current = e.getAudioNode();
-//			prev.connect(current);
-//		}
-		// connect predefined balance node
-//		current.connect(balanceEffect.getAudioNode(), 0, 0);
-//		current = balanceEffect.getAudioNode();
-		
-		// finally connect to last node
-		current.connect(output);
+	public AudioNode getOutput() {
+		return output;
 	}
 	
 	public void play(int offset_millis) {
@@ -131,14 +90,11 @@ public class BufferPlayer {
 	}
 
 	private void resetSourceNode(Buffer buffer) {
-		Context context = Context.get();
-		source.disconnect(output);
+		source.disconnect();
 		source.resetNode();
 		if (buffer != null) {
 			source.setNativeBuffer(buffer.getAudioBuffer());
 		}
-		// XXX, TODO: rework this
-		source.connect(output);
 	}
 	
 	public void setBuffer(Buffer buffer) {
@@ -182,30 +138,6 @@ public class BufferPlayer {
 	public double getBalance() {
 		//return balanceEffect.getBalance();
 		return 0;
-	}
-
-	public void setEffects(List<Effect> effects) {
-		// TODO: only replace/remove effects based on if there are matching IDs
-		this.effects.clear();
-		this.effects.addAll(effects);
-		for (Effect e : effects) {
-			e.setPlayer(this);
-			//logger.log(Level.SEVERE, "BufferPlayer adding effect " + e.getClass().getName());
-		}
-		dirty = true;
-	}
-	
-	public void addEffect(Effect effect) {
-		//logger.log(Level.SEVERE, "add effect " + effect);
-		effect.setPlayer(this);
-		effects.add(effect);
-		dirty = true;
-	}
-
-	public void removeEffect(Effect effect) {
-		//logger.log(Level.SEVERE, "remove effect " + effect);
-		effects.remove(effect);
-		dirty = true;
 	}
 	
 	public String toString() {

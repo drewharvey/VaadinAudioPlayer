@@ -221,11 +221,23 @@ public class AudioPlayer extends AbstractExtension {
 	
 	public void removeEffect(Effect effect) {
 		// TODO: optimize removing effects so we don't have to loop
-		getState().effects.remove(effect.getSharedEffectObject());
 		for (SharedEffect e : getState().effects) {
 			if (effect.getID().equals(e.getID())) {
-				getState().effects.remove(e);
 				Log.message(AudioPlayer.this,"removing effect: " + e.getName().name());
+				getState().effects.remove(e);
+			}
+		}
+	}
+	
+	/**
+	 * Updates properties of the effect and passes the changes to the client side.
+	 * @param effect
+	 */
+	public void updateEffect(Effect effect) {
+		for (SharedEffect e : getState().effects) {
+			if (effect.getID().equals(e.getID())) {
+				Log.message(AudioPlayer.this,"updating effect: " + e.getName().name());
+				e.setProperties(effect.getSharedEffectObject().getProperties());
 			}
 		}
 	}
