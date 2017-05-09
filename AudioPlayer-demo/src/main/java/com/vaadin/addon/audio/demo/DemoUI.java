@@ -15,6 +15,8 @@ import javax.servlet.annotation.WebServlet;
 import com.vaadin.addon.audio.server.AudioPlayer;
 import com.vaadin.addon.audio.server.Encoder;
 import com.vaadin.addon.audio.server.effects.FilterEffect;
+import com.vaadin.addon.audio.server.effects.FilterEffect.Type;
+import com.vaadin.addon.audio.server.effects.PitchEffect;
 import com.vaadin.addon.audio.server.Stream;
 import com.vaadin.addon.audio.server.AudioPlayer.PlaybackState;
 import com.vaadin.addon.audio.server.AudioPlayer.StateChangeCallback;
@@ -180,9 +182,10 @@ public class DemoUI extends UI {
 
 			sliderLayout.addComponent(speedSlider = new Slider("Speed"));
 			speedSlider.setWidth("150px");
-			speedSlider.setMin(-4);
+			speedSlider.setMin(0.5);
 			speedSlider.setMax(4);
-			speedSlider.setValue(0d);
+			speedSlider.setValue(1d);
+			speedSlider.setResolution(1);
 			speedSlider.addValueChangeListener(e -> {
 				final double playbackSpeed = speedSlider.getValue();
 				player.setPlaybackSpeed(playbackSpeed);
@@ -190,6 +193,7 @@ public class DemoUI extends UI {
 			
 			FilterEffect filterEffect = new FilterEffect();
 			sliderLayout.addComponent(createFilterEffectElement(player, filterEffect));
+			
 
 			innerContainer.addComponent(sliderLayout);
 			innerContainer.setComponentAlignment(sliderLayout, Alignment.MIDDLE_CENTER);

@@ -38,8 +38,7 @@ public class BufferPlayer {
 	private GainNode output;
 	private State state = State.STOPPED;
 	
-	private boolean dirty = true;
-	
+
 	public BufferPlayer() {
 		this(null);
 	}
@@ -111,7 +110,7 @@ public class BufferPlayer {
 	}
 	
 	public void setVolume(double volume) {
-		//logger.log(Level.SEVERE, "set volume to " + volume);
+		// logger.log(Level.SEVERE, "set volume to " + volume);
 		output.setGain(volume);
 	}
 	
@@ -120,7 +119,7 @@ public class BufferPlayer {
 	}
 	
 	public void setPlaybackSpeed(double speed_scale) {
-		//logger.log(Level.SEVERE, "set speed scale " + speed_scale);
+		logger.log(Level.SEVERE, "set speed scale " + speed_scale);
 		source.setPlaybackRate(speed_scale);
 		
 		// TODO: keep normal pitch if speed is changed, normally the pitch also changes
@@ -132,7 +131,7 @@ public class BufferPlayer {
 	}
 	
 	public void setBalance(double balance) {
-		//balanceEffect.setBalance(balance);
+//		balanceEffect.setBalance(balance);
 	}
 	
 	public double getBalance() {

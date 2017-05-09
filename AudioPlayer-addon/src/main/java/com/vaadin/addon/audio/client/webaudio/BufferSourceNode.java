@@ -92,7 +92,7 @@ public class BufferSourceNode extends AudioScheduledSourceNode {
 	}
 	
 	private static final native void setDetune(elemental.html.AudioNode node, double cents) /*-{
-		node.detune = cents;
+		node.detune.value = cents;
 	}-*/;
 	
 	public double getDetune() {
@@ -100,7 +100,7 @@ public class BufferSourceNode extends AudioScheduledSourceNode {
 	}
 	
 	private static final native double getDetune(elemental.html.AudioNode node) /*-{
-		return node.detune;
+		return node.detune.value;
 	}-*/;
 	
 	public void setPlaybackRate(double rate) {
@@ -108,7 +108,7 @@ public class BufferSourceNode extends AudioScheduledSourceNode {
 	}
 	
 	private static final native void setPlaybackRate(elemental.html.AudioNode node, double rate) /*-{
-		node.playbackRate = rate;
+		node.playbackRate.value = rate;
 	}-*/;
 	
 	public double getPlaybackRate() {
@@ -116,7 +116,7 @@ public class BufferSourceNode extends AudioScheduledSourceNode {
 	}
 	
 	private static final native double getPlaybackRate(elemental.html.AudioNode node) /*-{
-		return node.playbackRate;
+		return node.playbackRate.value;
 	}-*/;
 	
 	@Override

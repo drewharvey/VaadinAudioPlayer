@@ -395,9 +395,7 @@ public class AudioStreamPlayer {
 			Log.error(this, "current player is null");
 			return;
 		}
-		if (getCurrentPlayer() != null) {
-			getCurrentPlayer().setVolume(volume);
-		}
+		getCurrentPlayer().setVolume(volume);
 	}
 	
 	public double getVolume() {
@@ -410,9 +408,7 @@ public class AudioStreamPlayer {
 			logError("current player is null");
 			return;
 		}
-		if (getCurrentPlayer() != null) {
-			getCurrentPlayer().setPlaybackSpeed(playbackSpeed);
-		}
+		getCurrentPlayer().setPlaybackSpeed(playbackSpeed);
 	}
 	
 	public double getPlaybackSpeed() {
@@ -425,9 +421,7 @@ public class AudioStreamPlayer {
 			logError("current player is null");
 			return;
 		}
-		if (getCurrentPlayer() != null) {
-			getCurrentPlayer().setBalance(balance);
-		}
+		getCurrentPlayer().setBalance(balance);
 	}
 	
 	public double getBalance() {

@@ -44,7 +44,7 @@ public class AudioPlayer extends AbstractExtension {
     	registerRpc(new AudioPlayerServerRpc() {
 			@Override
 			public void requestChunk(final int chunkID) {
-				Log.message(AudioPlayer.this,"received request for chunk " + chunkID);
+				// Log.message(AudioPlayer.this,"received request for chunk " + chunkID);
 				
 				final UI ui = UI.getCurrent();
 				final AudioPlayer player = AudioPlayer.this;
@@ -56,7 +56,7 @@ public class AudioPlayer extends AbstractExtension {
 							@Override
 							public void run() {
 								player.getClientRPC().sendData(chunkID, stream.isCompressionEnabled(), encodedData);
-								Log.message(AudioPlayer.this, "sent chunk " + chunkID);
+								// Log.message(AudioPlayer.this, "sent chunk " + chunkID);
 							}
 						});
 					}
@@ -66,7 +66,7 @@ public class AudioPlayer extends AbstractExtension {
 			
 			@Override
 			public void reportPlaybackPosition(int position_millis) {
-				Log.message(AudioPlayer.this,"received position report: " + position_millis);
+				// Log.message(AudioPlayer.this,"received position report: " + position_millis);
 				currentPosition = position_millis;
 				for(StateChangeCallback cb : stateCallbacks) {
 					cb.playbackPositionChanged(position_millis);
