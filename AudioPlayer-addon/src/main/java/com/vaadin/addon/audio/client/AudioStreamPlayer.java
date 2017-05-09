@@ -61,7 +61,7 @@ public class AudioStreamPlayer {
 			public void onDataReceived(ChunkDescriptor chunk) {
 				BufferPlayer player = new BufferPlayer();
 				player.setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk));
-				AudioStreamPlayer.this.setPersistingPlayerOptions(player, true);
+				AudioStreamPlayer.this.setPersistingPlayerOptions(player);
 				AudioStreamPlayer.this.setCurrentPlayer(player);
 				AudioStreamPlayer.this.chunkOverlapTime = chunk.getOverlapTime();
 				// TODO: shouldn't need to add 1 here
@@ -119,7 +119,7 @@ public class AudioStreamPlayer {
 			public void onDataReceived(ChunkDescriptor chunk) {
 				BufferPlayer player = new BufferPlayer();
 				player.setBuffer(stream.getBufferForChunk(chunk));
-				AudioStreamPlayer.this.setPersistingPlayerOptions(player, true);
+				AudioStreamPlayer.this.setPersistingPlayerOptions(player);
 				AudioStreamPlayer.this.setNextPlayer(player);
 			}
 		});
@@ -205,6 +205,7 @@ public class AudioStreamPlayer {
 		}
 		logError("resume() - elapsed: " + chunkPosition);
 		logError("scheduled for " + (timePerChunk - chunkPosition));
+		setPersistingPlayerOptions(getCurrentPlayer());
 		connectBufferPlayerToEffectChain(getCurrentPlayer(), effects);
 		getCurrentPlayer().play(chunkPosition);
 		// track execution time to offset scheduled time for next chunk
@@ -233,21 +234,28 @@ public class AudioStreamPlayer {
 			public void onDataReceived(ChunkDescriptor chunk) {
 				BufferPlayer player = new BufferPlayer();
 				player.setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk));
-				AudioStreamPlayer.this.setPersistingPlayerOptions(player, true);
+				AudioStreamPlayer.this.setPersistingPlayerOptions(player);
 				AudioStreamPlayer.this.setCurrentPlayer(player);
 			}
 		});
 	}
 	
 	private void scheduleNextChunk() {
-		if (position < timePerChunk) {
+		playNextChunkTimer.cancel();
+		double chunkDuration = timePerChunk / playbackSpeed;
+		double chunkOffset = chunkPosition / playbackSpeed;
+		double overlapDuration = chunkOverlapTime / playbackSpeed;
+		if (position < chunkDuration) {
 			// for some reason the first chunk is fading out 500ms early (or the second chunk is 500ms late)
 			// TODO: first chunk should work the same way as others
-			logError("Scheduling for " + (timePerChunk - chunkPosition - chunkOverlapTime));
-			playNextChunkTimer.schedule(timePerChunk - chunkPosition - chunkOverlapTime - execTime.elapsedMillis());
+			// truncating after decimal doesn't matter since we are already in milliseconds
+			int time = ((int) (chunkDuration - chunkOffset - overlapDuration));
+			logError("Scheduling for " + time + " [" + chunkDuration + ", " + chunkOffset + ", " + overlapDuration + "]");
+			playNextChunkTimer.schedule(time);
 		} else {
-			logError("Scheduling for " + (timePerChunk - chunkPosition));
-			playNextChunkTimer.schedule(timePerChunk - chunkPosition - execTime.elapsedMillis());
+			int time = ((int) (chunkDuration - chunkOffset));
+			logError("Scheduling for " + time + " [" + chunkDuration + ", " + chunkOffset + ", " + overlapDuration + "]");
+			playNextChunkTimer.schedule(time);
 		}
 	}
 	
@@ -302,13 +310,13 @@ public class AudioStreamPlayer {
 			stop();
 		} else {
 			// make sure the next player has the same options set as current
-			setPersistingPlayerOptions(getNextPlayer(), true);
+			setPersistingPlayerOptions(getNextPlayer());
 			moveToNextPlayer();
 			play(true);
 		}
 	}
 	
-	private void setPersistingPlayerOptions(BufferPlayer player, boolean rebuildNodeChain) {
+	private void setPersistingPlayerOptions(BufferPlayer player) {
 		if (player == null) {
 			Log.error(this, "Cannot copy player options to null BufferPlayer");
 			return;
@@ -372,7 +380,7 @@ public class AudioStreamPlayer {
 					@Override
 					public void onBufferReady(Buffer b) {
 						// setup buffer player and play when ready
-						AudioStreamPlayer.this.setPersistingPlayerOptions(player, true);
+						AudioStreamPlayer.this.setPersistingPlayerOptions(player);
 						AudioStreamPlayer.this.setCurrentPlayer(player);
 						AudioStreamPlayer.this.play(offset, true);
 					}
@@ -408,7 +416,9 @@ public class AudioStreamPlayer {
 			logError("current player is null");
 			return;
 		}
+		pause();
 		getCurrentPlayer().setPlaybackSpeed(playbackSpeed);
+		resume();
 	}
 	
 	public double getPlaybackSpeed() {
