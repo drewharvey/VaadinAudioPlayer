@@ -26,6 +26,13 @@ public class BalanceEffect extends Effect {
 		
 	}
 	
+	@Override
+	public BalanceEffect createCopy(Context context) {
+		BalanceEffect e = new BalanceEffect();
+		e.init(context);
+		return e;
+	}
+	
 	/**
 	 * Sets the left/right position of the audio. 
 	 * The value range is from -1 to 1.

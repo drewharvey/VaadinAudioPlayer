@@ -29,7 +29,7 @@ public class BufferPlayer {
 	
 	private enum State {
 		PLAYING,
-		STOPPED
+		STOPPED 
 	}
 
 	//private BalanceEffect balanceEffect;
@@ -116,6 +116,13 @@ public class BufferPlayer {
 	
 	public double getVolume() {
 		return output.getGain();
+	}
+	
+	public void setVolumeAfterMilliseconds(double volume, int milliseconds) {
+		double seconds = milliseconds / 1000d;
+		logger.log(Level.SEVERE, "setVolumeAfterMilliseconds [volume=" + volume + ", seconds=" + seconds + "] + ");
+		//output.exponentialRampToValueAtTime(volume, Context.get().getCurrentTime() + seconds);
+		output.setValueAtTime(volume, seconds);
 	}
 	
 	public void setPlaybackSpeed(double speed_scale) {

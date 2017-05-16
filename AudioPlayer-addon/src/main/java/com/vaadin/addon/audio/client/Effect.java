@@ -16,9 +16,27 @@ public abstract class Effect {
 	private AudioNode node;
 	
 	
+	/**
+	 * Initializes the effects object and creates the required client side
+	 * objects.
+	 * @param context
+	 */
 	public abstract void init(Context context);
 	
+	/**
+	 * Sets the effect's property values.
+	 * @param props
+	 */
 	public abstract void setProperties(List<SharedEffectProperty> props);
+	
+	/**
+	 * Creates new instance with the same values as the effect being copied.
+	 * The new instance will have a different ID and a new AudioNode will
+	 * be created.
+	 * @param context
+	 * @return new instance
+	 */
+	public abstract Effect createCopy(Context context);
 	
 	public void setID(String id) {
 		this.id = id;

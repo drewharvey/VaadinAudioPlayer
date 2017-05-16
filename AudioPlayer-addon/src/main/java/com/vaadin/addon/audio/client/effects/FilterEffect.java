@@ -31,14 +31,7 @@ public class FilterEffect extends Effect {
 		}
 		for (SharedEffectProperty prop : props) {
 			if (prop.getProperty() == PropertyName.FilterType) {
-				// make sure we have a value Type
 				String type = prop.getValue();
-//				for (BiquadFilterNode.Type t : BiquadFilterNode.Type.values()) {
-//					if (t.name().equalsIgnoreCase(type)) {
-//						setType(t);
-//						break;
-//					}
-//				}
 				setType(prop.getValue());
 			} else if (prop.getProperty() == PropertyName.Frequency) {
 				setFrequency(Double.parseDouble(prop.getValue()));
@@ -48,6 +41,18 @@ public class FilterEffect extends Effect {
 				setQ(Double.parseDouble(prop.getValue()));
 			}
 		}
+	}
+	
+	@Override
+	public FilterEffect createCopy(Context context) {
+		FilterEffect e = new FilterEffect();
+		e.init(context);
+		e.setFrequency(getFrequency());
+		e.setGain(getGain());
+		e.setPlayer(getPlayer());
+		e.setQ(getQ());
+		e.setType(getType());
+		return e;
 	}
 	
 	public double getQ() {

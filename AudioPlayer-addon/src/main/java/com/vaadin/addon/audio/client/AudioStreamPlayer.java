@@ -94,11 +94,14 @@ public class AudioStreamPlayer {
 			return;
 		}
 		
+		logger.log(Level.SEVERE, "currentPlayer: " + currentPlayer + "\n\rprevPlayer: " + (currentPlayer == 0 ? MAX_PLAYERS - 1 : currentPlayer - 1));
+		
 		chunkPosition = timeOffset;
 		
 		if (useCrossFade) {
 			// use cross fade to blend prev and current audio together
-			crossFadePlayers(getCurrentPlayer(), getPrevPlayer(), getCurrentPlayer().getVolume());
+			int overlapTime = ((int) (chunkOverlapTime / playbackSpeed));
+			crossFadePlayers(getCurrentPlayer(), getPrevPlayer(), volume, overlapTime);
 		} else {
 			// simply play the audio
 			getCurrentPlayer().play(chunkPosition);
@@ -133,29 +136,40 @@ public class AudioStreamPlayer {
 	 * @param currentPlayer
 	 * @param prevPlayer
 	 */
-	private void crossFadePlayers(final BufferPlayer currentPlayer, final BufferPlayer prevPlayer, final double targetGain) {
-		// set volume to 0 and start playing
-		if (currentPlayer != null) {
-			currentPlayer.setVolume(0);
-			currentPlayer.play(chunkPosition);
-		}
+	private void crossFadePlayers(final BufferPlayer currentPlayer, final BufferPlayer prevPlayer, 
+			final double targetGain, final int fadeTime) {
 		// track execution time to offset scheduled time for next chunk
 		execTime = new Duration();
 		// starts counting MS when instantiated, used primarily for pausing
 		chunkPositionClock = new Duration();
+		
 		// if we have a prev player then we fade it out and fade our new player in
 		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 			@Override
 			public void execute() {
-				// TODO: use exponentialRampToValueAtTime() when IE supports it:
-				// https://developer.mozilla.org/en-US/docs/Web/API/AudioParam/exponentialRampToValueAtTime
-				for (double t = 1; t >= -1; t-= 0.001) {
-					double[] gains = getCrossFadeValues(t);
-					if (currentPlayer != null) {
-						currentPlayer.setVolume(gains[0] * targetGain);
-					}
-					if (prevPlayer != null) {
-						prevPlayer.setVolume(gains[1] * targetGain);
+				if (currentPlayer != null) {
+					currentPlayer.setVolume(0);
+					currentPlayer.play(chunkPosition);
+				}
+				
+				Duration duration = new Duration();
+				int lastTime = 0;
+				
+				double incriment = 1d / fadeTime;
+				
+				for (double t = 0; t < 1; ) {
+					// only update gain if at least a millisecond has passed
+					if (lastTime != duration.elapsedMillis()) {
+						lastTime = duration.elapsedMillis();
+						double[] gains = getCrossFadeValues(t);
+						if (prevPlayer != null) {
+							prevPlayer.setVolume(gains[0] * targetGain);
+						}
+						if (currentPlayer != null) {
+							currentPlayer.setVolume(gains[1] * targetGain);
+						}
+						// increment crossfade index value
+						t += incriment;
 					}
 				}
 				// make sure we are at max/min volumes by the end
@@ -164,23 +178,27 @@ public class AudioStreamPlayer {
 				}
 				if (prevPlayer != null) {
 					prevPlayer.setVolume(0);
+					disconnectEffectChain(prevPlayer, effects);
 				}
 			}
 		});
 	}
 	
 	/**
-	 * Takes a time value (between 1 and -1) and calculates
+	 * Takes a time value (between 0 and 1) and calculates
 	 * the volume level following a equal power crossfade curve.
 	 * 
 	 * @param t 
-	 * @param isIncreasing
 	 * @return volume (between 0 and 1)
 	 */
 	private double[] getCrossFadeValues(double t) {
 		double[] val = new double[2];
-	    val[0] = Math.sqrt(0.5 * (1 - t));
-	    val[1] = Math.sqrt(0.5 * (1 + t));
+		
+		// decreasing
+		val[0] = Math.cos(t * 0.5 * Math.PI);
+		// increasing
+	    val[1] = Math.cos((1.0 - t) * 0.5 * Math.PI);
+		
 	    return val;
 	}
 	
@@ -259,13 +277,27 @@ public class AudioStreamPlayer {
 		}
 	}
 	
+	private BufferPlayer getCurrentPlayer() {
+		return players[currentPlayer];
+	}
+	
 	private void setCurrentPlayer(BufferPlayer player) {
 		players[currentPlayer] = player;
+	}
+	
+	private BufferPlayer getNextPlayer() {
+		int i = (currentPlayer + 1) % MAX_PLAYERS;
+		return players[i];
 	}
 	
 	private void setNextPlayer(BufferPlayer player) {
 		int i = (currentPlayer + 1) % MAX_PLAYERS;
 		players[i] = player;
+	}
+	
+	private BufferPlayer getPrevPlayer() {
+		int i = (currentPlayer == 0 ? MAX_PLAYERS - 1 : currentPlayer - 1);
+		return players[i];
 	}
 	
 	private void moveToNextPlayer() {
@@ -274,20 +306,6 @@ public class AudioStreamPlayer {
 	
 	private void moveToPrevPlayer() {
 		currentPlayer = (currentPlayer == 0 ? MAX_PLAYERS - 1 : currentPlayer - 1);
-	}
-	
-	private BufferPlayer getCurrentPlayer() {
-		return players[currentPlayer];
-	}
-	
-	private BufferPlayer getNextPlayer() {
-		int i = (currentPlayer + 1) % MAX_PLAYERS;
-		return players[i];
-	}
-	
-	private BufferPlayer getPrevPlayer() {
-		int i = (currentPlayer == 0 ? MAX_PLAYERS - 1 : currentPlayer - 1);
-		return players[i];
 	}
 	
 	/**
@@ -342,19 +360,33 @@ public class AudioStreamPlayer {
 		logger.log(Level.SEVERE, "connecting BufferPlayer source and output to effects chain");
 		AudioNode source = player.getSourceNode();
 		AudioNode output = player.getOutput();
-		logger.log(Level.SEVERE, "source: " + source.toString());
-		logger.log(Level.SEVERE, "output: " + output.toString());
-		source.disconnect();
+		source.connect(output);
+		if (1==1) return;
 		if (effects.size() > 0) {
 			AudioNode firstEffect = effects.get(0).getAudioNode();
 			AudioNode lastEffect = effects.get(effects.size()-1).getAudioNode();
 			logger.log(Level.SEVERE, "connecting source -> first effect: " + firstEffect.toString());
-			lastEffect.disconnect();
+			// lastEffect.disconnect();
 			source.connect(firstEffect);
 			lastEffect.connect(output);
 		} else {
 			logger.log(Level.SEVERE, "connecting source -> output");
 			source.connect(output);
+		}
+	}
+	
+	private void disconnectEffectChain(BufferPlayer player, List<Effect> effects) {
+		logger.log(Level.SEVERE, "disconnectEffectChain on " + player.toString());
+		if (effects.size() > 0) {
+			AudioNode firstEffect = effects.get(0).getAudioNode();
+			AudioNode lastEffect = effects.get(effects.size()-1).getAudioNode();
+			lastEffect.disconnect();
+			if (player != null) {
+				AudioNode source = player.getSourceNode();
+				AudioNode output = player.getOutput();
+				source.disconnect(firstEffect);
+				lastEffect.disconnect(output);
+			}
 		}
 	}
 	
@@ -400,10 +432,15 @@ public class AudioStreamPlayer {
 	public void setVolume(double volume) {
 		this.volume = volume;
 		if(getCurrentPlayer() == null) {
-			Log.error(this, "current player is null");
+			logger.log(Level.SEVERE, "CURRENT PLAYER IS NULL");
 			return;
 		}
-		getCurrentPlayer().setVolume(volume);
+		// TODO: some reason wasn't working when I used getCurrentPlayer().setVolume(volume);
+		for (BufferPlayer p : players) {
+			if (p != null) {
+				p.setVolume(volume);
+			}
+		}
 	}
 	
 	public double getVolume() {

@@ -69,6 +69,14 @@ public class Context {
 		return dest;
 	}-*/;
 	
+	public double getCurrentTime() {
+		return getCurrentTime(ctx);
+	}
+	
+	public static final native double getCurrentTime(AudioContext ctx) /*-{
+		return ctx.currentTime;
+	}-*/;
+	
 	
 	//
 	// Node creation

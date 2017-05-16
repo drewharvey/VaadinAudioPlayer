@@ -21,6 +21,13 @@ public class PitchEffect extends Effect {
 	public void setProperties(List<SharedEffectProperty> props) {
 		
 	}
+	
+	@Override
+	public PitchEffect createCopy(Context context) {
+		PitchEffect e = new PitchEffect();
+		e.init(context);
+		return e;
+	}
 
 	public String toString() {
 		return "PitchEffect";

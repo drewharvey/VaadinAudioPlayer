@@ -22,6 +22,13 @@ public class VolumeEffect extends Effect {
 		
 	}
 	
+	@Override
+	public VolumeEffect createCopy(Context context) {
+		VolumeEffect e = new VolumeEffect();
+		e.init(context);
+		return e;
+	}
+	
 	public GainNode getGainNode() {
 		return ((GainNode) super.getAudioNode());
 	}

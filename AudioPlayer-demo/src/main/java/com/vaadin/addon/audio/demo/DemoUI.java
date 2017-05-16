@@ -161,6 +161,7 @@ public class DemoUI extends UI {
 			sliderLayout.setSpacing(true);
 
 			sliderLayout.addComponent(volumeSlider = new Slider("Volume"));
+			volumeSlider.setImmediate(true);
 			volumeSlider.setMin(0);
 			volumeSlider.setMax(100);
 			volumeSlider.setValue(80d);
@@ -171,6 +172,7 @@ public class DemoUI extends UI {
 			});
 
 			sliderLayout.addComponent(balanceSlider = new Slider("Balance"));
+			balanceSlider.setImmediate(true);
 			balanceSlider.setWidth("150px");
 			balanceSlider.setMin(-100);
 			balanceSlider.setMax(100);
@@ -181,6 +183,7 @@ public class DemoUI extends UI {
 			});
 
 			sliderLayout.addComponent(speedSlider = new Slider("Speed"));
+			speedSlider.setImmediate(true);
 			speedSlider.setWidth("150px");
 			speedSlider.setMin(0.5);
 			speedSlider.setMax(4);
@@ -357,16 +360,17 @@ public class DemoUI extends UI {
 		protected static HorizontalLayout createFilterEffectElement(AudioPlayer player, FilterEffect filterEffect) {
 			// set filter defaults
 			filterEffect.setType(FilterEffect.Type.LOWPASS);
-			filterEffect.setFrequency(500);
+			filterEffect.setFrequency(20000);
 			player.addEffect(filterEffect);
 			// build filter ui component
 			HorizontalLayout effectUi = createEffectContainer("Filter Effect");
 			OptionGroup typeSelector = new OptionGroup();
 			effectUi.addComponent(typeSelector);
+			typeSelector.setImmediate(true);
 			typeSelector.addItems(FilterEffect.Type.HIGHPASS, FilterEffect.Type.LOWPASS);
 			typeSelector.setItemCaption(FilterEffect.Type.HIGHPASS, "High pass");
 			typeSelector.setItemCaption(FilterEffect.Type.LOWPASS, "Low pass");
-			typeSelector.select(FilterEffect.Type.LOWPASS);
+			typeSelector.select(filterEffect.getType());
 			typeSelector.addValueChangeListener(e -> {
 				Log.message(player, "Set filter to " + ((FilterEffect.Type) typeSelector.getValue()));
 				filterEffect.setType((FilterEffect.Type) typeSelector.getValue());
@@ -374,10 +378,11 @@ public class DemoUI extends UI {
 			});
 			Slider frequency = new Slider();
 			effectUi.addComponent(frequency);
-			frequency.setMax(10000);
+			frequency.setImmediate(true);
+			frequency.setMax(20000);
 			frequency.setMin(0);
 			frequency.setWidth("250px");
-			frequency.setValue(500d);
+			frequency.setValue(filterEffect.getFrequency());
 			frequency.addValueChangeListener(e -> {
 				double freqVal = frequency.getValue();
 				filterEffect.setFrequency(freqVal);

@@ -3,6 +3,8 @@ package com.vaadin.addon.audio.client;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.google.gwt.user.client.Timer;
 import com.vaadin.addon.audio.client.effects.BalanceEffect;
@@ -199,6 +201,7 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 			@Override
 			public void setVolume(double volume) {
 				Log.message(AudioPlayerConnector.this, "set volume to " + volume);
+				Logger.getLogger("AudioPlayerConnector").log(Level.SEVERE, "Setting volume to " + volume);
 				player.setVolume(volume);
 			}
 			
