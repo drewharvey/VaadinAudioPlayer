@@ -35,6 +35,10 @@ public class Context {
 	private Context() {
 		ctx = createContext();
 	}
+
+	public AudioContext getNativeContext() {
+		return ctx;
+	}
 	
 	public void decodeAudioData(ArrayBuffer buf, AudioBufferCallback cb) {
 		decodeAudioData(ctx,buf,cb);

@@ -1,8 +1,6 @@
 package com.vaadin.addon.audio.server;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import com.vaadin.addon.audio.shared.AudioPlayerClientRpc;
@@ -11,12 +9,14 @@ import com.vaadin.addon.audio.shared.AudioPlayerState;
 import com.vaadin.addon.audio.shared.ChunkDescriptor;
 import com.vaadin.addon.audio.shared.SharedEffect;
 import com.vaadin.addon.audio.shared.util.Log;
+import com.vaadin.annotations.JavaScript;
 import com.vaadin.server.AbstractExtension;
 import com.vaadin.ui.UI;
 
 // This is the server-side UI component that provides public API 
 // for AudioPlayer
 @SuppressWarnings("serial")
+@JavaScript({ "pako_inflate.min.js", "kali.min.js" })
 public class AudioPlayer extends AbstractExtension {
 	
 	// TODO: use an actual event system

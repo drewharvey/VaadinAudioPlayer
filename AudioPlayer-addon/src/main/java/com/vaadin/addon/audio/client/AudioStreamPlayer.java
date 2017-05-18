@@ -11,12 +11,14 @@ import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.vaadin.addon.audio.client.ClientStream.DataCallback;
+import com.vaadin.addon.audio.client.utils.TimeStretch;
 import com.vaadin.addon.audio.client.webaudio.AudioNode;
 import com.vaadin.addon.audio.client.webaudio.Buffer;
 import com.vaadin.addon.audio.client.webaudio.BufferSourceNode;
 import com.vaadin.addon.audio.client.webaudio.Context;
 import com.vaadin.addon.audio.shared.ChunkDescriptor;
 import com.vaadin.addon.audio.shared.util.Log;
+import elemental.html.AudioBuffer;
 
 /**
  * Player controls for a stream.
@@ -120,9 +122,13 @@ public class AudioStreamPlayer {
 		stream.requestChunkByTimestamp(nextChunkTime, new DataCallback() {
 			@Override
 			public void onDataReceived(ChunkDescriptor chunk) {
-				BufferPlayer player = new BufferPlayer();
-				player.setBuffer(stream.getBufferForChunk(chunk));
-				AudioStreamPlayer.this.setPersistingPlayerOptions(player);
+				final BufferPlayer player = new BufferPlayer();
+				player.setBuffer(stream.getBufferForChunk(chunk), new BufferSourceNode.BufferReadyListener() {
+					@Override
+					public void onBufferReady(Buffer b) {
+						AudioStreamPlayer.this.setPersistingPlayerOptions(player);
+					}
+				});
 				AudioStreamPlayer.this.setNextPlayer(player);
 			}
 		});
@@ -152,6 +158,8 @@ public class AudioStreamPlayer {
 					currentPlayer.play(chunkPosition);
 				}
 				
+				double split = (currentPlayer != null && prevPlayer != null) ? 0.7 : 1;
+				
 				Duration duration = new Duration();
 				int lastTime = 0;
 				
@@ -178,7 +186,7 @@ public class AudioStreamPlayer {
 				}
 				if (prevPlayer != null) {
 					prevPlayer.setVolume(0);
-					disconnectEffectChain(prevPlayer, effects);
+					//disconnectEffectChain(prevPlayer, effects);
 				}
 			}
 		});
@@ -250,9 +258,13 @@ public class AudioStreamPlayer {
 		stream.requestChunkByTimestamp(0, new DataCallback() {
 			@Override
 			public void onDataReceived(ChunkDescriptor chunk) {
-				BufferPlayer player = new BufferPlayer();
-				player.setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk));
-				AudioStreamPlayer.this.setPersistingPlayerOptions(player);
+				final BufferPlayer player = new BufferPlayer();
+				player.setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk), new BufferSourceNode.BufferReadyListener() {
+					@Override
+					public void onBufferReady(Buffer b) {
+						AudioStreamPlayer.this.setPersistingPlayerOptions(player);
+					}
+				});
 				AudioStreamPlayer.this.setCurrentPlayer(player);
 			}
 		});
@@ -328,7 +340,7 @@ public class AudioStreamPlayer {
 			stop();
 		} else {
 			// make sure the next player has the same options set as current
-			setPersistingPlayerOptions(getNextPlayer());
+			// setPersistingPlayerOptions(getNextPlayer());
 			moveToNextPlayer();
 			play(true);
 		}
@@ -360,13 +372,14 @@ public class AudioStreamPlayer {
 		logger.log(Level.SEVERE, "connecting BufferPlayer source and output to effects chain");
 		AudioNode source = player.getSourceNode();
 		AudioNode output = player.getOutput();
+		source.disconnect();
 		source.connect(output);
-		if (1==1) return;
+		if (1 == 1) return;
+		// TODO: re-enable (is causing clicks in audio)
 		if (effects.size() > 0) {
 			AudioNode firstEffect = effects.get(0).getAudioNode();
 			AudioNode lastEffect = effects.get(effects.size()-1).getAudioNode();
 			logger.log(Level.SEVERE, "connecting source -> first effect: " + firstEffect.toString());
-			// lastEffect.disconnect();
 			source.connect(firstEffect);
 			lastEffect.connect(output);
 		} else {
@@ -454,8 +467,27 @@ public class AudioStreamPlayer {
 			return;
 		}
 		pause();
-		getCurrentPlayer().setPlaybackSpeed(playbackSpeed);
+		// update current player so that we have the time warped buffer if needed
+		BufferPlayer player = new BufferPlayer();
+		player.setBuffer(getCurrentPlayer().getBuffer());
+		setPersistingPlayerOptions(player);
+		setCurrentPlayer(player);
+		// update next player now to avoid last second processing
+		BufferPlayer nextPlayer = new BufferPlayer();
+		nextPlayer.setBuffer(getNextPlayer().getBuffer());
+		setPersistingPlayerOptions(nextPlayer);
+		setNextPlayer(nextPlayer);
 		resume();
+
+		// pause playback
+		// get current buffer player
+		// create new warped buffer
+		// reset buffer player and set new warped buffer
+		// do this for next chunk as well
+		// resume playback
+
+		//TODO: everytime chunk is loaded, it needs to be warped if speed != 1
+
 	}
 	
 	public double getPlaybackSpeed() {

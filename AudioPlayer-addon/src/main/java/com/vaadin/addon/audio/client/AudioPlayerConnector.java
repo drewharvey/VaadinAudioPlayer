@@ -40,7 +40,6 @@ import elemental.html.AudioContext;
 // corresponding server-side component
 @Connect(AudioPlayer.class)
 @SuppressWarnings("serial")
-@JavaScript({ "pako_inflate.min.js" }) // TODO: get this to load!!!! (should it be on the server side?)
 public class AudioPlayerConnector extends AbstractExtensionConnector {
 
 	// For now, we're going with a simple singleton

@@ -8,6 +8,7 @@ import java.util.logging.Logger;
 
 import com.google.gwt.user.client.Timer;
 import com.vaadin.addon.audio.client.effects.BalanceEffect;
+import com.vaadin.addon.audio.client.utils.TimeStretch;
 import com.vaadin.addon.audio.client.webaudio.AudioNode;
 import com.vaadin.addon.audio.client.webaudio.BiquadFilterNode;
 import com.vaadin.addon.audio.client.webaudio.Buffer;
@@ -15,6 +16,8 @@ import com.vaadin.addon.audio.client.webaudio.BufferSourceNode;
 import com.vaadin.addon.audio.client.webaudio.Context;
 import com.vaadin.addon.audio.client.webaudio.GainNode;
 import com.vaadin.addon.audio.shared.util.Log;
+import elemental.html.AudioBuffer;
+import elemental.html.AudioContext;
 
 /**
  * Actual player component, plays a single Buffer.
@@ -37,6 +40,8 @@ public class BufferPlayer {
 	private BufferSourceNode source;
 	private GainNode output;
 	private State state = State.STOPPED;
+	private AudioBuffer unmodifiedBuffer = null;
+	private double playbackSpeed = 1;
 	
 
 	public BufferPlayer() {
@@ -48,6 +53,7 @@ public class BufferPlayer {
 		Context context = Context.get();
 		source = context.createBufferSourceNode();
 		if (buffer != null) {
+			unmodifiedBuffer = buffer.getAudioBuffer();
 			source.setNativeBuffer(buffer.getAudioBuffer());
 		}
 		// create output audio node
@@ -89,6 +95,10 @@ public class BufferPlayer {
 	}
 
 	private void resetSourceNode(Buffer buffer) {
+		resetSourceNode(buffer, null);
+	}
+
+	private void resetSourceNode(Buffer buffer, final BufferSourceNode.BufferReadyListener cb) {
 		source.disconnect();
 		source.resetNode();
 		if (buffer != null) {
@@ -100,13 +110,26 @@ public class BufferPlayer {
 		setBuffer(buffer, null);
 	}
 	
-	public void setBuffer(Buffer buffer, BufferSourceNode.BufferReadyListener cb) {
+	public void setBuffer(Buffer buffer, final BufferSourceNode.BufferReadyListener cb) {
 		//logger.log(Level.SEVERE, "buffer reassigned");
-		source.setBuffer(buffer, cb);
+		source.setBuffer(buffer, new BufferSourceNode.BufferReadyListener() {
+			@Override
+			public void onBufferReady(Buffer b) {
+				setUnmodifiedBuffer(b.getAudioBuffer());
+				if (cb != null) {
+					cb.onBufferReady(b);
+				}
+			}
+		});
+		// nmodifiedBuffer = buffer.getAudioBuffer();
 	}
 	
 	public Buffer getBuffer() {
 		return source.getBuffer();
+	}
+
+	public void setUnmodifiedBuffer(AudioBuffer buffer) {
+		unmodifiedBuffer = buffer;
 	}
 	
 	public void setVolume(double volume) {
@@ -117,20 +140,44 @@ public class BufferPlayer {
 	public double getVolume() {
 		return output.getGain();
 	}
-	
-	public void setVolumeAfterMilliseconds(double volume, int milliseconds) {
-		double seconds = milliseconds / 1000d;
-		logger.log(Level.SEVERE, "setVolumeAfterMilliseconds [volume=" + volume + ", seconds=" + seconds + "] + ");
-		//output.exponentialRampToValueAtTime(volume, Context.get().getCurrentTime() + seconds);
-		output.setValueAtTime(volume, seconds);
-	}
-	
-	public void setPlaybackSpeed(double speed_scale) {
-		logger.log(Level.SEVERE, "set speed scale " + speed_scale);
-		source.setPlaybackRate(speed_scale);
-		
-		// TODO: keep normal pitch if speed is changed, normally the pitch also changes
-		// when the speed is changed
+
+	/**
+	 * Changes the speed at which the BufferPlayer plays the audio. If the speed is changed,
+	 * the audio data in the buffer will need to be processed and replaced by one that has
+	 * been stretched according to the playback speed.  This is to avoid pitch change.
+	 * @param playbackSpeed
+	 */
+	public void setPlaybackSpeed(double playbackSpeed) {
+		logger.log(Level.SEVERE, "set speed scale " + playbackSpeed);
+		if (this.playbackSpeed == playbackSpeed) {
+			// don't do anything if we aren't changing the scale
+			logger.log(Level.SEVERE, "playback speed did not change");
+			return;
+		}
+		// you can only set a BufferSourceNode's buffer once, so lets reset the node and re-set the buffer
+		source.disconnect();
+		source.resetNode();
+		source.setPlaybackRate(playbackSpeed);
+		// generate warped buffer if playback speed is other than 1
+		if (unmodifiedBuffer != null) {
+			AudioBuffer buffer = null;
+			if (playbackSpeed != 1) {
+				logger.log(Level.SEVERE, "unmodifiedBuffer not null and speed scale not 1");
+				double stretchFactor = 1d * playbackSpeed;
+				AudioContext context = Context.get().getNativeContext();
+				int numChannels = unmodifiedBuffer.getNumberOfChannels();
+				buffer = TimeStretch.strechAudioBuffer(stretchFactor, unmodifiedBuffer, context, numChannels, true);
+			} else {
+				buffer = unmodifiedBuffer;
+			}
+			// apply our buffer ot the source BufferSourceNode
+			if (buffer != null) {
+				logger.log(Level.SEVERE, "Setting buffer");
+				source.setNativeBuffer(buffer);
+			}
+		} else {
+			logger.log(Level.SEVERE, "unmodifiedBuffer is NULL");
+		}
 	}
 	
 	public double getPlaybackSpeed() {

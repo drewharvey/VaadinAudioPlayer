@@ -59,6 +59,10 @@ public class Buffer {
 	public AudioBuffer getAudioBuffer() {
 		return buffer;
 	}
+
+	public void setAudioBuffer(AudioBuffer audioBuffer) {
+		buffer = audioBuffer;
+	}
 	
 	public ArrayBuffer getData() {
 		return data;
