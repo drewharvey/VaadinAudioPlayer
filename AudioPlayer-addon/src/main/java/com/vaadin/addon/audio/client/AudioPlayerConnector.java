@@ -30,11 +30,6 @@ import com.vaadin.shared.ui.Connect;
 
 import elemental.html.AudioContext;
 
-//
-// TODO: get the JavaScript inflate library to load - this is required
-// in order to get the client to receive compressed audio chunks
-//
-
 // Connector binds client-side widget class to server-side component class
 // Connector lives in the client and the @Connect annotation specifies the
 // corresponding server-side component
@@ -66,18 +61,6 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
     private void updateEffects() {
     	Log.message(this, "shared state effects list changed");
     	// TODO: don't rebuild list every time
-    	
-//		List<Effect> effects = new ArrayList<Effect>();
-//    	for (SharedEffect e : getState().effects) {
-//    		final Effect effect = getEffectFromSharedEffect(e);
-//			if (effect != null) {
-//				Log.message(this, "Adding effect: " + e.getName().name());
-//    			Log.message(this, e.toString());
-//				effects.add(effect);
-//			}
-//    	}
-//    	player.setEffects(effects);
-    	
     	List<SharedEffect> effects = getState().effects;
     	for (SharedEffect sharedEffect : effects) {
 			Effect existingEffect = effectsMap.get(sharedEffect.getID());

@@ -71,7 +71,6 @@ public class BufferPlayer {
 	
 	public void play(int offset_millis) {
 		logger.log(Level.SEVERE, "start playback at " + offset_millis);
-		logger.log(Level.SEVERE, " ==== PLAY CALLED ==== ");
 		if (state == State.PLAYING) {
 			stop();
 		}
@@ -111,17 +110,17 @@ public class BufferPlayer {
 	}
 	
 	public void setBuffer(Buffer buffer, final BufferSourceNode.BufferReadyListener cb) {
-		//logger.log(Level.SEVERE, "buffer reassigned");
 		source.setBuffer(buffer, new BufferSourceNode.BufferReadyListener() {
 			@Override
 			public void onBufferReady(Buffer b) {
+				// since we may time stretch the buffer, we need to keep
+				// a clean copy of the buffer in case setPlaybackSpeed gets called
 				setUnmodifiedBuffer(b.getAudioBuffer());
 				if (cb != null) {
 					cb.onBufferReady(b);
 				}
 			}
 		});
-		// nmodifiedBuffer = buffer.getAudioBuffer();
 	}
 	
 	public Buffer getBuffer() {
@@ -160,13 +159,14 @@ public class BufferPlayer {
 		source.setPlaybackRate(playbackSpeed);
 		// generate warped buffer if playback speed is other than 1
 		if (unmodifiedBuffer != null) {
-			AudioBuffer buffer = null;
+			AudioBuffer buffer;
 			if (playbackSpeed != 1) {
-				logger.log(Level.SEVERE, "unmodifiedBuffer not null and speed scale not 1");
+				logger.log(Level.SEVERE, "stretching audio chunk to fit playback speed of " + playbackSpeed);
 				double stretchFactor = 1d * playbackSpeed;
 				AudioContext context = Context.get().getNativeContext();
 				int numChannels = unmodifiedBuffer.getNumberOfChannels();
 				buffer = TimeStretch.strechAudioBuffer(stretchFactor, unmodifiedBuffer, context, numChannels, true);
+				logger.log(Level.SEVERE, "stretching complete");
 			} else {
 				buffer = unmodifiedBuffer;
 			}
@@ -181,7 +181,7 @@ public class BufferPlayer {
 	}
 	
 	public double getPlaybackSpeed() {
-		return source.getPlaybackRate();
+		return playbackSpeed;
 	}
 	
 	public void setBalance(double balance) {

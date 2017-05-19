@@ -20,20 +20,6 @@ public class TimeStretch {
      */
     public static native AudioBuffer strechAudioBuffer(double stretchFactor, AudioBuffer buffer, AudioContext context,
                                                        int numChannels, boolean quickSeek) /*-{
-        console.error("stretchAudioBuffer started");
-        if (stretchFactor <= 0) {
-            console.error("STRETCH FACTOR MUST BE GREATER THAN 0");
-            return;
-        }
-        if (!context) {
-            console.error("CONTEXT IS NULL");
-            return;
-        }
-         if (!buffer) {
-             console.error("NODE BUFFER IS NULL");
-             return;
-         }
-
         var inputData = buffer.getChannelData(0);
 
         var numInputFrames = inputData.length / numChannels;
@@ -77,11 +63,6 @@ public class TimeStretch {
         // create new audio buffer with warped audio
         var outputAudioBuffer = context.createBuffer(1, completed.length, context.sampleRate);
         outputAudioBuffer.getChannelData(0).set(completed);
-
-        console.error("stretchAudioBuffer finished");
-        console.error(completed);
-        console.error(outputAudioBuffer);
-
         return outputAudioBuffer;
      }-*/;
 
