@@ -9,16 +9,12 @@ import com.google.gwt.core.client.Duration;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.user.client.Timer;
-import com.google.gwt.user.client.Window;
 import com.vaadin.addon.audio.client.ClientStream.DataCallback;
-import com.vaadin.addon.audio.client.utils.TimeStretch;
 import com.vaadin.addon.audio.client.webaudio.AudioNode;
 import com.vaadin.addon.audio.client.webaudio.Buffer;
 import com.vaadin.addon.audio.client.webaudio.BufferSourceNode;
-import com.vaadin.addon.audio.client.webaudio.Context;
 import com.vaadin.addon.audio.shared.ChunkDescriptor;
 import com.vaadin.addon.audio.shared.util.Log;
-import elemental.html.AudioBuffer;
 
 /**
  * Player controls for a stream.

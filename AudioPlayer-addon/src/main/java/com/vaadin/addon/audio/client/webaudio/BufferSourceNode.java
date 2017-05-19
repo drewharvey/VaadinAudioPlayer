@@ -5,10 +5,8 @@ import java.util.logging.Logger;
 
 import com.google.gwt.user.client.Timer;
 
-import com.vaadin.addon.audio.client.utils.TimeStretch;
 import elemental.html.AudioBuffer;
 import elemental.html.AudioContext;
-import elemental.html.Float32Array;
 
 //See https://developer.mozilla.org/en-US/docs/Web/API/AudioBufferSourceNode
 public class BufferSourceNode extends AudioScheduledSourceNode {

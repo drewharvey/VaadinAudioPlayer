@@ -6,7 +6,6 @@ import com.vaadin.addon.audio.shared.util.Log;
 
 import elemental.html.ArrayBuffer;
 import elemental.html.AudioBuffer;
-import elemental.html.Uint8Array;
 
 /*
  * Wraps a WebAudio data buffer

@@ -1,16 +1,11 @@
 package com.vaadin.addon.audio.client;
 
-import java.util.ArrayList;
-
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.google.gwt.user.client.Timer;
 import com.vaadin.addon.audio.client.effects.BalanceEffect;
 import com.vaadin.addon.audio.client.utils.TimeStretch;
 import com.vaadin.addon.audio.client.webaudio.AudioNode;
-import com.vaadin.addon.audio.client.webaudio.BiquadFilterNode;
 import com.vaadin.addon.audio.client.webaudio.Buffer;
 import com.vaadin.addon.audio.client.webaudio.BufferSourceNode;
 import com.vaadin.addon.audio.client.webaudio.Context;
@@ -76,12 +71,11 @@ public class BufferPlayer {
 		}
 		double offsetSeconds = offset_millis / 1000d;
 		source.start(0, offsetSeconds);
-		
 		state = State.PLAYING;
 	}
 	
 	public void stop() {
-		//logger.log(Level.SEVERE, "stop playback");
+		logger.log(Level.SEVERE, "stop playback");
 		if (state == State.STOPPED) {
 			return;
 		}
@@ -127,7 +121,7 @@ public class BufferPlayer {
 		return source.getBuffer();
 	}
 
-	public void setUnmodifiedBuffer(AudioBuffer buffer) {
+	private void setUnmodifiedBuffer(AudioBuffer buffer) {
 		unmodifiedBuffer = buffer;
 	}
 	

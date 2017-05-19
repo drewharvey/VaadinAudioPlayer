@@ -3,7 +3,6 @@ package com.vaadin.addon.audio.client.utils;
 
 import elemental.html.AudioBuffer;
 import elemental.html.AudioContext;
-import elemental.html.Float32Array;
 
 public class TimeStretch {
 
