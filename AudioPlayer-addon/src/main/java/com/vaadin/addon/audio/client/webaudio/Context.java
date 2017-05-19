@@ -27,7 +27,8 @@ public class Context {
 	private AudioDestinationNode destination;
 	
 	private static final native AudioContext createContext() /*-{
-		var audioCtx = new AudioContext();
+		// safari uses webkitAudioContext, others use AudioContext
+		var audioCtx = new ($wnd.AudioContext || $wnd.webkitAudioContext)();
 		console.log("created context: " + audioCtx);
 		return audioCtx;
 	}-*/;
