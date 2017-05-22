@@ -3,14 +3,12 @@ package com.vaadin.addon.audio.client;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.vaadin.addon.audio.client.effects.BalanceEffect;
-import com.vaadin.addon.audio.client.utils.TimeStretch;
+import com.vaadin.addon.audio.client.utils.AudioBufferUtils;
 import com.vaadin.addon.audio.client.webaudio.AudioNode;
 import com.vaadin.addon.audio.client.webaudio.Buffer;
 import com.vaadin.addon.audio.client.webaudio.BufferSourceNode;
 import com.vaadin.addon.audio.client.webaudio.Context;
 import com.vaadin.addon.audio.client.webaudio.GainNode;
-import com.vaadin.addon.audio.shared.util.Log;
 import elemental.html.AudioBuffer;
 import elemental.html.AudioContext;
 
@@ -163,7 +161,7 @@ public class BufferPlayer {
 				double stretchFactor = 1d * playbackSpeed;
 				AudioContext context = Context.get().getNativeContext();
 				int numChannels = unmodifiedBuffer.getNumberOfChannels();
-				buffer = TimeStretch.strechAudioBuffer(stretchFactor, unmodifiedBuffer, context, numChannels, false);
+				buffer = AudioBufferUtils.timeStrechAudioBuffer(stretchFactor, unmodifiedBuffer, context, numChannels, false);
 				logger.log(Level.SEVERE, "stretching complete");
 			} else {
 				buffer = unmodifiedBuffer;

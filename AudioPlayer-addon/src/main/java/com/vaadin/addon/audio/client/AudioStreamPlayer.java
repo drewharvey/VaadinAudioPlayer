@@ -6,10 +6,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.gwt.core.client.Duration;
-import com.google.gwt.core.client.Scheduler;
-import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.user.client.Timer;
 import com.vaadin.addon.audio.client.ClientStream.DataCallback;
+import com.vaadin.addon.audio.client.utils.AudioBufferUtils;
 import com.vaadin.addon.audio.client.webaudio.AudioNode;
 import com.vaadin.addon.audio.client.webaudio.Buffer;
 import com.vaadin.addon.audio.client.webaudio.BufferSourceNode;
@@ -20,6 +19,8 @@ import com.vaadin.addon.audio.shared.util.Log;
  * Player controls for a stream.
  */
 public class AudioStreamPlayer {
+
+	// TODO: move audio effects and effects chain processing to separate class
 	
 	private static Logger logger = Logger.getLogger("AudioStreamPlayer");
 	
@@ -88,15 +89,16 @@ public class AudioStreamPlayer {
 		chunkPosition = timeOffset;
 		int playOffset = ((int) (chunkPosition / playbackSpeed));
 
+		// starts counting MS when instantiated, used primarily for pausing
+		chunkPositionClock = new Duration();
+
 		if (useCrossFade) {
 			// use cross fade to blend prev and current audio together
 			int overlapTime = ((int) (chunkOverlapTime / playbackSpeed));
-			crossFadePlayers(playerManager.getCurrentPlayer(), playerManager.getPrevPlayer(), playOffset, volume, overlapTime);
+			AudioBufferUtils.crossFadePlayers(playerManager.getCurrentPlayer(), playerManager.getPrevPlayer(), playOffset, volume, overlapTime);
 		} else {
 			// simply play the audio
 			playerManager.getCurrentPlayer().play(playOffset);
-			// starts counting MS when instantiated, used primarily for pausing
-			chunkPositionClock = new Duration();
 		}
 		
 		// start timer to play next chunk of audio
@@ -119,79 +121,6 @@ public class AudioStreamPlayer {
 			}
 		});
 		
-	}
-	
-	/**
-	 * Uses a equal power crossfade curve to blend two audio players together.
-	 * After the crossfade the currentPlayer will have volume and the prevPlayer
-	 * will have a volume of 0.
-	 * @param currentPlayer
-	 * @param prevPlayer
-	 */
-	private void crossFadePlayers(final BufferPlayer currentPlayer, final BufferPlayer prevPlayer, 
-			final int currentPlayerPlayOffset, final double targetGain, final int fadeTime) {
-		// starts counting MS when instantiated, used primarily for pausing
-		chunkPositionClock = new Duration();
-		
-		// if we have a prev player then we fade it out and fade our new player in
-		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
-			@Override
-			public void execute() {
-				if (currentPlayer != null) {
-					currentPlayer.setVolume(0);
-					currentPlayer.play(currentPlayerPlayOffset);
-				}
-				
-				double split = (currentPlayer != null && prevPlayer != null) ? 0.7 : 1;
-				
-				Duration duration = new Duration();
-				int lastTime = 0;
-				
-				double incriment = 1d / fadeTime;
-				
-				for (double t = 0; t < 1; ) {
-					// only update gain if at least a millisecond has passed
-					if (lastTime != duration.elapsedMillis()) {
-						lastTime = duration.elapsedMillis();
-						double[] gains = getCrossFadeValues(t);
-						if (prevPlayer != null) {
-							prevPlayer.setVolume(gains[0] * targetGain);
-						}
-						if (currentPlayer != null) {
-							currentPlayer.setVolume(gains[1] * targetGain);
-						}
-						// increment crossfade index value
-						t += incriment;
-					}
-				}
-				// make sure we are at max/min volumes by the end
-				if (currentPlayer != null) {
-					currentPlayer.setVolume(targetGain);
-				}
-				if (prevPlayer != null) {
-					prevPlayer.setVolume(0);
-					//disconnectEffectChain(prevPlayer, effects);
-				}
-			}
-		});
-	}
-	
-	/**
-	 * Takes a time value (between 0 and 1) and calculates
-	 * the volume level following a equal power crossfade curve.
-	 * 
-	 * @param t 
-	 * @return volume (between 0 and 1)
-	 */
-	private double[] getCrossFadeValues(double t) {
-		double[] val = new double[2];
-		
-		// decreasing
-		val[0] = Math.cos(t * 0.5 * Math.PI);
-		// increasing
-	    val[1] = Math.cos((1.0 - t) * 0.5 * Math.PI);
-		
-	    return val;
 	}
 	
 	public void pause() {
@@ -313,51 +242,6 @@ public class AudioStreamPlayer {
 		player.setPlaybackSpeed(playbackSpeed);
 		player.setBalance(balance);
 		connectBufferPlayerToEffectChain(player, effects);
-	}
-	
-	/**
-	 * Connects a BufferPlayer to the current set of effects by connecting the 
-	 * BufferPlayer's source to the effects chain and then outputs to the BufferPlayer's
-	 * output node.
-	 * 
-	 * BufferPlayer.source -> [Effect Chain] -> BufferPlayer.output
-	 * 
-	 * @param player
-	 * @param effects
-	 */
-	private void connectBufferPlayerToEffectChain(BufferPlayer player, List<Effect> effects) {
-		logger.log(Level.SEVERE, "connecting BufferPlayer source and output to effects chain");
-		AudioNode source = player.getSourceNode();
-		AudioNode output = player.getOutput();
-		source.disconnect();
-		source.connect(output);
-		if (1 == 1) return;
-		// TODO: re-enable (is causing clicks in audio)
-		if (effects.size() > 0) {
-			AudioNode firstEffect = effects.get(0).getAudioNode();
-			AudioNode lastEffect = effects.get(effects.size()-1).getAudioNode();
-			logger.log(Level.SEVERE, "connecting source -> first effect: " + firstEffect.toString());
-			source.connect(firstEffect);
-			lastEffect.connect(output);
-		} else {
-			logger.log(Level.SEVERE, "connecting source -> output");
-			source.connect(output);
-		}
-	}
-	
-	private void disconnectEffectChain(BufferPlayer player, List<Effect> effects) {
-		logger.log(Level.SEVERE, "disconnectEffectChain on " + player.toString());
-		if (effects.size() > 0) {
-			AudioNode firstEffect = effects.get(0).getAudioNode();
-			AudioNode lastEffect = effects.get(effects.size()-1).getAudioNode();
-			lastEffect.disconnect();
-			if (player != null) {
-				AudioNode source = player.getSourceNode();
-				AudioNode output = player.getOutput();
-				source.disconnect(firstEffect);
-				lastEffect.disconnect(output);
-			}
-		}
 	}
 	
 	public int getDuration() {
@@ -502,6 +386,51 @@ public class AudioStreamPlayer {
 	
 	public List<Effect> getEffects() {
 		return effects;
+	}
+
+	/**
+	 * Connects a BufferPlayer to the current set of effects by connecting the
+	 * BufferPlayer's source to the effects chain and then outputs to the BufferPlayer's
+	 * output node.
+	 *
+	 * BufferPlayer.source -> [Effect Chain] -> BufferPlayer.output
+	 *
+	 * @param player
+	 * @param effects
+	 */
+	private void connectBufferPlayerToEffectChain(BufferPlayer player, List<Effect> effects) {
+		logger.log(Level.SEVERE, "connecting BufferPlayer source and output to effects chain");
+		AudioNode source = player.getSourceNode();
+		AudioNode output = player.getOutput();
+		source.disconnect();
+		source.connect(output);
+		if (1 == 1) return;
+		// TODO: re-enable (is causing clicks in audio)
+		if (effects.size() > 0) {
+			AudioNode firstEffect = effects.get(0).getAudioNode();
+			AudioNode lastEffect = effects.get(effects.size()-1).getAudioNode();
+			logger.log(Level.SEVERE, "connecting source -> first effect: " + firstEffect.toString());
+			source.connect(firstEffect);
+			lastEffect.connect(output);
+		} else {
+			logger.log(Level.SEVERE, "connecting source -> output");
+			source.connect(output);
+		}
+	}
+
+	private void disconnectEffectChain(BufferPlayer player, List<Effect> effects) {
+		logger.log(Level.SEVERE, "disconnectEffectChain on " + player.toString());
+		if (effects.size() > 0) {
+			AudioNode firstEffect = effects.get(0).getAudioNode();
+			AudioNode lastEffect = effects.get(effects.size()-1).getAudioNode();
+			lastEffect.disconnect();
+			if (player != null) {
+				AudioNode source = player.getSourceNode();
+				AudioNode output = player.getOutput();
+				source.disconnect(firstEffect);
+				lastEffect.disconnect(output);
+			}
+		}
 	}
 	
 	/**
