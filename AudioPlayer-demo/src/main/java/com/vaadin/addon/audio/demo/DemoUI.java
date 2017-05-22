@@ -185,10 +185,10 @@ public class DemoUI extends UI {
 			sliderLayout.addComponent(speedSlider = new Slider("Speed"));
 			speedSlider.setImmediate(true);
 			speedSlider.setWidth("150px");
-			speedSlider.setMin(0.5);
-			speedSlider.setMax(4);
-			speedSlider.setValue(1d);
 			speedSlider.setResolution(1);
+			speedSlider.setMin(0.5d);
+			speedSlider.setMax(3);
+			speedSlider.setValue(1d);
 			speedSlider.addValueChangeListener(e -> {
 				final double playbackSpeed = speedSlider.getValue();
 				player.setPlaybackSpeed(playbackSpeed);
