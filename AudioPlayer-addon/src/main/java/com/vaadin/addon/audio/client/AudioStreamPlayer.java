@@ -94,14 +94,14 @@ public class AudioStreamPlayer {
 		logger.log(Level.SEVERE, "currentPlayer: " + currentPlayer + "\n\rprevPlayer: " + (currentPlayer == 0 ? MAX_PLAYERS - 1 : currentPlayer - 1));
 		
 		chunkPosition = timeOffset;
+		int playOffset = ((int) (chunkPosition / playbackSpeed));
 
 		if (useCrossFade) {
 			// use cross fade to blend prev and current audio together
 			int overlapTime = ((int) (chunkOverlapTime / playbackSpeed));
-			crossFadePlayers(getCurrentPlayer(), getPrevPlayer(), volume, overlapTime);
+			crossFadePlayers(getCurrentPlayer(), getPrevPlayer(), playOffset, volume, overlapTime);
 		} else {
 			// simply play the audio
-			int playOffset = ((int) (chunkPosition / playbackSpeed));
 			getCurrentPlayer().play(playOffset);
 			// track execution time to offset scheduled time for next chunk
 			execTime = new Duration();
@@ -139,7 +139,7 @@ public class AudioStreamPlayer {
 	 * @param prevPlayer
 	 */
 	private void crossFadePlayers(final BufferPlayer currentPlayer, final BufferPlayer prevPlayer, 
-			final double targetGain, final int fadeTime) {
+			final int currentPlayerPlayOffset, final double targetGain, final int fadeTime) {
 		// track execution time to offset scheduled time for next chunk
 		execTime = new Duration();
 		// starts counting MS when instantiated, used primarily for pausing
@@ -151,7 +151,7 @@ public class AudioStreamPlayer {
 			public void execute() {
 				if (currentPlayer != null) {
 					currentPlayer.setVolume(0);
-					currentPlayer.play(chunkPosition);
+					currentPlayer.play(currentPlayerPlayOffset);
 				}
 				
 				double split = (currentPlayer != null && prevPlayer != null) ? 0.7 : 1;
@@ -429,7 +429,7 @@ public class AudioStreamPlayer {
 						// setup buffer player and play when ready
 						setPersistingPlayerOptions(player);
 						setCurrentPlayer(player);
-						play(offset, true);
+						play(offset, false);
 					}
 				});
 			}
@@ -475,7 +475,10 @@ public class AudioStreamPlayer {
 			logError("current player is null");
 			return;
 		}
-		pause();
+		boolean isPlaying = getCurrentPlayer().isPlaying();
+		if (isPlaying) {
+			pause();
+		}
 		// update current player so that we have the time warped buffer if needed
 		BufferPlayer player = new BufferPlayer();
 		player.setBuffer(getCurrentPlayer().getBuffer());
@@ -486,7 +489,9 @@ public class AudioStreamPlayer {
 		nextPlayer.setBuffer(getNextPlayer().getBuffer());
 		setPersistingPlayerOptions(nextPlayer);
 		setNextPlayer(nextPlayer);
-		resume();
+		if (isPlaying) {
+			resume();
+		}
 	}
 	
 	public double getPlaybackSpeed() {

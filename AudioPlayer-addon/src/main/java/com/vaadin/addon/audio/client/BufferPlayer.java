@@ -63,6 +63,10 @@ public class BufferPlayer {
 	public AudioNode getOutput() {
 		return output;
 	}
+
+	public boolean isPlaying() {
+		return state == State.PLAYING;
+	}
 	
 	public void play(int offset_millis) {
 		logger.log(Level.SEVERE, "start playback at " + offset_millis);
