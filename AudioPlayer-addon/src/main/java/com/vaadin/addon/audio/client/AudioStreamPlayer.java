@@ -94,14 +94,15 @@ public class AudioStreamPlayer {
 		logger.log(Level.SEVERE, "currentPlayer: " + currentPlayer + "\n\rprevPlayer: " + (currentPlayer == 0 ? MAX_PLAYERS - 1 : currentPlayer - 1));
 		
 		chunkPosition = timeOffset;
-		
+
 		if (useCrossFade) {
 			// use cross fade to blend prev and current audio together
 			int overlapTime = ((int) (chunkOverlapTime / playbackSpeed));
 			crossFadePlayers(getCurrentPlayer(), getPrevPlayer(), volume, overlapTime);
 		} else {
 			// simply play the audio
-			getCurrentPlayer().play(chunkPosition);
+			int playOffset = ((int) (chunkPosition / playbackSpeed));
+			getCurrentPlayer().play(playOffset);
 			// track execution time to offset scheduled time for next chunk
 			execTime = new Duration();
 			// starts counting MS when instantiated, used primarily for pausing
@@ -211,7 +212,7 @@ public class AudioStreamPlayer {
 			Log.error(this, "current player is null");
 			return;
 		}
-		chunkPosition += chunkPositionClock.elapsedMillis();
+		chunkPosition += chunkPositionClock.elapsedMillis() * playbackSpeed;
 		chunkPositionClock = null;
 		getCurrentPlayer().stop();
 		playNextChunkTimer.cancel();
@@ -224,11 +225,11 @@ public class AudioStreamPlayer {
 			Log.error(this, "current player is null");
 			return;
 		}
-		logError("resume() - elapsed: " + chunkPosition);
-		logError("scheduled for " + (timePerChunk - chunkPosition));
+		int playOffset = ((int) (chunkPosition / playbackSpeed));
+		logError("chunk time position: " + chunkPosition + " / with playbackSpeed: " + playOffset);
 		setPersistingPlayerOptions(getCurrentPlayer());
 		connectBufferPlayerToEffectChain(getCurrentPlayer(), effects);
-		getCurrentPlayer().play(chunkPosition);
+		getCurrentPlayer().play(playOffset);
 		// track execution time to offset scheduled time for next chunk
 		execTime = new Duration();
 		// schedule next chunk handoff
@@ -275,10 +276,16 @@ public class AudioStreamPlayer {
 			// TODO: first chunk should work the same way as others
 			// truncating after decimal doesn't matter since we are already in milliseconds
 			int time = ((int) (chunkDuration - chunkOffset - overlapDuration));
+			if (time < 0) {
+				time = 0;
+			}
 			logError("Scheduling for " + time + " [" + chunkDuration + ", " + chunkOffset + ", " + overlapDuration + "]");
 			playNextChunkTimer.schedule(time);
 		} else {
 			int time = ((int) (chunkDuration - chunkOffset));
+			if (time < 0) {
+				time = 0;
+			}
 			logError("Scheduling for " + time + " [" + chunkDuration + ", " + chunkOffset + ", " + overlapDuration + "]");
 			playNextChunkTimer.schedule(time);
 		}
@@ -322,7 +329,7 @@ public class AudioStreamPlayer {
 	private int getChunkPosition() {
 		int pos = chunkPosition;
 		if (chunkPositionClock != null) {
-			pos += chunkPositionClock.elapsedMillis();
+			pos += (chunkPositionClock.elapsedMillis() * playbackSpeed);
 		}
 		return pos;
 	}
@@ -456,7 +463,14 @@ public class AudioStreamPlayer {
 	}
 	
 	public void setPlaybackSpeed(double playbackSpeed) {
+		// stop from any division by 0 errors
+		if (playbackSpeed <= 0) {
+			logError("playback speed must be greater than 0");
+			return;
+		}
+		// save playbackSpeed
 		this.playbackSpeed = playbackSpeed;
+		// if the current player is not null, apply the speed
 		if(getCurrentPlayer() == null) {
 			logError("current player is null");
 			return;
