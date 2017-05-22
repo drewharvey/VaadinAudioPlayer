@@ -22,19 +22,12 @@ import com.vaadin.addon.audio.shared.util.Log;
 public class AudioStreamPlayer {
 	
 	private static Logger logger = Logger.getLogger("AudioStreamPlayer");
-
-	//
-	// TODO: improve log messages
-	//
 	
-	Duration execTime = null;
-	
-	private static final int MAX_PLAYERS = 3;	// Maximum number of players
+	private static final int MAX_BUFFER_PLAYERS = 3;	// Maximum number of players
 	//TODO: get values from ChunkDescriptions
 	private int timePerChunk = 5000;
 	private int chunkOverlapTime = 500; // extra time added to end of each chunk
-	
-	private int currentPlayer = 0;
+
 	private int position = 0;
 	private int chunkPosition = 0;
 	
@@ -43,24 +36,25 @@ public class AudioStreamPlayer {
 	private double balance = 0;
 	
 	private ClientStream stream;
-	BufferPlayer[] players = new BufferPlayer[MAX_PLAYERS];
+	private BufferPlayerManager playerManager;
 	private Timer playNextChunkTimer;
 	private Duration chunkPositionClock;
 	
 	private List<Effect> effects = new ArrayList<Effect>();
 
 	public AudioStreamPlayer(ClientStream stream) {
-		
-		// Warm up the stream
+		// warm up the stream
 		this.stream = stream;
-		
+		// playerManager keeps track of the different BufferPlayers
+		playerManager = new BufferPlayerManager(MAX_BUFFER_PLAYERS);
+		// request first audio chunk
 		stream.requestChunkByTimestamp(0, new DataCallback() {
 			@Override
 			public void onDataReceived(ChunkDescriptor chunk) {
 				BufferPlayer player = new BufferPlayer();
 				player.setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk));
 				setPersistingPlayerOptions(player);
-				setCurrentPlayer(player);
+				playerManager.setCurrentPlayer(player);
 				chunkOverlapTime = chunk.getOverlapTime();
 				// TODO: shouldn't need to add 1 here
 				timePerChunk = chunk.getEndTimeOffset() - chunk.getStartSampleOffset() + 1 - chunkOverlapTime;
@@ -86,25 +80,21 @@ public class AudioStreamPlayer {
 	
 	private void play(int timeOffset, boolean useCrossFade) {
 		logError("PLAY");
-		if (getCurrentPlayer() == null) {
+		if (playerManager.getCurrentPlayer() == null) {
 			Log.error(this, "current player is null");
 			return;
 		}
-		
-		logger.log(Level.SEVERE, "currentPlayer: " + currentPlayer + "\n\rprevPlayer: " + (currentPlayer == 0 ? MAX_PLAYERS - 1 : currentPlayer - 1));
-		
+
 		chunkPosition = timeOffset;
 		int playOffset = ((int) (chunkPosition / playbackSpeed));
 
 		if (useCrossFade) {
 			// use cross fade to blend prev and current audio together
 			int overlapTime = ((int) (chunkOverlapTime / playbackSpeed));
-			crossFadePlayers(getCurrentPlayer(), getPrevPlayer(), playOffset, volume, overlapTime);
+			crossFadePlayers(playerManager.getCurrentPlayer(), playerManager.getPrevPlayer(), playOffset, volume, overlapTime);
 		} else {
 			// simply play the audio
-			getCurrentPlayer().play(playOffset);
-			// track execution time to offset scheduled time for next chunk
-			execTime = new Duration();
+			playerManager.getCurrentPlayer().play(playOffset);
 			// starts counting MS when instantiated, used primarily for pausing
 			chunkPositionClock = new Duration();
 		}
@@ -125,7 +115,7 @@ public class AudioStreamPlayer {
 						setPersistingPlayerOptions(player);
 					}
 				});
-				setNextPlayer(player);
+				playerManager.setNextPlayer(player);
 			}
 		});
 		
@@ -140,8 +130,6 @@ public class AudioStreamPlayer {
 	 */
 	private void crossFadePlayers(final BufferPlayer currentPlayer, final BufferPlayer prevPlayer, 
 			final int currentPlayerPlayOffset, final double targetGain, final int fadeTime) {
-		// track execution time to offset scheduled time for next chunk
-		execTime = new Duration();
 		// starts counting MS when instantiated, used primarily for pausing
 		chunkPositionClock = new Duration();
 		
@@ -208,30 +196,28 @@ public class AudioStreamPlayer {
 	
 	public void pause() {
 		logError("PAUSE");	
-		if (getCurrentPlayer() == null) {
+		if (playerManager.getCurrentPlayer() == null) {
 			Log.error(this, "current player is null");
 			return;
 		}
 		chunkPosition += chunkPositionClock.elapsedMillis() * playbackSpeed;
 		chunkPositionClock = null;
-		getCurrentPlayer().stop();
+		playerManager.getCurrentPlayer().stop();
 		playNextChunkTimer.cancel();
 		logError("pause() - elapsedTime:  " + chunkPosition);
 	}
 	
 	public void resume() {
 		logError("resume");
-		if (getCurrentPlayer() == null) {
+		if (playerManager.getCurrentPlayer() == null) {
 			Log.error(this, "current player is null");
 			return;
 		}
 		int playOffset = ((int) (chunkPosition / playbackSpeed));
 		logError("chunk time position: " + chunkPosition + " / with playbackSpeed: " + playOffset);
-		setPersistingPlayerOptions(getCurrentPlayer());
-		connectBufferPlayerToEffectChain(getCurrentPlayer(), effects);
-		getCurrentPlayer().play(playOffset);
-		// track execution time to offset scheduled time for next chunk
-		execTime = new Duration();
+		setPersistingPlayerOptions(playerManager.getCurrentPlayer());
+		connectBufferPlayerToEffectChain(playerManager.getCurrentPlayer(), effects);
+		playerManager.getCurrentPlayer().play(playOffset);
 		// schedule next chunk handoff
 		scheduleNextChunk();
 		// Duration object starts counting MS when instantiated
@@ -240,12 +226,12 @@ public class AudioStreamPlayer {
 	
 	public void stop() {
 		logError("stop");
-		if (getCurrentPlayer() == null) {
+		if (playerManager.getCurrentPlayer() == null) {
 			Log.error(this, "current player is null");
 			return;
 		}
 		// reset everything
-		getCurrentPlayer().stop();
+		playerManager.getCurrentPlayer().stop();
 		playNextChunkTimer.cancel();
 		position = 0;
 		chunkPosition = 0;
@@ -261,7 +247,7 @@ public class AudioStreamPlayer {
 						setPersistingPlayerOptions(player);
 					}
 				});
-				setCurrentPlayer(player);
+				AudioStreamPlayer.this.playerManager.setCurrentPlayer(player);
 			}
 		});
 	}
@@ -291,37 +277,6 @@ public class AudioStreamPlayer {
 		}
 	}
 	
-	private BufferPlayer getCurrentPlayer() {
-		return players[currentPlayer];
-	}
-	
-	private void setCurrentPlayer(BufferPlayer player) {
-		players[currentPlayer] = player;
-	}
-	
-	private BufferPlayer getNextPlayer() {
-		int i = (currentPlayer + 1) % MAX_PLAYERS;
-		return players[i];
-	}
-	
-	private void setNextPlayer(BufferPlayer player) {
-		int i = (currentPlayer + 1) % MAX_PLAYERS;
-		players[i] = player;
-	}
-	
-	private BufferPlayer getPrevPlayer() {
-		int i = (currentPlayer == 0 ? MAX_PLAYERS - 1 : currentPlayer - 1);
-		return players[i];
-	}
-	
-	private void moveToNextPlayer() {
-		currentPlayer = (currentPlayer + 1) % MAX_PLAYERS;
-	}
-	
-	private void moveToPrevPlayer() {
-		currentPlayer = (currentPlayer == 0 ? MAX_PLAYERS - 1 : currentPlayer - 1);
-	}
-	
 	/**
 	 * Gets playtime position of the current audio chunk.
 	 * @return playtime position (milliseconds)
@@ -343,7 +298,7 @@ public class AudioStreamPlayer {
 		} else {
 			// make sure the next player has the same options set as current
 			// setPersistingPlayerOptions(getNextPlayer());
-			moveToNextPlayer();
+			playerManager.moveToNextPlayer();
 			play(true);
 		}
 	}
@@ -411,7 +366,7 @@ public class AudioStreamPlayer {
 	
 	public void setPosition(final int millis) {
 		logError("set position to " + millis);
-		getCurrentPlayer().stop();
+		playerManager.getCurrentPlayer().stop();
 		playNextChunkTimer.cancel();
 		// calculate the offset time within this audio chunk
 		final int offset = millis % timePerChunk;
@@ -428,7 +383,7 @@ public class AudioStreamPlayer {
 					public void onBufferReady(Buffer b) {
 						// setup buffer player and play when ready
 						setPersistingPlayerOptions(player);
-						setCurrentPlayer(player);
+						AudioStreamPlayer.this.playerManager.setCurrentPlayer(player);
 						play(offset, false);
 					}
 				});
@@ -446,12 +401,12 @@ public class AudioStreamPlayer {
 	
 	public void setVolume(double volume) {
 		this.volume = volume;
-		if(getCurrentPlayer() == null) {
+		if(playerManager.getCurrentPlayer() == null) {
 			logger.log(Level.SEVERE, "CURRENT PLAYER IS NULL");
 			return;
 		}
 		// TODO: some reason wasn't working when I used getCurrentPlayer().setVolume(volume);
-		for (BufferPlayer p : players) {
+		for (BufferPlayer p : playerManager.getPlayers()) {
 			if (p != null) {
 				p.setVolume(volume);
 			}
@@ -471,24 +426,24 @@ public class AudioStreamPlayer {
 		// save playbackSpeed
 		this.playbackSpeed = playbackSpeed;
 		// if the current player is not null, apply the speed
-		if(getCurrentPlayer() == null) {
+		if(playerManager.getCurrentPlayer() == null) {
 			logError("current player is null");
 			return;
 		}
-		boolean isPlaying = getCurrentPlayer().isPlaying();
+		boolean isPlaying = playerManager.getCurrentPlayer().isPlaying();
 		if (isPlaying) {
 			pause();
 		}
 		// update current player so that we have the time warped buffer if needed
 		BufferPlayer player = new BufferPlayer();
-		player.setBuffer(getCurrentPlayer().getBuffer());
+		player.setBuffer(playerManager.getCurrentPlayer().getBuffer());
 		setPersistingPlayerOptions(player);
-		setCurrentPlayer(player);
+		playerManager.setCurrentPlayer(player);
 		// update next player now to avoid last second processing
 		BufferPlayer nextPlayer = new BufferPlayer();
-		nextPlayer.setBuffer(getNextPlayer().getBuffer());
+		nextPlayer.setBuffer(playerManager.getNextPlayer().getBuffer());
 		setPersistingPlayerOptions(nextPlayer);
-		setNextPlayer(nextPlayer);
+		playerManager.setNextPlayer(nextPlayer);
 		if (isPlaying) {
 			resume();
 		}
@@ -500,11 +455,11 @@ public class AudioStreamPlayer {
 	
 	public void setBalance(double balance) {
 		this.balance = balance;
-		if(getCurrentPlayer() == null) {
+		if(playerManager.getCurrentPlayer() == null) {
 			logError("current player is null");
 			return;
 		}
-		getCurrentPlayer().setBalance(balance);
+		playerManager.getCurrentPlayer().setBalance(balance);
 	}
 	
 	public double getBalance() {
@@ -515,7 +470,7 @@ public class AudioStreamPlayer {
 		logError("AudioStreamPlayer add effect " + effect.getID());
 		effects.add(effect);
 		connectEffectNodes(effects);
-		BufferPlayer currentPlayer = getCurrentPlayer();
+		BufferPlayer currentPlayer = playerManager.getCurrentPlayer();
 		if (currentPlayer != null) {
 			connectBufferPlayerToEffectChain(currentPlayer, effects);
 		}
@@ -525,7 +480,7 @@ public class AudioStreamPlayer {
 		logError("AudioStreamPlayer removing effect " + effect.getID());
 		effects.remove(effect);
 		connectEffectNodes(effects);
-		BufferPlayer currentPlayer = getCurrentPlayer();
+		BufferPlayer currentPlayer = playerManager.getCurrentPlayer();
 		if (currentPlayer != null) {
 			connectBufferPlayerToEffectChain(currentPlayer, effects);
 		}
@@ -538,7 +493,7 @@ public class AudioStreamPlayer {
 			this.effects.addAll(effects);
 		}
 		connectEffectNodes(effects);
-		BufferPlayer currentPlayer = getCurrentPlayer();
+		BufferPlayer currentPlayer = playerManager.getCurrentPlayer();
 		if (currentPlayer != null) {
 			connectBufferPlayerToEffectChain(currentPlayer, effects);
 		}
