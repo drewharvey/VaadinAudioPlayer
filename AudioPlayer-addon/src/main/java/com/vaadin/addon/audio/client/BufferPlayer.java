@@ -135,10 +135,10 @@ public class BufferPlayer {
 	}
 
 	/**
-	 * Changes the speed at which the BufferPlayer plays the audio. If the speed is changed,
-	 * the audio data in the buffer will need to be processed and replaced by one that has
-	 * been stretched according to the playback speed.  This is to avoid pitch change.
-	 * @param playbackSpeed
+	 * Changes the speed at which the BufferPlayer plays the audio without changing
+	 * the pitch of the audio. The audio buffer will need to be reprocessed in order to
+	 * play at the speed requested.
+	 * @param playbackSpeed value greater than 0
 	 */
 	public void setPlaybackSpeed(double playbackSpeed) {
 		logger.log(Level.SEVERE, "set speed scale " + playbackSpeed);
@@ -159,7 +159,7 @@ public class BufferPlayer {
 				double stretchFactor = 1d * playbackSpeed;
 				AudioContext context = Context.get().getNativeContext();
 				int numChannels = unmodifiedBuffer.getNumberOfChannels();
-				buffer = TimeStretch.strechAudioBuffer(stretchFactor, unmodifiedBuffer, context, numChannels, true);
+				buffer = TimeStretch.strechAudioBuffer(stretchFactor, unmodifiedBuffer, context, numChannels, false);
 				logger.log(Level.SEVERE, "stretching complete");
 			} else {
 				buffer = unmodifiedBuffer;

@@ -59,12 +59,11 @@ public class AudioStreamPlayer {
 			public void onDataReceived(ChunkDescriptor chunk) {
 				BufferPlayer player = new BufferPlayer();
 				player.setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk));
-				AudioStreamPlayer.this.setPersistingPlayerOptions(player);
-				AudioStreamPlayer.this.setCurrentPlayer(player);
-				AudioStreamPlayer.this.chunkOverlapTime = chunk.getOverlapTime();
+				setPersistingPlayerOptions(player);
+				setCurrentPlayer(player);
+				chunkOverlapTime = chunk.getOverlapTime();
 				// TODO: shouldn't need to add 1 here
-				AudioStreamPlayer.this.timePerChunk = 
-						chunk.getEndTimeOffset() - chunk.getStartSampleOffset() + 1 - chunkOverlapTime;
+				timePerChunk = chunk.getEndTimeOffset() - chunk.getStartSampleOffset() + 1 - chunkOverlapTime;
 				logError("timePerChunk: " + timePerChunk + "\r\n" + "chunkLeadTime: " + chunkOverlapTime);
 			}
 		});
@@ -119,13 +118,13 @@ public class AudioStreamPlayer {
 			@Override
 			public void onDataReceived(ChunkDescriptor chunk) {
 				final BufferPlayer player = new BufferPlayer();
-				player.setBuffer(stream.getBufferForChunk(chunk), new BufferSourceNode.BufferReadyListener() {
+				player.setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk), new BufferSourceNode.BufferReadyListener() {
 					@Override
 					public void onBufferReady(Buffer b) {
-						AudioStreamPlayer.this.setPersistingPlayerOptions(player);
+						setPersistingPlayerOptions(player);
 					}
 				});
-				AudioStreamPlayer.this.setNextPlayer(player);
+				setNextPlayer(player);
 			}
 		});
 		
@@ -258,10 +257,10 @@ public class AudioStreamPlayer {
 				player.setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk), new BufferSourceNode.BufferReadyListener() {
 					@Override
 					public void onBufferReady(Buffer b) {
-						AudioStreamPlayer.this.setPersistingPlayerOptions(player);
+						setPersistingPlayerOptions(player);
 					}
 				});
-				AudioStreamPlayer.this.setCurrentPlayer(player);
+				setCurrentPlayer(player);
 			}
 		});
 	}
@@ -421,9 +420,9 @@ public class AudioStreamPlayer {
 					@Override
 					public void onBufferReady(Buffer b) {
 						// setup buffer player and play when ready
-						AudioStreamPlayer.this.setPersistingPlayerOptions(player);
-						AudioStreamPlayer.this.setCurrentPlayer(player);
-						AudioStreamPlayer.this.play(offset, true);
+						setPersistingPlayerOptions(player);
+						setCurrentPlayer(player);
+						play(offset, true);
 					}
 				});
 			}
@@ -474,16 +473,6 @@ public class AudioStreamPlayer {
 		setPersistingPlayerOptions(nextPlayer);
 		setNextPlayer(nextPlayer);
 		resume();
-
-		// pause playback
-		// get current buffer player
-		// create new warped buffer
-		// reset buffer player and set new warped buffer
-		// do this for next chunk as well
-		// resume playback
-
-		//TODO: everytime chunk is loaded, it needs to be warped if speed != 1
-
 	}
 	
 	public double getPlaybackSpeed() {
