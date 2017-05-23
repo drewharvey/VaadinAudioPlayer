@@ -24,7 +24,7 @@ public class AudioStreamPlayer {
 	
 	private static Logger logger = Logger.getLogger("AudioStreamPlayer");
 	
-	private static final int MAX_BUFFER_PLAYERS = 3;	// Maximum number of players
+	private static final int MAX_BUFFER_PLAYERS = 2;	// Maximum number of players
 	//TODO: get values from ChunkDescriptions
 	private int timePerChunk = 5000;
 	private int chunkOverlapTime = 500; // extra time added to end of each chunk
@@ -43,9 +43,10 @@ public class AudioStreamPlayer {
 	
 	private List<Effect> effects = new ArrayList<Effect>();
 
-	public AudioStreamPlayer(ClientStream stream) {
+	public AudioStreamPlayer(ClientStream stream, int chunkTimeMillis) {
 		// warm up the stream
 		this.stream = stream;
+		this.timePerChunk = chunkTimeMillis;
 		// playerManager keeps track of the different BufferPlayers
 		playerManager = new BufferPlayerManager(MAX_BUFFER_PLAYERS);
 		// request first audio chunk
@@ -56,9 +57,8 @@ public class AudioStreamPlayer {
 				player.setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk));
 				setPersistingPlayerOptions(player);
 				playerManager.setCurrentPlayer(player);
+				// TODO: should we set both chunkTime and chunkOverlapTime in state?
 				chunkOverlapTime = chunk.getOverlapTime();
-				// TODO: shouldn't need to add 1 here
-				timePerChunk = chunk.getEndTimeOffset() - chunk.getStartSampleOffset() + 1 - chunkOverlapTime;
 				logError("timePerChunk: " + timePerChunk + "\r\n" + "chunkLeadTime: " + chunkOverlapTime);
 			}
 		});

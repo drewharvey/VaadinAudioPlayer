@@ -14,12 +14,8 @@ import com.vaadin.addon.audio.client.effects.VolumeEffect;
 import com.vaadin.addon.audio.client.webaudio.Buffer;
 import com.vaadin.addon.audio.client.webaudio.Context;
 import com.vaadin.addon.audio.server.AudioPlayer;
-import com.vaadin.addon.audio.shared.AudioPlayerClientRpc;
-import com.vaadin.addon.audio.shared.AudioPlayerServerRpc;
-import com.vaadin.addon.audio.shared.AudioPlayerState;
-import com.vaadin.addon.audio.shared.SharedEffect;
+import com.vaadin.addon.audio.shared.*;
 import com.vaadin.addon.audio.shared.SharedEffect.EffectName;
-import com.vaadin.addon.audio.shared.SharedEffectProperty;
 import com.vaadin.addon.audio.shared.util.Log;
 import com.vaadin.annotations.JavaScript;
 import com.vaadin.client.ServerConnector;
@@ -132,6 +128,22 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 			}
 
 			@Override
+			public void requestAndCacheAudioChunks(int startTime, int endTime) {
+				Log.message(AudioPlayerConnector.this, "preloading audio chunks from time " + startTime + " - " + endTime);
+				// get time per chunk
+				int timePerChunk = getState().chunkTimeMillis;
+				// loop thru and request whatever chunks needed within time frame
+				for (int i = startTime; i < endTime; i += timePerChunk) {
+					stream.requestChunkByTimestamp(i, new ClientStream.DataCallback() {
+						@Override
+						public void onDataReceived(ChunkDescriptor chunk) {
+							// caching is handled automatically
+						}
+					});
+				}
+			}
+
+			@Override
 			public void setPlaybackPosition(int position_millis) {
 				Log.message(AudioPlayerConnector.this, "set playback position to " + position_millis);
 				position_millis = (position_millis < 0) ? 0 : position_millis;
@@ -215,7 +227,7 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
         
         // create stream and the client side audio player
     	stream = new ClientStream(this);
-    	player = new AudioStreamPlayer(stream);
+    	player = new AudioStreamPlayer(stream, getState().chunkTimeMillis);
     	
     	// expose this audio player to the client side thru a custom js api
     	JavaScriptPublicAPI.exposeMethods();

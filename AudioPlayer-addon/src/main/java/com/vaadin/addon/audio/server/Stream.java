@@ -14,7 +14,7 @@ import com.vaadin.addon.audio.shared.PCMFormat;
  */
 public class Stream {
 
-	private static final int CHUNK_LENGTH_MILLIS = 5000;
+	private static final int CHUNK_LENGTH_MILLIS_DEFAULT = 5000;
 	private static final int CHUNK_OVERLAP_MILLIS = 500;
 
 	public static interface Callback {
@@ -51,12 +51,27 @@ public class Stream {
 	private StreamState streamState = StreamState.IDLE;
 
 	// TODO: pass in chunk length and overlap in an optional constructor
-	private int chunkLength = CHUNK_LENGTH_MILLIS;
+	private int chunkLength;
 	private int chunkOverlapLength = CHUNK_OVERLAP_MILLIS;
 
 	private boolean compression = false;
 	private int sampleCount = 0;
 	private int duration = 0;
+
+	/**
+	 * Create an audio stream. Performs on-the-fly audio encoding on a
+	 * chunk-by-chunk basis.
+	 *
+	 * @param pcmBuffer
+	 *            Buffer containing PCM data - data should start at offset 0
+	 * @param format
+	 *            Object describing PCM data format
+	 * @param encoder
+	 *            Data encoder to use. {@link WaveEncoder} forwards PCM data.
+	 */
+	public Stream(ByteBuffer pcmBuffer, PCMFormat format, Encoder encoder) {
+		this(pcmBuffer, format, encoder, CHUNK_LENGTH_MILLIS_DEFAULT);
+	}
 
 	/**
 	 * Create an audio stream. Performs on-the-fly audio encoding on a
@@ -69,10 +84,11 @@ public class Stream {
 	 * @param encoder
 	 *            Data encoder to use. {@link WaveEncoder} forwards PCM data.
 	 */
-	public Stream(ByteBuffer pcmBuffer, PCMFormat format, Encoder encoder) {
+	public Stream(ByteBuffer pcmBuffer, PCMFormat format, Encoder encoder, int millisPerChunk) {
 		this.buffer = pcmBuffer;
 		this.format = format;
 		this.encoder = encoder;
+		this.chunkLength = millisPerChunk;
 		encoder.setInput(pcmBuffer, format);
 
 		int buffersize = pcmBuffer.capacity();
@@ -160,6 +176,10 @@ public class Stream {
 
 	public StreamState getState() {
 		return streamState;
+	}
+
+	public int getChunkLength() {
+		return chunkLength;
 	}
 
 	public List<ChunkDescriptor> getChunks() {

@@ -10,6 +10,8 @@ import com.vaadin.shared.AbstractComponentState;
 public class AudioPlayerState extends AbstractComponentState {
 
 	public final List<ChunkDescriptor> chunks = new ArrayList<ChunkDescriptor>();
+
+	public int chunkTimeMillis;
 	
 	public int duration;
 	

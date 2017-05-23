@@ -18,6 +18,8 @@ public interface AudioPlayerClientRpc extends ClientRpc {
 	 * @param encodedData Base64 encoded data
 	 */
 	void sendData(int chunkId, boolean compressed, String encodedData);
+
+	void requestAndCacheAudioChunks(int startTime, int endTime);
 	
 	void setPlaybackPosition(int position_millis);
 	

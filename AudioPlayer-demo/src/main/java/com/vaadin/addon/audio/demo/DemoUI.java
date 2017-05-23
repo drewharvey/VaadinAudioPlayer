@@ -508,7 +508,7 @@ public class DemoUI extends UI {
 		int dataLength = WaveUtil.getDataLength(waveFile);
 		PCMFormat dataFormat = WaveUtil.getDataFormat(waveFile);
 		ByteBuffer dataBuffer = ByteBuffer.wrap(waveFile.array(),startOffset,dataLength);
-		Stream stream = new Stream(dataBuffer,dataFormat,outputEncoder);
+		Stream stream = new Stream(dataBuffer,dataFormat,outputEncoder, 10000);
 		return stream;
 	}
 

@@ -40,7 +40,7 @@ public class ClientStream {
 	
 	public ClientStream(AudioPlayerConnector connector) {
 		Log.message(this, "create");
-		
+
 		this.connector = connector;
 		buffers = new LinkedHashMap<>();
 		requests = new HashMap<>();
