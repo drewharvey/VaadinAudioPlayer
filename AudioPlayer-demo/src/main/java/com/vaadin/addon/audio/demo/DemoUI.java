@@ -506,9 +506,10 @@ public class DemoUI extends UI {
 	private static Stream createWaveStream(ByteBuffer waveFile, Encoder outputEncoder) {
 		int startOffset = WaveUtil.getDataStartOffset(waveFile);
 		int dataLength = WaveUtil.getDataLength(waveFile);
+		int chunkLength = 5000;
 		PCMFormat dataFormat = WaveUtil.getDataFormat(waveFile);
 		ByteBuffer dataBuffer = ByteBuffer.wrap(waveFile.array(),startOffset,dataLength);
-		Stream stream = new Stream(dataBuffer,dataFormat,outputEncoder, 10000);
+		Stream stream = new Stream(dataBuffer,dataFormat,outputEncoder, chunkLength);
 		return stream;
 	}
 
