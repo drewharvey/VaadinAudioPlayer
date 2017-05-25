@@ -15,8 +15,6 @@ import javax.servlet.annotation.WebServlet;
 import com.vaadin.addon.audio.server.AudioPlayer;
 import com.vaadin.addon.audio.server.Encoder;
 import com.vaadin.addon.audio.server.effects.FilterEffect;
-import com.vaadin.addon.audio.server.effects.FilterEffect.Type;
-import com.vaadin.addon.audio.server.effects.PitchEffect;
 import com.vaadin.addon.audio.server.Stream;
 import com.vaadin.addon.audio.server.AudioPlayer.PlaybackState;
 import com.vaadin.addon.audio.server.AudioPlayer.StateChangeCallback;
@@ -72,6 +70,8 @@ public class DemoUI extends UI {
 		private Slider volumeSlider;
 		private Slider balanceSlider;
 		private Slider speedSlider;
+
+		private ComboBox preloadSelect;
 
 		private Button rewButton;
 		private Button stopButton;
@@ -153,6 +153,17 @@ public class DemoUI extends UI {
 				}
 			}));
 			fwdButton.addStyleName(BUTTON_SIZE_CLASS);
+
+			buttonLayout.addComponent(preloadSelect = new ComboBox("Preload Chunks"));
+			preloadSelect.addItems(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+			preloadSelect.select(player.getNumberChunksToPreload());
+			preloadSelect.addValueChangeListener(new ValueChangeListener() {
+				@Override
+				public void valueChange(ValueChangeEvent event) {
+					int val = (int) preloadSelect.getValue();
+					player.setNumberChunksToPreload(val);
+				}
+			});
 
 			innerContainer.addComponent(buttonLayout);
 			innerContainer.setComponentAlignment(buttonLayout, Alignment.MIDDLE_CENTER);
@@ -478,6 +489,18 @@ public class DemoUI extends UI {
 				}
 				
 				ByteBuffer fileBytes = readFile(itemName, TEST_FILE_PATH);
+
+//				if (itemName.equalsIgnoreCase("avoke-audio-sample.wav")) {
+//					System.out.println("Converting uLaw into standard WAV format");
+//					try {
+//						File uLawFile = new File(TEST_FILE_PATH + "/" + itemName);
+//						byte[] wavBytes = WaveUtil.convertULawFileToWav(uLawFile);
+//						fileBytes = ByteBuffer.wrap(wavBytes);
+//					} catch (Exception e) {
+//						Log.error(DemoUI.class, "File read failed");
+//						e.printStackTrace();
+//					}
+//				}
 				
 				// TODO: use the following line when OGG and/or MP3 encoders have been implemented
 				//Stream stream = createWaveStream(fileBytes, encoder);
@@ -508,6 +531,12 @@ public class DemoUI extends UI {
 		int dataLength = WaveUtil.getDataLength(waveFile);
 		int chunkLength = 5000;
 		PCMFormat dataFormat = WaveUtil.getDataFormat(waveFile);
+		System.out.println("arrayLength: " + waveFile.array().length
+				+ "\n\rstartOffset: " + startOffset
+				+ "\n\rdataLength: " + dataLength
+				+ "\n\rdataLength alt: " + (waveFile.array().length - 40)
+				+ "\n\rsubchunk 1: " + WaveUtil.getFmtChunkSize(waveFile)
+				+ "\r\nsampleRate: " + dataFormat.getSampleRate());
 		ByteBuffer dataBuffer = ByteBuffer.wrap(waveFile.array(),startOffset,dataLength);
 		Stream stream = new Stream(dataBuffer,dataFormat,outputEncoder, chunkLength);
 		return stream;

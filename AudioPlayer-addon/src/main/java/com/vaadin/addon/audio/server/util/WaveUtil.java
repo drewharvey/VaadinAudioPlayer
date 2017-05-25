@@ -1,8 +1,14 @@
 package com.vaadin.addon.audio.server.util;
 
+import java.io.*;
 import java.nio.ByteBuffer;
 
 import com.vaadin.addon.audio.shared.PCMFormat;
+
+import javax.sound.sampled.AudioFileFormat;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
 
 /**
  * Utilities for working with WAVE files
@@ -32,6 +38,17 @@ public final class WaveUtil {
 	}
 
 	/**
+	 * Gets the number of remaining bytes in the fmt header (following the
+	 * 4 bytes in which the size is read from).
+	 * @param waveFileBytes
+	 * @return number of bytes in the fmt header
+	 */
+	public static int getFmtChunkSize(ByteBuffer waveFileBytes) {
+		// seems like byte 16 is always the fmt chunk size
+		return Endian.readLE(waveFileBytes, 16, 4);
+	}
+
+	/**
 	 * Get byte offset of the data start. For now we assume there's always a 44
 	 * byte wave header...
 	 * 
@@ -51,7 +68,11 @@ public final class WaveUtil {
 	 * @return number of bytes in PCM data block
 	 */
 	public static int getDataLength(ByteBuffer waveFileBytes) {
-		return Endian.readLE(waveFileBytes, 40, 4);
+		// byte 20 + fmt size gives us the first byte in the data chunk
+		int dataChunkStartByte = 20 + getFmtChunkSize(waveFileBytes);
+		// add 4 bytes to get past the ID block
+		int dataLengthByte = dataChunkStartByte + 4;
+		return Endian.readLE(waveFileBytes, dataLengthByte, 4);
 	}
 
 	/**
@@ -129,6 +150,17 @@ public final class WaveUtil {
 		Endian.writeLE(36 + dataSize, buf, 4, 4);
 
 		return buf.array();
+	}
+
+	public static byte[] convertULawFileToWav(File file) throws IOException {
+		long fileSize = file.length();
+		int frameSize = 160;
+		long numFrames = fileSize / frameSize;
+		AudioFormat audioFormat = new AudioFormat(AudioFormat.Encoding.ULAW, 8000, 8, 1, frameSize, 50, true);
+		AudioInputStream audioInputStream = new AudioInputStream(new FileInputStream(file), audioFormat, numFrames);
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, outputStream);
+		return outputStream.toByteArray();
 	}
 
 }

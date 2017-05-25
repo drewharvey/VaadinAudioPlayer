@@ -48,10 +48,24 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
     @OnStateChange("chunks")
     private void updateChunks() {
     	 Log.message(this, "chunk table updated");
-    	 
     	 // TODO: do we need to respond to this somehow? probably not
-    	 
     }
+
+    @OnStateChange("chunkTimeMillis")
+	private void updateChunkTime() {
+		Log.message(this, "chunkTimeMillis updated");
+	}
+
+	@OnStateChange("duration")
+	private void updateDuration() {
+		Log.message(this, "duration updated");
+	}
+
+    @OnStateChange("numChunksPreload")
+	private void updateNumChunksPreload() {
+		Log.message(this, "numChunksPreload updated");
+		player.setNumChunksPreload(getState().numChunksPreload);
+	}
     
     @OnStateChange("effects")
     private void updateEffects() {

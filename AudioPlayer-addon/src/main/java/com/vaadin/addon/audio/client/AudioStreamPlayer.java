@@ -24,27 +24,23 @@ public class AudioStreamPlayer {
 	
 	private static Logger logger = Logger.getLogger("AudioStreamPlayer");
 
-	private static final int NUM_CHUNKS_PRELOAD = 5;
 	private static final int MAX_BUFFER_PLAYERS = 2;
 
-	private int timePerChunk;
-	private int chunkOverlapTime = 500;
+	private int timePerChunk;						// duration of chunk (ms)
+	private int chunkOverlapTime;					// duration of crossfade between chunks (ms)
+	private int numChunksPreload = 0;				// number of chunks to load ahead of time (set higher for slower connections)
 
-	private int position = 0;
-	private int chunkPosition = 0;
+	private int position = 0;						// total position (ms)
+	private int chunkPosition = 0;					// position within the current chunk (ms)
 	
 	private double volume = 1;
 	private double playbackSpeed = 1;
 	private double balance = 0;
 
-	// stream is used to fetch audio chunks from the server or cache
-	private ClientStream stream;
-	// playerManager keeps track of rotating thru several BufferPlayers
-	private BufferPlayerManager playerManager;
-	// timer used to correctly time the handoff between BufferPlayers
-	private Timer playNextChunkTimer;
-	// keeps track of how far into a chunk we have played
-	private Duration chunkPositionClock;
+	private ClientStream stream;					// used to fetch audio chunks from the server or cache
+	private BufferPlayerManager playerManager;		// keeps track of rotating thru several BufferPlayers
+	private Timer playNextChunkTimer;				// timer used to correctly time the handoff between BufferPlayers
+	private Duration chunkPositionClock;			// keeps track of how far into a chunk we have played
 	
 	private List<Effect> effects = new ArrayList<Effect>();
 
@@ -64,58 +60,6 @@ public class AudioStreamPlayer {
 		};
 	}
 
-	private void initFirstAudioChunk() {
-		fetchChunksForNextPlayer(0, NUM_CHUNKS_PRELOAD, timePerChunk, new DataCallback() {
-			@Override
-			public void onDataReceived(ChunkDescriptor chunk) {
-				playerManager.moveToNextPlayer();
-				// TODO: should we set both chunkTime and chunkOverlapTime in state?
-				chunkOverlapTime = chunk.getOverlapTime();
-				logError("timePerChunk: " + AudioStreamPlayer.this.timePerChunk + "\r\n" + "chunkLeadTime: " + chunkOverlapTime);
-			}
-		}, null);
-	}
-
-	private void fetchChunksForNextPlayer(int timestamp, int numChunksToPreload, int timePerChunk,
-										  final DataCallback chunkDescReadyCb,
-										  final BufferSourceNode.BufferReadyListener bufferReadyCb) {
-		// request first audio chunk
-		stream.requestChunkByTimestamp(timestamp, new DataCallback() {
-			@Override
-			public void onDataReceived(ChunkDescriptor chunk) {
-				// create new BufferPlayer
-				final BufferPlayer player = new BufferPlayer();
-				// assign this to the next BufferPlayer slot
-				playerManager.setNextPlayer(player);
-				// run the ChunkDescription is ready callback
-				if (chunkDescReadyCb != null) {
-					chunkDescReadyCb.onDataReceived(chunk);
-				}
-				// when AudioBuffer is ready, set the BufferPlayer's buffer
-				player.setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk), new BufferSourceNode.BufferReadyListener() {
-					@Override
-					public void onBufferReady(Buffer b) {
-						setPersistingPlayerOptions(player);
-						if (bufferReadyCb != null) {
-							bufferReadyCb.onBufferReady(b);
-						}
-					}
-				});
-			}
-		});
-		// preload additional chunks if needed
-		for (int i = 1; i < numChunksToPreload; i++) {
-			final int time = i * timePerChunk;
-			stream.requestChunkByTimestamp(time, new DataCallback() {
-				@Override
-				public void onDataReceived(ChunkDescriptor chunk) {
-					// these get auto cached in ClientStream
-				}
-			});
-		}
-	}
-
-	
 	public void play() {
 		play(true);
 	}
@@ -134,7 +78,6 @@ public class AudioStreamPlayer {
 		chunkPosition = timeOffset;
 		int playOffset = ((int) (chunkPosition / playbackSpeed));
 
-		// starts counting MS when instantiated, used primarily for pausing
 		chunkPositionClock = new Duration();
 
 		if (useCrossFade) {
@@ -152,7 +95,7 @@ public class AudioStreamPlayer {
 		// start loading next chunk
 		int nextChunkTime = position + timePerChunk + chunkOverlapTime;
 		logError("nextChunkTime: " + nextChunkTime);
-		fetchChunksForNextPlayer(nextChunkTime, NUM_CHUNKS_PRELOAD, timePerChunk, null, null);
+		fetchChunksForNextPlayer(nextChunkTime, numChunksPreload, timePerChunk, null, null);
 	}
 	
 	public void pause() {
@@ -199,6 +142,68 @@ public class AudioStreamPlayer {
 		chunkPositionClock = null;
 		// load the first chunk (beginning of audio)
 		initFirstAudioChunk();
+	}
+
+	private void initFirstAudioChunk() {
+		fetchChunksForNextPlayer(0, numChunksPreload, timePerChunk, new DataCallback() {
+			@Override
+			public void onDataReceived(ChunkDescriptor chunk) {
+				playerManager.moveToNextPlayer();
+				chunkOverlapTime = chunk.getOverlapTime();
+				logError("timePerChunk: " + AudioStreamPlayer.this.timePerChunk + "\r\n" + "chunkLeadTime: " + chunkOverlapTime);
+			}
+		}, null);
+	}
+
+	/**
+	 * Loads audio chunk at provided timestamp into the next BufferPlayer. You can also pre-load chunks by
+	 * giving a value greater than 1 as numChunksToPreload.
+	 * @param timestamp				timestap (ms) corresponding to first chunk
+	 * @param numChunksToPreload	number of chunks to pre-load including the initial chunk
+	 * @param timePerChunk			time (ms) of each chunk
+	 * @param chunkDescReadyCb		ran when the ChunkDescriptor is ready, does NOT mean the AudioBuffer is ready
+	 * @param bufferReadyCb			ran when the AudioBuffer is fully loaded and ready for use
+	 */
+	private void fetchChunksForNextPlayer(int timestamp, int numChunksToPreload, int timePerChunk,
+										  final DataCallback chunkDescReadyCb,
+										  final BufferSourceNode.BufferReadyListener bufferReadyCb) {
+		// request first audio chunk
+		stream.requestChunkByTimestamp(timestamp, new DataCallback() {
+			@Override
+			public void onDataReceived(ChunkDescriptor chunk) {
+				// create new BufferPlayer
+				final BufferPlayer player = new BufferPlayer();
+				// assign this to the next BufferPlayer slot
+				playerManager.setNextPlayer(player);
+				// run the ChunkDescription is ready callback
+				if (chunkDescReadyCb != null) {
+					chunkDescReadyCb.onDataReceived(chunk);
+				}
+				// when AudioBuffer is ready, set the BufferPlayer's buffer
+				player.setBuffer(AudioStreamPlayer.this.stream.getBufferForChunk(chunk), new BufferSourceNode.BufferReadyListener() {
+					@Override
+					public void onBufferReady(Buffer b) {
+						setPersistingPlayerOptions(player);
+						if (bufferReadyCb != null) {
+							bufferReadyCb.onBufferReady(b);
+						}
+					}
+				});
+			}
+		});
+		logger.log(Level.SEVERE, "preloading " + numChunksToPreload + " additional chunks");
+		// preload additional chunks if needed
+		if (numChunksToPreload > 1) {
+			for (int i = 1; i < numChunksToPreload; i++) {
+				final int time = i * timePerChunk;
+				stream.requestChunkByTimestamp(time, new DataCallback() {
+					@Override
+					public void onDataReceived(ChunkDescriptor chunk) {
+						// these get auto cached in ClientStream
+					}
+				});
+			}
+		}
 	}
 	
 	private void scheduleNextChunk() {
@@ -261,6 +266,11 @@ public class AudioStreamPlayer {
 		player.setBalance(balance);
 		connectBufferPlayerToEffectChain(player, effects);
 	}
+
+	public void setNumChunksPreload(int numChunksPreload) {
+		logger.log(Level.SEVERE, "numChunksPreload updated");
+		this.numChunksPreload = numChunksPreload;
+	}
 	
 	public int getDuration() {
 		return stream.getDuration();
@@ -274,7 +284,7 @@ public class AudioStreamPlayer {
 		final int offset = millis % timePerChunk;
 		position = millis - offset;
 		// get audio chunk needed for this time position
-		fetchChunksForNextPlayer(millis, NUM_CHUNKS_PRELOAD, timePerChunk, null, new BufferSourceNode.BufferReadyListener() {
+		fetchChunksForNextPlayer(millis, numChunksPreload, timePerChunk, null, new BufferSourceNode.BufferReadyListener() {
 			@Override
 			public void onBufferReady(Buffer b) {
 				playerManager.moveToNextPlayer();

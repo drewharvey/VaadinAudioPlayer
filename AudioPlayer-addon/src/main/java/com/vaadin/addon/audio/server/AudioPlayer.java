@@ -214,6 +214,22 @@ public class AudioPlayer extends AbstractExtension {
 	public void setBalance(double balance) {
 		getClientRPC().setBalance(balance);
 	}
+
+	/**
+	 * Sets the number of audio chunks that are loaded ahead of the current playing audio chunk.
+	 * @param numChunksPreload
+	 */
+	public void setNumberChunksToPreload(int numChunksPreload) {
+		getState().numChunksPreload = numChunksPreload;
+	}
+
+	/**
+	 * Gets number of chunks to load each time audio chunks are requested.
+	 * @return number of chunks
+	 */
+	public int getNumberChunksToPreload() {
+		return getState().numChunksPreload;
+	}
 	
 	public void addEffect(Effect effect) {
 		// TODO: update effect if it already exists
