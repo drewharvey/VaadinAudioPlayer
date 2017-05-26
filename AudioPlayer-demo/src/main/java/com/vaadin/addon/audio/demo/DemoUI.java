@@ -1,9 +1,9 @@
 package com.vaadin.addon.audio.demo;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -11,7 +11,13 @@ import java.util.List;
 import java.util.Set;
 
 import javax.servlet.annotation.WebServlet;
+import javax.sound.sampled.AudioFileFormat;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
 
+import com.google.gwt.user.client.Window;
+import com.sun.media.sound.UlawCodec;
 import com.vaadin.addon.audio.server.AudioPlayer;
 import com.vaadin.addon.audio.server.Encoder;
 import com.vaadin.addon.audio.server.effects.FilterEffect;
@@ -23,6 +29,7 @@ import com.vaadin.addon.audio.server.Stream.StreamStateCallback;
 import com.vaadin.addon.audio.server.encoders.MP3Encoder;
 import com.vaadin.addon.audio.server.encoders.WaveEncoder;
 import com.vaadin.addon.audio.server.encoders.OGGEncoder;
+import com.vaadin.addon.audio.server.util.DecompressInputStream;
 import com.vaadin.addon.audio.server.util.FeatureSupport;
 import com.vaadin.addon.audio.server.util.WaveUtil;
 import com.vaadin.addon.audio.shared.ChunkDescriptor;
@@ -49,6 +56,8 @@ import com.vaadin.ui.Slider;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Button.ClickEvent;
+import org.apache.commons.io.FileUtils;
+import java.io.ByteArrayOutputStream;
 
 @Push
 @Theme("demo")
@@ -57,7 +66,7 @@ import com.vaadin.ui.Button.ClickEvent;
 public class DemoUI extends UI {
 
 	// TODO: detect when a session dies and kill any work pending in Stream
-	
+
 	public static final String BUTTON_SIZE_CLASS = "small";
 	public static final int SKIP_TIME_SEC = 5;
 	public static final String TEST_FILE_PATH = "src/main/resources/com/vaadin/addon/audio/wav";
@@ -204,20 +213,20 @@ public class DemoUI extends UI {
 				final double playbackSpeed = speedSlider.getValue();
 				player.setPlaybackSpeed(playbackSpeed);
 			});
-			
+
 			FilterEffect filterEffect = new FilterEffect();
 			sliderLayout.addComponent(createFilterEffectElement(player, filterEffect));
-			
+
 
 			innerContainer.addComponent(sliderLayout);
 			innerContainer.setComponentAlignment(sliderLayout, Alignment.MIDDLE_CENTER);
 
 			layout.addComponent(innerContainer);
-			
+
 			//
 			// Stream delete controls
 			//
-			
+
 			Button deleteButton = new Button("Delete stream", new Button.ClickListener() {
 				@Override
 				public void buttonClick(ClickEvent event) {
@@ -264,7 +273,7 @@ public class DemoUI extends UI {
 					});
 				}
 			});
-			
+
 			final Label playerStatus = new Label("Player status: STOPPED");
 			playerStatus.setSizeFull();
 			player.addStateChangeListener(new StateChangeCallback() {
@@ -291,7 +300,7 @@ public class DemoUI extends UI {
 						}
 					});
 				}
-				
+
 				@Override
 				public void playbackPositionChanged(final int new_position_millis) {
 					ui.access(new Runnable() {
@@ -314,16 +323,16 @@ public class DemoUI extends UI {
 					});
 				}
 			});
-			
+
 			HorizontalLayout bottomLayout = new HorizontalLayout();
 			bottomLayout.setWidth("100%");
 
 			bottomLayout.addComponent(playerStatus);
 			bottomLayout.setComponentAlignment(playerStatus, Alignment.MIDDLE_LEFT);
-			
+
 			bottomLayout.addComponent(streamStatus);
 			bottomLayout.setComponentAlignment(streamStatus, Alignment.MIDDLE_LEFT);
-			
+
 			bottomLayout.addComponent(deleteButton);
 			bottomLayout.setComponentAlignment(deleteButton, Alignment.MIDDLE_RIGHT);
 			innerContainer.addComponent(bottomLayout);
@@ -473,45 +482,107 @@ public class DemoUI extends UI {
 		final FileSelector fileSelector = new FileSelector(new FileSelector.SelectionCallback() {
 			@Override
 			public void onSelected(String itemName) {
-				
+
 				// Choose encoder based on support
 				Encoder encoder = null;
-				
+
 				// Prefer OGG support
 				if (FeatureSupport.isOggSupported()) {
 					encoder = new OGGEncoder();
 				} else if (FeatureSupport.isMp3Supported() && MP3Encoder.isSupported()) {
 					// Try MP3 support (it's patent-encumbered)
-					encoder = new MP3Encoder();					
+					encoder = new MP3Encoder();
 				} else {
 					// WaveEncoder should always work
 					encoder = new WaveEncoder();
 				}
-				
+
 				ByteBuffer fileBytes = readFile(itemName, TEST_FILE_PATH);
 
-//				if (itemName.equalsIgnoreCase("avoke-audio-sample.wav")) {
-//					System.out.println("Converting uLaw into standard WAV format");
-//					try {
-//						File uLawFile = new File(TEST_FILE_PATH + "/" + itemName);
-//						byte[] wavBytes = WaveUtil.convertULawFileToWav(uLawFile);
-//						fileBytes = ByteBuffer.wrap(wavBytes);
-//					} catch (Exception e) {
-//						Log.error(DemoUI.class, "File read failed");
-//						e.printStackTrace();
-//					}
-//				}
-				
+				// if we have u-law encoded data, decode it to PCM signed
+				try {
+					Path path = Paths.get(TEST_FILE_PATH + "/" + itemName);
+					byte[] data = Files.readAllBytes(path);
+					AudioInputStream uLawInStream = AudioSystem.getAudioInputStream(new ByteArrayInputStream(data));
+					if (uLawInStream.getFormat().getEncoding().equals(AudioFormat.Encoding.ULAW)) {
+						System.out.println("Converting uLaw into standard WAV format");
+						UlawCodec codec = new UlawCodec();
+						try {
+							System.out.println("Decoding u-law to signed pcm data");
+							AudioInputStream convertedStream
+									= codec.getAudioInputStream(AudioFormat.Encoding.PCM_SIGNED, uLawInStream);
+							//ByteArrayOutputStream output = new ByteArrayOutputStream();
+							//AudioSystem.write(convertedStream, AudioFileFormat.Type.WAVE, output);
+							//byte[] convertedBytes = new byte[output.size()];
+							//output.write(convertedBytes);
+//							fileBytes.clear();
+//							fileBytes = ByteBuffer.wrap(convertedBytes);
+							// write file
+							// File tmp = File.createTempFile("convertedAudio", ".wav");
+							File tmp = new File(TEST_FILE_PATH + "/" + "temp.wav");
+							AudioSystem.write(convertedStream, AudioFileFormat.Type.WAVE, tmp);
+							fileBytes = readFile(tmp.getPath());
+						} catch (Exception e) {
+							Log.error(DemoUI.class, "Failed using encoder");
+							e.printStackTrace();
+						}
+					}
+//						System.out.println("Old format: " + oldFormat.toString());
+//						AudioFormat newFormat = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED,
+//								oldFormat.getSampleRate(),
+//								oldFormat.getSampleSizeInBits() * 2,
+//								oldFormat.getChannels(),
+//								oldFormat.getFrameSize() * 2,
+//								oldFormat.getFrameRate(),
+//								true);
+//						AudioInputStream pcmFormattedAudio = AudioSystem.getAudioInputStream(newFormat, ais);
+//						System.out.println("New format: " + pcmFormattedAudio.getFormat().toString());
+//						byte[] output = new byte[data.length];
+//						System.out.println("Reading bytes: " + pcmFormattedAudio.read(output));
+//						fileBytes.clear();
+//						fileBytes.wrap(output);
+
+//						File newFile = new File(TEST_FILE_PATH + "/converted.wav");
+//						FileOutputStream fileIn = new FileOutputStream(newFile);
+//						try {
+//							fileIn.write(output);
+//						} catch(Exception e) {
+//							Log.error(DemoUI.class, "Failed to write file");
+//							e.printStackTrace();
+//						} finally {
+//							fileIn.close();
+//						}
+
+
+
+
+
+//						// using format
+//						try {
+//							AudioInputStream convertedStream2 = codec.getAudioInputStream(newFormat, uLawInStream);
+//							AudioSystem.write(convertedStream2, AudioFileFormat.Type.WAVE, new
+//									File(TEST_FILE_PATH + "/" + "formatConverted.wav")
+//							);
+//						} catch(Exception e) {
+//							Log.error(DemoUI.class, "Failed using format");
+//							e.printStackTrace();
+//						}
+
+				} catch (Exception e) {
+					Log.error(DemoUI.class, "File read failed");
+					e.printStackTrace();
+				}
+
 				// TODO: use the following line when OGG and/or MP3 encoders have been implemented
 				//Stream stream = createWaveStream(fileBytes, encoder);
 				Stream stream = createWaveStream(fileBytes, new WaveEncoder());
-				
+
 				for(ChunkDescriptor d : stream.getChunks()) {
 					Log.message(this, d.toString());
 				}
-				
+
 				Log.message(this, "Stream duration: " + stream.getDurationString());
-				
+
 				if(encoder instanceof WaveEncoder) {
 					// TODO: enable the following line when client decompression library can be loaded
 					//stream.setCompression(true);
@@ -525,17 +596,16 @@ public class DemoUI extends UI {
 		layout.addComponent(fileSelector);
 		setContent(layout);
 	}
-	
+
 	private static Stream createWaveStream(ByteBuffer waveFile, Encoder outputEncoder) {
 		int startOffset = WaveUtil.getDataStartOffset(waveFile);
 		int dataLength = WaveUtil.getDataLength(waveFile);
 		int chunkLength = 5000;
 		PCMFormat dataFormat = WaveUtil.getDataFormat(waveFile);
+		System.out.println(dataFormat.toString());
 		System.out.println("arrayLength: " + waveFile.array().length
 				+ "\n\rstartOffset: " + startOffset
 				+ "\n\rdataLength: " + dataLength
-				+ "\n\rdataLength alt: " + (waveFile.array().length - 40)
-				+ "\n\rsubchunk 1: " + WaveUtil.getFmtChunkSize(waveFile)
 				+ "\r\nsampleRate: " + dataFormat.getSampleRate());
 		ByteBuffer dataBuffer = ByteBuffer.wrap(waveFile.array(),startOffset,dataLength);
 		Stream stream = new Stream(dataBuffer,dataFormat,outputEncoder, chunkLength);
@@ -556,13 +626,17 @@ public class DemoUI extends UI {
 	//
 
 	public static ByteBuffer readFile(String fname, String dir) {
-		Log.message(DemoUI.class, "Reading file " + fname + " in " + dir + "...");
+		return readFile(dir + "/" + fname);
+	}
+
+	public static ByteBuffer readFile(String path) {
+		Log.message(DemoUI.class, "Reading file " + path + "...");
 		try {
-			byte[] bytes = Files.readAllBytes(Paths.get(dir + "/" + fname));
-			Log.message(DemoUI.class, "File " + fname + " read success");
+			byte[] bytes = Files.readAllBytes(Paths.get(path));
+			Log.message(DemoUI.class, "File read success");
 			return ByteBuffer.wrap(bytes);
 		} catch (IOException e) {
-			Log.error(DemoUI.class, "File " + fname + " read failed");
+			Log.error(DemoUI.class, "File read failed");
 			e.printStackTrace();
 		}
 		return null;

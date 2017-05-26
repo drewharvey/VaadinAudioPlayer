@@ -160,15 +160,4 @@ public final class WaveUtil {
 
 		return buf.array();
 	}
-
-	public static byte[] convertULawFileToWav(File file) throws IOException {
-		long fileSize = file.length();
-		int frameSize = 160;
-		long numFrames = fileSize / frameSize;
-		AudioFormat audioFormat = new AudioFormat(AudioFormat.Encoding.ULAW, 8000, 8, 1, frameSize, 50, true);
-		AudioInputStream audioInputStream = new AudioInputStream(new FileInputStream(file), audioFormat, numFrames);
-		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-		AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, outputStream);
-		return outputStream.toByteArray();
-	}
 }
