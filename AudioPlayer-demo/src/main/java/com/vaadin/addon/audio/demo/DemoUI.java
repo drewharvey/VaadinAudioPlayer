@@ -11,13 +11,10 @@ import java.util.List;
 import java.util.Set;
 
 import javax.servlet.annotation.WebServlet;
-import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 
-import com.google.gwt.user.client.Window;
-import com.sun.media.sound.UlawCodec;
 import com.vaadin.addon.audio.server.AudioPlayer;
 import com.vaadin.addon.audio.server.Encoder;
 import com.vaadin.addon.audio.server.effects.FilterEffect;
@@ -29,8 +26,8 @@ import com.vaadin.addon.audio.server.Stream.StreamStateCallback;
 import com.vaadin.addon.audio.server.encoders.MP3Encoder;
 import com.vaadin.addon.audio.server.encoders.WaveEncoder;
 import com.vaadin.addon.audio.server.encoders.OGGEncoder;
-import com.vaadin.addon.audio.server.util.DecompressInputStream;
 import com.vaadin.addon.audio.server.util.FeatureSupport;
+import com.vaadin.addon.audio.server.util.ULawUtil;
 import com.vaadin.addon.audio.server.util.WaveUtil;
 import com.vaadin.addon.audio.shared.ChunkDescriptor;
 import com.vaadin.addon.audio.shared.PCMFormat;
@@ -56,8 +53,6 @@ import com.vaadin.ui.Slider;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Button.ClickEvent;
-import org.apache.commons.io.FileUtils;
-import java.io.ByteArrayOutputStream;
 
 @Push
 @Theme("demo")
@@ -505,6 +500,7 @@ public class DemoUI extends UI {
 				//Stream stream = createWaveStream(fileBytes, encoder);
 				Stream stream = createWaveStream(fileBytes, new WaveEncoder());
 
+				// debugging
 				for(ChunkDescriptor d : stream.getChunks()) {
 					Log.message(this, d.toString());
 				}
@@ -544,7 +540,7 @@ public class DemoUI extends UI {
 			AudioFormat.Encoding encoding = audioInputStream.getFormat().getEncoding();
 			// handle current encoding
 			if (encoding.equals(AudioFormat.Encoding.ULAW)) {
-				buffer = decodeULawToPcm(audioInputStream);
+				buffer = ULawUtil.decodeULawToPcm(audioInputStream);
 			} else {
 				// for now assume it is PCM data and load it straight into byte buffer
 				buffer = ByteBuffer.wrap(bytes);
@@ -557,37 +553,7 @@ public class DemoUI extends UI {
 		return buffer;
 	}
 
-	/**
-	 * Takes AudioInputStream with U-Law encoded data, converts it to PCM Signed data and
-	 * wraps it in a ByteBuffer.
-	 * @param uLawInputStream	AudioInputStream containing U-Law encoded data.
-	 * @return ByteBuffer containing PCM Signed data.
-	 * @throws IOException
-	 */
-	private static ByteBuffer decodeULawToPcm(AudioInputStream uLawInputStream) throws IOException {
-		System.out.println("Decoding u-law to signed pcm data");
-		ByteBuffer buffer;
-		UlawCodec codec = new UlawCodec();
-		// decode u-law audio to pcm
-		AudioInputStream convertedStream
-				= codec.getAudioInputStream(AudioFormat.Encoding.PCM_SIGNED, uLawInputStream);
-		// save the decoded file to a temp file just until we can read into a byte buffer
-		File tmp = File.createTempFile("tempAudioFile", ".wav");
-		AudioSystem.write(convertedStream, AudioFileFormat.Type.WAVE, tmp);
-		buffer = readFile(tmp.getPath());
-		tmp.delete();
 
-		// TODO: get decoding directly to byte[] working
-		// this is writing the correct number of bytes into the byte[], but
-		// non of the audio format info is being read later
-		//ByteArrayOutputStream output = new ByteArrayOutputStream();
-		//AudioSystem.write(convertedStream, AudioFileFormat.Type.WAVE, output);
-		//byte[] convertedBytes = new byte[output.size()];
-		//output.write(convertedBytes);
-//							fileBytes.clear();
-//							fileBytes = ByteBuffer.wrap(convertedBytes);
-		return buffer;
-	}
 
 	private static Stream createWaveStream(ByteBuffer waveFile, Encoder outputEncoder) {
 		int startOffset = WaveUtil.getDataStartOffset(waveFile);
@@ -616,23 +582,6 @@ public class DemoUI extends UI {
 	//
 	// File I/O routines require "new" Java features.
 	//
-
-	public static ByteBuffer readFile(String fname, String dir) {
-		return readFile(dir + "/" + fname);
-	}
-
-	public static ByteBuffer readFile(String path) {
-		Log.message(DemoUI.class, "Reading file " + path + "...");
-		try {
-			byte[] bytes = Files.readAllBytes(Paths.get(path));
-			Log.message(DemoUI.class, "File read success");
-			return ByteBuffer.wrap(bytes);
-		} catch (IOException e) {
-			Log.error(DemoUI.class, "File read failed");
-			e.printStackTrace();
-		}
-		return null;
-	}
 
 	public static final List<String> listFileNames(String dir) {
 		List<String> fnames = new ArrayList<String>();
