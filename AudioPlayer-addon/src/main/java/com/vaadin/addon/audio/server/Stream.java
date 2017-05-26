@@ -83,6 +83,8 @@ public class Stream {
 	 *            Object describing PCM data format
 	 * @param encoder
 	 *            Data encoder to use. {@link WaveEncoder} forwards PCM data.
+	 * @param millisPerChunk
+	 * 			  Milliseconds per audio chunk
 	 */
 	public Stream(ByteBuffer pcmBuffer, PCMFormat format, Encoder encoder, int millisPerChunk) {
 		this.buffer = pcmBuffer;

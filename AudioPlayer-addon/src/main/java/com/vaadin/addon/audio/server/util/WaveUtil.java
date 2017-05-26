@@ -37,6 +37,11 @@ public final class WaveUtil {
 		return new PCMFormat(channels, sampleRate, bitsPerSample);
 	}
 
+	public static int getFmtChunkStart(ByteBuffer waveFileBytes) {
+		// seems to always be 12
+		return 12;
+	}
+
 	/**
 	 * Gets the number of remaining bytes in the fmt header (following the
 	 * 4 bytes in which the size is read from).
@@ -48,6 +53,24 @@ public final class WaveUtil {
 		return Endian.readLE(waveFileBytes, 16, 4);
 	}
 
+	public static int getDataChunkStart(ByteBuffer waveFileBytes) {
+		// add 4 bytes for fmt ID block and 4 for fmt size block
+		return getFmtChunkStart(waveFileBytes) + getFmtChunkSize(waveFileBytes) + 8;
+	}
+
+	/**
+	 * Get the length of the PCM data block
+	 *
+	 * @param waveFileBytes
+	 *            bytebuffer containing a wave file or chunk
+	 * @return number of bytes in PCM data block
+	 */
+	public static int getDataLength(ByteBuffer waveFileBytes) {
+		// add 4 bytes to get past the ID block
+		int dataLengthByte = getDataChunkStart(waveFileBytes) + 4;
+		return Endian.readLE(waveFileBytes, dataLengthByte, 4);
+	}
+
 	/**
 	 * Get byte offset of the data start. For now we assume there's always a 44
 	 * byte wave header...
@@ -57,22 +80,8 @@ public final class WaveUtil {
 	 * @return number of bytes until start of PCM data block
 	 */
 	public static int getDataStartOffset(ByteBuffer waveFileBytes) {
-		return 44;
-	}
-
-	/**
-	 * Get the length of the PCM data block
-	 * 
-	 * @param waveFileBytes
-	 *            bytebuffer containing a wave file or chunk
-	 * @return number of bytes in PCM data block
-	 */
-	public static int getDataLength(ByteBuffer waveFileBytes) {
-		// byte 20 + fmt size gives us the first byte in the data chunk
-		int dataChunkStartByte = 20 + getFmtChunkSize(waveFileBytes);
-		// add 4 bytes to get past the ID block
-		int dataLengthByte = dataChunkStartByte + 4;
-		return Endian.readLE(waveFileBytes, dataLengthByte, 4);
+		// add 4 bytes for data chunk ID and 4 bytes for data chunk size
+		return getDataChunkStart(waveFileBytes) + 8;
 	}
 
 	/**
@@ -162,5 +171,4 @@ public final class WaveUtil {
 		AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, outputStream);
 		return outputStream.toByteArray();
 	}
-
 }

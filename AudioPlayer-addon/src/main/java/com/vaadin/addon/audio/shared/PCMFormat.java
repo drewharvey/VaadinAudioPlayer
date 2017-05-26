@@ -50,5 +50,16 @@ public class PCMFormat implements Serializable {
 		return bitsPerSample;
 	}
 
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("numChannels: ").append(numChannels).append("\n\r");
+		sb.append("sampleRate: ").append(sampleRate).append("\n\r");
+		sb.append("byteRate: ").append(byteRate).append("\n\r");
+		sb.append("blockAlign: ").append(blockAlign).append("\n\r");
+		sb.append("bitsPerSample: ").append(bitsPerSample).append("\n\r");
+		return sb.toString();
+	}
+
 }
 
