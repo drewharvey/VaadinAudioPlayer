@@ -503,14 +503,13 @@ public class DemoUI extends UI {
 				try {
 					Path path = Paths.get(TEST_FILE_PATH + "/" + itemName);
 					byte[] data = Files.readAllBytes(path);
-					AudioInputStream uLawInStream = AudioSystem.getAudioInputStream(new ByteArrayInputStream(data));
-					if (uLawInStream.getFormat().getEncoding().equals(AudioFormat.Encoding.ULAW)) {
-						System.out.println("Converting uLaw into standard WAV format");
+					AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new ByteArrayInputStream(data));
+					if (audioInputStream.getFormat().getEncoding().equals(AudioFormat.Encoding.ULAW)) {
+						System.out.println("Decoding u-law to signed pcm data");
 						UlawCodec codec = new UlawCodec();
 						try {
-							System.out.println("Decoding u-law to signed pcm data");
 							AudioInputStream convertedStream
-									= codec.getAudioInputStream(AudioFormat.Encoding.PCM_SIGNED, uLawInStream);
+									= codec.getAudioInputStream(AudioFormat.Encoding.PCM_SIGNED, audioInputStream);
 							//ByteArrayOutputStream output = new ByteArrayOutputStream();
 							//AudioSystem.write(convertedStream, AudioFileFormat.Type.WAVE, output);
 							//byte[] convertedBytes = new byte[output.size()];
@@ -520,8 +519,12 @@ public class DemoUI extends UI {
 							// write file
 							// File tmp = File.createTempFile("convertedAudio", ".wav");
 							File tmp = new File(TEST_FILE_PATH + "/" + "temp.wav");
+							if (tmp.exists()) {
+								tmp.delete();
+							}
 							AudioSystem.write(convertedStream, AudioFileFormat.Type.WAVE, tmp);
 							fileBytes = readFile(tmp.getPath());
+							tmp.delete();
 						} catch (Exception e) {
 							Log.error(DemoUI.class, "Failed using encoder");
 							e.printStackTrace();
