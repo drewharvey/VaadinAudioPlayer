@@ -497,84 +497,9 @@ public class DemoUI extends UI {
 					encoder = new WaveEncoder();
 				}
 
-				ByteBuffer fileBytes = readFile(itemName, TEST_FILE_PATH);
-
-				// if we have u-law encoded data, decode it to PCM signed
-				try {
-					Path path = Paths.get(TEST_FILE_PATH + "/" + itemName);
-					byte[] data = Files.readAllBytes(path);
-					AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new ByteArrayInputStream(data));
-					if (audioInputStream.getFormat().getEncoding().equals(AudioFormat.Encoding.ULAW)) {
-						System.out.println("Decoding u-law to signed pcm data");
-						UlawCodec codec = new UlawCodec();
-						try {
-							AudioInputStream convertedStream
-									= codec.getAudioInputStream(AudioFormat.Encoding.PCM_SIGNED, audioInputStream);
-							//ByteArrayOutputStream output = new ByteArrayOutputStream();
-							//AudioSystem.write(convertedStream, AudioFileFormat.Type.WAVE, output);
-							//byte[] convertedBytes = new byte[output.size()];
-							//output.write(convertedBytes);
-//							fileBytes.clear();
-//							fileBytes = ByteBuffer.wrap(convertedBytes);
-							// write file
-							// File tmp = File.createTempFile("convertedAudio", ".wav");
-							File tmp = new File(TEST_FILE_PATH + "/" + "temp.wav");
-							if (tmp.exists()) {
-								tmp.delete();
-							}
-							AudioSystem.write(convertedStream, AudioFileFormat.Type.WAVE, tmp);
-							fileBytes = readFile(tmp.getPath());
-							tmp.delete();
-						} catch (Exception e) {
-							Log.error(DemoUI.class, "Failed using encoder");
-							e.printStackTrace();
-						}
-					}
-//						System.out.println("Old format: " + oldFormat.toString());
-//						AudioFormat newFormat = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED,
-//								oldFormat.getSampleRate(),
-//								oldFormat.getSampleSizeInBits() * 2,
-//								oldFormat.getChannels(),
-//								oldFormat.getFrameSize() * 2,
-//								oldFormat.getFrameRate(),
-//								true);
-//						AudioInputStream pcmFormattedAudio = AudioSystem.getAudioInputStream(newFormat, ais);
-//						System.out.println("New format: " + pcmFormattedAudio.getFormat().toString());
-//						byte[] output = new byte[data.length];
-//						System.out.println("Reading bytes: " + pcmFormattedAudio.read(output));
-//						fileBytes.clear();
-//						fileBytes.wrap(output);
-
-//						File newFile = new File(TEST_FILE_PATH + "/converted.wav");
-//						FileOutputStream fileIn = new FileOutputStream(newFile);
-//						try {
-//							fileIn.write(output);
-//						} catch(Exception e) {
-//							Log.error(DemoUI.class, "Failed to write file");
-//							e.printStackTrace();
-//						} finally {
-//							fileIn.close();
-//						}
-
-
-
-
-
-//						// using format
-//						try {
-//							AudioInputStream convertedStream2 = codec.getAudioInputStream(newFormat, uLawInStream);
-//							AudioSystem.write(convertedStream2, AudioFileFormat.Type.WAVE, new
-//									File(TEST_FILE_PATH + "/" + "formatConverted.wav")
-//							);
-//						} catch(Exception e) {
-//							Log.error(DemoUI.class, "Failed using format");
-//							e.printStackTrace();
-//						}
-
-				} catch (Exception e) {
-					Log.error(DemoUI.class, "File read failed");
-					e.printStackTrace();
-				}
+				// we decode any other formats to PCM Signed data to make encoding to
+				// other formats easier
+				ByteBuffer fileBytes = decodeToPcm(itemName, TEST_FILE_PATH);
 
 				// TODO: use the following line when OGG and/or MP3 encoders have been implemented
 				//Stream stream = createWaveStream(fileBytes, encoder);
@@ -598,6 +523,70 @@ public class DemoUI extends UI {
 
 		layout.addComponent(fileSelector);
 		setContent(layout);
+	}
+
+	/**
+	 * Returns a ByteBuffer filled with PCM data. If the original audio file is using
+	 * a different encoding, this method attempts to decode it into PCM signed data.
+	 * @param fname 	filename
+	 * @param dir		directory in which the file exists
+	 * @return ByteBuffer containing byte[] of PCM data
+	 */
+	private static ByteBuffer decodeToPcm(String fname, String dir) {
+		// TODO: add other supported encodings for decoding to PCM
+		ByteBuffer buffer = null;
+		try {
+			// load audio file
+			Path path = Paths.get(TEST_FILE_PATH + "/" + fname);
+			byte[] bytes = Files.readAllBytes(path);
+			// create input stream with audio file bytes
+			AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new ByteArrayInputStream(bytes));
+			AudioFormat.Encoding encoding = audioInputStream.getFormat().getEncoding();
+			// handle current encoding
+			if (encoding.equals(AudioFormat.Encoding.ULAW)) {
+				buffer = decodeULawToPcm(audioInputStream);
+			} else {
+				// for now assume it is PCM data and load it straight into byte buffer
+				buffer = ByteBuffer.wrap(bytes);
+			}
+
+		} catch (Exception e) {
+			Log.error(DemoUI.class, "File read failed");
+			e.printStackTrace();
+		}
+		return buffer;
+	}
+
+	/**
+	 * Takes AudioInputStream with U-Law encoded data, converts it to PCM Signed data and
+	 * wraps it in a ByteBuffer.
+	 * @param uLawInputStream	AudioInputStream containing U-Law encoded data.
+	 * @return ByteBuffer containing PCM Signed data.
+	 * @throws IOException
+	 */
+	private static ByteBuffer decodeULawToPcm(AudioInputStream uLawInputStream) throws IOException {
+		System.out.println("Decoding u-law to signed pcm data");
+		ByteBuffer buffer;
+		UlawCodec codec = new UlawCodec();
+		// decode u-law audio to pcm
+		AudioInputStream convertedStream
+				= codec.getAudioInputStream(AudioFormat.Encoding.PCM_SIGNED, uLawInputStream);
+		// save the decoded file to a temp file just until we can read into a byte buffer
+		File tmp = File.createTempFile("tempAudioFile", ".wav");
+		AudioSystem.write(convertedStream, AudioFileFormat.Type.WAVE, tmp);
+		buffer = readFile(tmp.getPath());
+		tmp.delete();
+
+		// TODO: get decoding directly to byte[] working
+		// this is writing the correct number of bytes into the byte[], but
+		// non of the audio format info is being read later
+		//ByteArrayOutputStream output = new ByteArrayOutputStream();
+		//AudioSystem.write(convertedStream, AudioFileFormat.Type.WAVE, output);
+		//byte[] convertedBytes = new byte[output.size()];
+		//output.write(convertedBytes);
+//							fileBytes.clear();
+//							fileBytes = ByteBuffer.wrap(convertedBytes);
+		return buffer;
 	}
 
 	private static Stream createWaveStream(ByteBuffer waveFile, Encoder outputEncoder) {
