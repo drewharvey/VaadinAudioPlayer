@@ -50,43 +50,35 @@ function BufferedPV(frameSize) {
 		}
 
 		var sampleCounter = 0;
+		var inputBuffers = [];
+		var outputBuffers = [];
 
-		//
-
-		var il = _buffer.getChannelData(0);
-		// TODO:
-		if (_buffer.numberOfChannels > 1) {
-			var ir = _buffer.getChannelData(1);
-		}
-		var ol = outputAudioBuffer.getChannelData(0);
-		// TODO
-		if (_buffer.numberOfChannels > 1) {
-			var or = outputAudioBuffer.getChannelData(1);
+		// push all the input/output buffer channels into arrays
+		for (var i = 0; i < _buffer.numberOfChannels; i++) {
+			inputBuffers.push(_buffer.getChannelData(i));
+			outputBuffers.push(outputAudioBuffer.getChannelData(i));
 		}
 
-		console.log("shifting left and right channels");
-		while (_channelBuffers[0].size > 0 && sampleCounter < outputAudioBuffer.length) {
-			var i = sampleCounter++;
-			ol[i] = _channelBuffers[0].shift();
-			// TODO
-			if (_buffer.numberOfChannels > 1) {
-				or[i] = _channelBuffers[1].shift();
-			}
+		// TODO: what is the point of this?
+		// while (_channelBuffers[0].size > 0 && sampleCounter < outputAudioBuffer.length) {
+		// 	var byteIndex = sampleCounter++;
+		// 	for (var i in _channelBuffers) {
+		// 		outputBuffers[i][byteIndex] = _channelBuffers[i].shift();
+		// 	}
+		// }
 
-		}
+		// if (sampleCounter == outputAudioBuffer.length)
+		// 	return;
 
-		if (sampleCounter == outputAudioBuffer.length)
-			return;
-
-		console.log("Starting to process");
 		do {
 
-			var bufL = il.subarray(_position, _position + _frameSize);
-			// TODO:
-			if (_buffer.numberOfChannels > 1) {
-				var bufR = ir.subarray(_position, _position + _frameSize);
+			// get chunk of the input buffer based on the frame size provided
+			var currentFrames = [];
+			for (var i in inputBuffers) {
+				currentFrames.push(inputBuffers[i].subarray(_position, _position + _frameSize));
 			}
 
+			// set alpha value (time stretch value) for each PhaseVocoder instance
 			if (_newAlpha != undefined && _newAlpha != _pvList[0].get_alpha()) {
 				for (var i in _pvList) {
 					_pvList[i].set_alpha(_newAlpha);
@@ -94,25 +86,21 @@ function BufferedPV(frameSize) {
 				_newAlpha = undefined;
 			}
 
-
-			/* LEFT */
-			_pvList[0].process(bufL, _channelBuffers[0]);
-			// TODO:
-			if (_buffer.numberOfChannels > 1) {
-				_pvList[1].process(bufR, _channelBuffers[1]);
+			// time stretch the current frame
+			for (var i in _pvList) {
+				_pvList[i].process(currentFrames[i], _channelBuffers[i]);
 			}
-			for (var i=sampleCounter; _channelBuffers[0].size > 0 && i < outputAudioBuffer.length; i++) {
-				ol[i] = _channelBuffers[0].shift();
-				// TODO:
-				if (_buffer.numberOfChannels  > 1) {
-					or[i] = _channelBuffers[1].shift();
+
+			// push the warped buffer data into the output buffers
+			for (var byteIndex = sampleCounter; _channelBuffers[0].size > 0 && byteIndex < outputAudioBuffer.length; byteIndex++) {
+				for (var i in outputBuffers) {
+					outputBuffers[i][byteIndex] = _channelBuffers[i].shift();
 				}
 			}
 
 			sampleCounter += _pvList[0].get_synthesis_hop();
 
-			_position
-				+= _pvList[0].get_analysis_hop();
+			_position += _pvList[0].get_analysis_hop();
 
 		} while (sampleCounter < outputAudioBuffer.length);
 	}
