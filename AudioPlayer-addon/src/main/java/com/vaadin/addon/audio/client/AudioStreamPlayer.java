@@ -278,7 +278,10 @@ public class AudioStreamPlayer {
 	
 	public void setPosition(final int millis) {
 		logError("set position to " + millis);
-		playerManager.getCurrentPlayer().stop();
+		final boolean isPlaying = playerManager.getCurrentPlayer().isPlaying();
+		if (isPlaying) {
+			playerManager.getCurrentPlayer().stop();
+		}
 		playNextChunkTimer.cancel();
 		// calculate the offset time within this audio chunk
 		final int offset = millis % timePerChunk;
@@ -288,7 +291,9 @@ public class AudioStreamPlayer {
 			@Override
 			public void onBufferReady(Buffer b) {
 				playerManager.moveToNextPlayer();
-				play(offset, false);
+				if (isPlaying) {
+					play(offset, false);
+				}
 			}
 		});
 	}
@@ -333,6 +338,7 @@ public class AudioStreamPlayer {
 			return;
 		}
 		boolean isPlaying = playerManager.getCurrentPlayer().isPlaying();
+		logger.log(Level.SEVERE, "isPlaying: " + isPlaying);
 		if (isPlaying) {
 			pause();
 		}
