@@ -158,7 +158,7 @@ public class BufferPlayer {
 			AudioBuffer buffer;
 			if (playbackSpeed != 1) {
 				logger.log(Level.SEVERE, "stretching audio chunk to fit playback speed of " + playbackSpeed);
-				double stretchFactor = 1d * playbackSpeed;
+				double stretchFactor = 1d / playbackSpeed;
 				AudioContext context = Context.get().getNativeContext();
 				int numChannels = unmodifiedBuffer.getNumberOfChannels();
 				buffer = AudioBufferUtils.timeStrechAudioBuffer(stretchFactor, unmodifiedBuffer, context, numChannels, false);

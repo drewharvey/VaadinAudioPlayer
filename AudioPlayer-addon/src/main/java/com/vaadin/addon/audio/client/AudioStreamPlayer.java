@@ -343,15 +343,19 @@ public class AudioStreamPlayer {
 			pause();
 		}
 		// update current player so that we have the time warped buffer if needed
-		BufferPlayer player = new BufferPlayer();
-		player.setBuffer(playerManager.getCurrentPlayer().getBuffer());
-		setPersistingPlayerOptions(player);
-		playerManager.setCurrentPlayer(player);
+		if (playerManager.getCurrentPlayer() != null) {
+			BufferPlayer player = new BufferPlayer();
+			player.setBuffer(playerManager.getCurrentPlayer().getBuffer());
+			setPersistingPlayerOptions(player);
+			playerManager.setCurrentPlayer(player);
+		}
 		// update next player now to avoid last second processing
-		BufferPlayer nextPlayer = new BufferPlayer();
-		nextPlayer.setBuffer(playerManager.getNextPlayer().getBuffer());
-		setPersistingPlayerOptions(nextPlayer);
-		playerManager.setNextPlayer(nextPlayer);
+		if (playerManager.getNextPlayer() != null) {
+			BufferPlayer nextPlayer = new BufferPlayer();
+			nextPlayer.setBuffer(playerManager.getNextPlayer().getBuffer());
+			setPersistingPlayerOptions(nextPlayer);
+			playerManager.setNextPlayer(nextPlayer);
+		}
 		if (isPlaying) {
 			resume();
 		}
