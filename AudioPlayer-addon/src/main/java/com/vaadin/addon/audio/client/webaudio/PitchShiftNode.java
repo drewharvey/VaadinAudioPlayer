@@ -4,7 +4,12 @@ package com.vaadin.addon.audio.client.webaudio;
 import com.google.gwt.core.client.JavaScriptObject;
 import elemental.html.AudioContext;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 public class PitchShiftNode {
+
+    private static final Logger logger = Logger.getLogger("PitchShiftNode");
 
     JavaScriptObject jungleObject;
 

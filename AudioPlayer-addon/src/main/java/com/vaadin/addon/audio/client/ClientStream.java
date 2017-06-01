@@ -101,10 +101,8 @@ public class ClientStream {
 		List<ChunkDescriptor> chunks = connector.getState().chunks;
 		
 		for(ChunkDescriptor c : chunks) {
-			Logger.getLogger("ClientStream").log(Level.SEVERE, c.toString());
 			if(c.getStartTimeOffset() <= position_millis 
 					&& (c.getEndTimeOffset() - c.getLeadInDuration()) >= position_millis) {
-				Logger.getLogger("ClientStream").log(Level.SEVERE, "time: " + position_millis + " - " + c.toString());
 				return c;
 			}
 		}

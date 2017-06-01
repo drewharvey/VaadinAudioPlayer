@@ -179,11 +179,6 @@ public class BufferPlayer {
 
 	public void setPlaybackSpeed(double playbackSpeed) {
 		logger.log(Level.SEVERE, "set speed scale " + playbackSpeed);
-		if (this.playbackSpeed == playbackSpeed) {
-			// don't do anything if we aren't changing the scale
-			logger.log(Level.SEVERE, "playback speed did not change");
-			return;
-		}
 		this.playbackSpeed = playbackSpeed;
 		source.setPlaybackRate(playbackSpeed);
 		pitchShiftNode.normalizePitchBasedOnPlaybackSpeed(playbackSpeed);

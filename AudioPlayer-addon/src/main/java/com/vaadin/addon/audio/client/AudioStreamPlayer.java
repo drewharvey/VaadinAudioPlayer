@@ -94,7 +94,6 @@ public class AudioStreamPlayer {
 		
 		// start loading next chunk
 		int nextChunkTime = position + timePerChunk + chunkOverlapTime;
-		logError("nextChunkTime: " + nextChunkTime);
 		fetchChunksForNextPlayer(nextChunkTime, numChunksPreload, timePerChunk, null, null);
 	}
 	
@@ -108,7 +107,6 @@ public class AudioStreamPlayer {
 		chunkPositionClock = null;
 		playerManager.getCurrentPlayer().stop();
 		playNextChunkTimer.cancel();
-		logError("pause() - elapsedTime:  " + chunkPosition);
 	}
 	
 	public void resume() {
@@ -117,11 +115,8 @@ public class AudioStreamPlayer {
 			Log.error(this, "current player is null");
 			return;
 		}
-		int playOffset = ((int) (chunkPosition / playbackSpeed));
-		logError("chunk time position: " + chunkPosition + " / with playbackSpeed: " + playOffset);
 		setPersistingPlayerOptions(playerManager.getCurrentPlayer());
-		connectBufferPlayerToEffectChain(playerManager.getCurrentPlayer(), effects);
-		playerManager.getCurrentPlayer().play(playOffset);
+		playerManager.getCurrentPlayer().play(chunkPosition);
 		// schedule next chunk handoff
 		scheduleNextChunk();
 		// Duration object starts counting MS when instantiated
@@ -150,7 +145,6 @@ public class AudioStreamPlayer {
 			public void onDataReceived(ChunkDescriptor chunk) {
 				playerManager.moveToNextPlayer();
 				chunkOverlapTime = chunk.getOverlapTime();
-				logError("timePerChunk: " + AudioStreamPlayer.this.timePerChunk + "\r\n" + "chunkLeadTime: " + chunkOverlapTime);
 			}
 		}, null);
 	}
@@ -191,7 +185,6 @@ public class AudioStreamPlayer {
 				});
 			}
 		});
-		logger.log(Level.SEVERE, "preloading " + numChunksToPreload + " additional chunks");
 		// preload additional chunks if needed
 		if (numChunksToPreload > 1) {
 			for (int i = 1; i < numChunksToPreload; i++) {
@@ -212,6 +205,7 @@ public class AudioStreamPlayer {
 		double chunkOffset = chunkPosition / playbackSpeed;
 		double overlapDuration = chunkOverlapTime / playbackSpeed;
 		if (position < chunkDuration) {
+			logger.log(Level.SEVERE, "FIRST SCHEDULE");
 			// for some reason the first chunk is fading out 500ms early (or the second chunk is 500ms late)
 			// TODO: first chunk should work the same way as others
 			// truncating after decimal doesn't matter since we are already in milliseconds
@@ -219,14 +213,13 @@ public class AudioStreamPlayer {
 			if (time < 0) {
 				time = 0;
 			}
-			logError("Scheduling for " + time + " [" + chunkDuration + ", " + chunkOffset + ", " + overlapDuration + "]");
 			playNextChunkTimer.schedule(time);
 		} else {
+			logger.log(Level.SEVERE, "LATER SCHEDULE");
 			int time = ((int) (chunkDuration - chunkOffset));
 			if (time < 0) {
 				time = 0;
 			}
-			logError("Scheduling for " + time + " [" + chunkDuration + ", " + chunkOffset + ", " + overlapDuration + "]");
 			playNextChunkTimer.schedule(time);
 		}
 	}
@@ -244,7 +237,6 @@ public class AudioStreamPlayer {
 	}
 	
 	private void playNextChunk() {
-		logError("PLAY NEXT CHUNK");
 		position += timePerChunk;
 		// stop the audio if we've reached the end
 		if (getPosition() >= getDuration()) {
@@ -330,41 +322,30 @@ public class AudioStreamPlayer {
 			logError("playback speed must be greater than 0");
 			return;
 		}
-		// save playbackSpeed
-		this.playbackSpeed = playbackSpeed;
-		// if the current player is not null, apply the speed
-		if(playerManager.getCurrentPlayer() == null) {
-			logError("current player is null");
-			return;
-		}
 		boolean isPlaying = playerManager.getCurrentPlayer().isPlaying();
-		logger.log(Level.SEVERE, "isPlaying: " + isPlaying);
+		// calculate the position in the chunk based on elapsed time and current playback speed
 		if (isPlaying) {
-			pause();
+			chunkPosition += chunkPositionClock.elapsedMillis() * this.playbackSpeed;
+			chunkPositionClock = null;
+			chunkPositionClock = new Duration();
 		}
-		// update current player so that we have the time warped buffer if needed
-		if (playerManager.getCurrentPlayer() != null) {
-			BufferPlayer player = new BufferPlayer();
-			player.setBuffer(playerManager.getCurrentPlayer().getBuffer());
-			setPersistingPlayerOptions(player);
-			playerManager.setCurrentPlayer(player);
-		}
-		// update next player now to avoid last second processing
-		if (playerManager.getNextPlayer() != null) {
-			BufferPlayer nextPlayer = new BufferPlayer();
-			nextPlayer.setBuffer(playerManager.getNextPlayer().getBuffer());
-			setPersistingPlayerOptions(nextPlayer);
-			playerManager.setNextPlayer(nextPlayer);
+		// update playback speeds
+		this.playbackSpeed = playbackSpeed;
+		for (BufferPlayer p : playerManager.getPlayers()) {
+			if (p != null) {
+				p.setPlaybackSpeed(playbackSpeed);
+			}
 		}
 		if (isPlaying) {
-			resume();
+			playNextChunkTimer.cancel();
+			scheduleNextChunk();
 		}
 	}
 	
 	public double getPlaybackSpeed() {
 		return playbackSpeed;
 	}
-	
+
 	public void setBalance(double balance) {
 		this.balance = balance;
 		if(playerManager.getCurrentPlayer() == null) {
@@ -427,7 +408,6 @@ public class AudioStreamPlayer {
 	 * @param effects
 	 */
 	private void connectBufferPlayerToEffectChain(BufferPlayer player, List<Effect> effects) {
-		logger.log(Level.SEVERE, "connecting BufferPlayer source and output to effects chain");
 		AudioNode source = player.getSourceNode();
 		AudioNode output = player.getOutput();
 		source.disconnect();
@@ -447,7 +427,6 @@ public class AudioStreamPlayer {
 	}
 
 	private void disconnectEffectChain(BufferPlayer player, List<Effect> effects) {
-		logger.log(Level.SEVERE, "disconnectEffectChain on " + player.toString());
 		if (effects.size() > 0) {
 			AudioNode firstEffect = effects.get(0).getAudioNode();
 			AudioNode lastEffect = effects.get(effects.size()-1).getAudioNode();
@@ -468,7 +447,6 @@ public class AudioStreamPlayer {
 	 */
 	private void connectEffectNodes(List<Effect> effects) {
 		// TODO: optimize by not completely rebuilding unless neccessary
-		logger.log(Level.SEVERE, "connectEffectNodes()");
 		String msg = "";
 		AudioNode prev = null;
 		AudioNode current = null;
@@ -485,7 +463,6 @@ public class AudioStreamPlayer {
 				}
 			}
 		}
-		logger.log(Level.SEVERE, "Effects node chain: " + msg);
 	}
 
 	private static void logError(String msg) {
