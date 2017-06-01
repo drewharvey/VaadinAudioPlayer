@@ -75,20 +75,22 @@ public class AudioBufferUtils {
 //        return outputAudioBuffer;
 //     }-*/;
 
-    public static native AudioBuffer timeStrechAudioBuffer(double stretchFactor, AudioBuffer buffer, AudioContext context,
-                                                           int numChannels, boolean quickSeek) /*-{
 
-        var warpedBuffer = context.createBuffer(numChannels, buffer.length, buffer.sampleRate);
-
-        var bufferedPv = new $wnd.BufferedPV();
-        bufferedPv.set_audio_buffer(buffer);
-        bufferedPv.alpha = stretchFactor;
-        console.log(bufferedPv);
-
-        bufferedPv.process(warpedBuffer);
-        console.log(warpedBuffer);
-        return warpedBuffer;
-    }-*/;
+    // using buffered-pv.js
+//    public static native AudioBuffer timeStrechAudioBuffer(double stretchFactor, AudioBuffer buffer, AudioContext context,
+//                                                           int numChannels, boolean quickSeek) /*-{
+//
+//        var warpedBuffer = context.createBuffer(numChannels, buffer.length, buffer.sampleRate);
+//
+//        var bufferedPv = new $wnd.BufferedPV();
+//        bufferedPv.set_audio_buffer(buffer);
+//        bufferedPv.alpha = stretchFactor;
+//        console.log(bufferedPv);
+//
+//        bufferedPv.process(warpedBuffer);
+//        console.log(warpedBuffer);
+//        return warpedBuffer;
+//    }-*/;
 
     /**
      * Uses a equal power crossfade curve to blend two BufferPlayer audios together.
