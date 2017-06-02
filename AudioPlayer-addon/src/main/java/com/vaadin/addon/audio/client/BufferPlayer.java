@@ -152,16 +152,17 @@ public class BufferPlayer {
 		// you can only set a BufferSourceNode's buffer once, so lets reset the node and re-set the buffer
 		source.disconnect();
 		source.resetNode();
+		this.playbackSpeed = playbackSpeed;
 		source.setPlaybackRate(playbackSpeed);
 		// generate warped buffer if playback speed is other than 1
 		if (unmodifiedBuffer != null) {
 			AudioBuffer buffer;
 			if (playbackSpeed != 1) {
 				logger.log(Level.SEVERE, "stretching audio chunk to fit playback speed of " + playbackSpeed);
-				double stretchFactor = 1d / playbackSpeed;
+				double pitchChange = 1d / playbackSpeed;
 				AudioContext context = Context.get().getNativeContext();
 				int numChannels = unmodifiedBuffer.getNumberOfChannels();
-				buffer = AudioBufferUtils.timeStrechAudioBuffer(stretchFactor, unmodifiedBuffer, context, numChannels, false);
+				buffer = AudioBufferUtils.pitchShiftBuffer(pitchChange, unmodifiedBuffer, context);
 				logger.log(Level.SEVERE, "stretching complete");
 			} else {
 				buffer = unmodifiedBuffer;
