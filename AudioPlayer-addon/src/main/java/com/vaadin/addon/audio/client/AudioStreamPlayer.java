@@ -76,17 +76,17 @@ public class AudioStreamPlayer {
 		}
 
 		chunkPosition = timeOffset;
-		int playOffset = ((int) (chunkPosition / playbackSpeed));
 
 		chunkPositionClock = new Duration();
 
 		if (useCrossFade) {
 			// use cross fade to blend prev and current audio together
 			int overlapTime = ((int) (chunkOverlapTime / playbackSpeed));
-			AudioBufferUtils.crossFadePlayers(playerManager.getCurrentPlayer(), playerManager.getPrevPlayer(), playOffset, volume, overlapTime);
+			AudioBufferUtils.crossFadePlayers(playerManager.getCurrentPlayer(), playerManager.getPrevPlayer(),
+					chunkPosition, volume, overlapTime);
 		} else {
 			// simply play the audio
-			playerManager.getCurrentPlayer().play(playOffset);
+			playerManager.getCurrentPlayer().play(chunkPosition);
 		}
 		
 		// start timer to play next chunk of audio
@@ -117,11 +117,9 @@ public class AudioStreamPlayer {
 			Log.error(this, "current player is null");
 			return;
 		}
-		int playOffset = ((int) (chunkPosition / playbackSpeed));
-		logError("chunk time position: " + chunkPosition + " / with playbackSpeed: " + playOffset);
 		setPersistingPlayerOptions(playerManager.getCurrentPlayer());
 		connectBufferPlayerToEffectChain(playerManager.getCurrentPlayer(), effects);
-		playerManager.getCurrentPlayer().play(playOffset);
+		playerManager.getCurrentPlayer().play(chunkPosition);
 		// schedule next chunk handoff
 		scheduleNextChunk();
 		// Duration object starts counting MS when instantiated
@@ -208,27 +206,18 @@ public class AudioStreamPlayer {
 	
 	private void scheduleNextChunk() {
 		playNextChunkTimer.cancel();
-		double chunkDuration = timePerChunk / playbackSpeed;
-		double chunkOffset = chunkPosition / playbackSpeed;
-		double overlapDuration = chunkOverlapTime / playbackSpeed;
-		if (position < chunkDuration) {
-			// for some reason the first chunk is fading out 500ms early (or the second chunk is 500ms late)
-			// TODO: first chunk should work the same way as others
-			// truncating after decimal doesn't matter since we are already in milliseconds
-			int time = ((int) (chunkDuration - chunkOffset - overlapDuration));
-			if (time < 0) {
-				time = 0;
-			}
-			logError("Scheduling for " + time + " [" + chunkDuration + ", " + chunkOffset + ", " + overlapDuration + "]");
-			playNextChunkTimer.schedule(time);
-		} else {
-			int time = ((int) (chunkDuration - chunkOffset));
-			if (time < 0) {
-				time = 0;
-			}
-			logError("Scheduling for " + time + " [" + chunkDuration + ", " + chunkOffset + ", " + overlapDuration + "]");
-			playNextChunkTimer.schedule(time);
+		int timeRemaining = ((int) ((timePerChunk - chunkPosition) / playbackSpeed));
+		int overlapDuration = ((int) (chunkOverlapTime / playbackSpeed));
+		// for some reason the first chunk is fading out 500ms early (or the second chunk is 500ms late)
+		// TODO: first chunk should work the same way as others
+		if (position < timePerChunk) {
+			timeRemaining -= overlapDuration;
 		}
+		if (timeRemaining < 0) {
+			timeRemaining = 0;
+		}
+		logError("Scheduling for " + timeRemaining);
+		playNextChunkTimer.schedule(timeRemaining);
 	}
 	
 	/**
@@ -325,23 +314,32 @@ public class AudioStreamPlayer {
 	}
 	
 	public void setPlaybackSpeed(double playbackSpeed) {
+		// do nothing if nothing changed
+		if (playbackSpeed == this.playbackSpeed) {
+			logError("Playback speed is already " + playbackSpeed);
+			return;
+		}
 		// stop from any division by 0 errors
 		if (playbackSpeed <= 0) {
 			logError("playback speed must be greater than 0");
 			return;
 		}
-		// save playbackSpeed
-		this.playbackSpeed = playbackSpeed;
 		// if the current player is not null, apply the speed
 		if(playerManager.getCurrentPlayer() == null) {
 			logError("current player is null");
+			// even if player is null we still want to save playback speed
+			this.playbackSpeed = playbackSpeed;
 			return;
 		}
+
 		boolean isPlaying = playerManager.getCurrentPlayer().isPlaying();
-		logger.log(Level.SEVERE, "isPlaying: " + isPlaying);
+		// pause before we set the playback speed because pause will track the current position
+		// in the current chunk based on the current playback speed
 		if (isPlaying) {
 			pause();
 		}
+		// save playbackSpeed
+		this.playbackSpeed = playbackSpeed;
 		// update current player so that we have the time warped buffer if needed
 		if (playerManager.getCurrentPlayer() != null) {
 			BufferPlayer player = new BufferPlayer();
