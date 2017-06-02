@@ -45,6 +45,7 @@ public class AudioStreamPlayer {
 	private List<Effect> effects = new ArrayList<Effect>();
 
 	public AudioStreamPlayer(ClientStream stream, int timePerChunk) {
+		// warm up the stream
 		this.stream = stream;
 		this.timePerChunk = timePerChunk;
 		playerManager = new BufferPlayerManager(MAX_BUFFER_PLAYERS);
@@ -75,16 +76,17 @@ public class AudioStreamPlayer {
 		}
 
 		chunkPosition = timeOffset;
+		int playOffset = ((int) (chunkPosition / playbackSpeed));
 
 		chunkPositionClock = new Duration();
 
 		if (useCrossFade) {
 			// use cross fade to blend prev and current audio together
 			int overlapTime = ((int) (chunkOverlapTime / playbackSpeed));
-			AudioBufferUtils.crossFadePlayers(playerManager.getCurrentPlayer(), playerManager.getPrevPlayer(), chunkPosition, volume, overlapTime);
+			AudioBufferUtils.crossFadePlayers(playerManager.getCurrentPlayer(), playerManager.getPrevPlayer(), playOffset, volume, overlapTime);
 		} else {
 			// simply play the audio
-			playerManager.getCurrentPlayer().play(chunkPosition);
+			playerManager.getCurrentPlayer().play(playOffset);
 		}
 		
 		// start timer to play next chunk of audio
