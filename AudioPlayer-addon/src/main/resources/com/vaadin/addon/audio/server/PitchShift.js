@@ -76,8 +76,9 @@ Pitchshift.prototype.getready = function (fftFrameSize, sampleRate, algo) {
 
 };
 
-Pitchshift.prototype.process = function (pitchShift, numSampsToProcess, osamp, indata) {
+Pitchshift.prototype.process = function (pitchShift, numSampsToProcess, osamp, indata, outdata) {
 
+    outdata = outdata || this.outdata;
 
     function setArray(array, length, val) {
         var intLength = Math.floor(length);
@@ -103,7 +104,7 @@ Pitchshift.prototype.process = function (pitchShift, numSampsToProcess, osamp, i
 	for (j = 0; j < numSampsToProcess; j++){
             /* As long as we have not yet collected enough data just read in */
 		this.gInFIFO[this.gRover_] = indata[j];
-		this.outdata[j] = this.gOutFIFO[this.gRover_ - inFifoLatency];
+		outdata[j] = this.gOutFIFO[this.gRover_ - inFifoLatency];
 		this.gRover_++;
 
 		/* now we have enough data for processing */

@@ -3,6 +3,7 @@ package com.vaadin.addon.audio.client;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.gwt.core.client.Scheduler;
 import com.vaadin.addon.audio.client.utils.AudioBufferUtils;
 import com.vaadin.addon.audio.client.webaudio.AudioNode;
 import com.vaadin.addon.audio.client.webaudio.Buffer;
@@ -156,22 +157,28 @@ public class BufferPlayer {
 		source.setPlaybackRate(playbackSpeed);
 		// generate warped buffer if playback speed is other than 1
 		if (unmodifiedBuffer != null) {
-			AudioBuffer buffer;
-			if (playbackSpeed != 1) {
-				logger.log(Level.SEVERE, "stretching audio chunk to fit playback speed of " + playbackSpeed);
-				double pitchChange = 1d / playbackSpeed;
-				AudioContext context = Context.get().getNativeContext();
-				int numChannels = unmodifiedBuffer.getNumberOfChannels();
-				buffer = AudioBufferUtils.pitchShiftBuffer(pitchChange, unmodifiedBuffer, context);
-				logger.log(Level.SEVERE, "stretching complete");
-			} else {
-				buffer = unmodifiedBuffer;
-			}
-			// apply our buffer ot the source BufferSourceNode
-			if (buffer != null) {
-				logger.log(Level.SEVERE, "Setting buffer");
-				source.setNativeBuffer(buffer);
-			}
+			// TODO: ui still gets hung for split second here
+			// async command so it will not bog down ui
+			Scheduler.get().scheduleDeferred(new Scheduler.ScheduledCommand() {
+				@Override
+				public void execute() {
+					AudioBuffer buffer;
+					if (BufferPlayer.this.playbackSpeed != 1) {
+						logger.log(Level.SEVERE, "stretching audio chunk to fit playback speed of " + BufferPlayer.this.playbackSpeed);
+						double pitchChange = 1d / BufferPlayer.this.playbackSpeed;
+						AudioContext context = Context.get().getNativeContext();
+						buffer = AudioBufferUtils.applyPitchShiftToBuffer(pitchChange, BufferPlayer.this.unmodifiedBuffer, context);
+						logger.log(Level.SEVERE, "stretching complete");
+					} else {
+						buffer = BufferPlayer.this.unmodifiedBuffer;
+					}
+					// apply our buffer ot the source BufferSourceNode
+					if (buffer != null) {
+						logger.log(Level.SEVERE, "Setting buffer");
+						BufferPlayer.this.source.setNativeBuffer(buffer);
+					}
+				}
+			});
 		} else {
 			logger.log(Level.SEVERE, "unmodifiedBuffer is NULL");
 		}
