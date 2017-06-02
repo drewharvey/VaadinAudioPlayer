@@ -109,12 +109,9 @@ public class BufferSourceNode extends AudioScheduledSourceNode {
 			rate = 0.01;
 		}
 		playbackRate = rate;
-
-		// comment this out if you're stretching the buffer instead
-		setPlaybackRate(getNativeNode(), rate);
 	}
 	
-	private static final native void setPlaybackRate(elemental.html.AudioNode node, double rate) /*-{
+	private static final native void setPlaybackRate(elemental.html.AudioNode node, double rate, elemental.html.AudioContext ctx) /*-{
 		// set nodes playback rate
 		node.playbackRate.value = rate;
     }-*/;

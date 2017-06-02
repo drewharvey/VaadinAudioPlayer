@@ -3,9 +3,12 @@ package com.vaadin.addon.audio.client;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.google.gwt.core.client.JavaScriptObject;
 import com.vaadin.addon.audio.client.utils.AudioBufferUtils;
-import com.vaadin.addon.audio.client.webaudio.*;
+import com.vaadin.addon.audio.client.webaudio.AudioNode;
+import com.vaadin.addon.audio.client.webaudio.Buffer;
+import com.vaadin.addon.audio.client.webaudio.BufferSourceNode;
+import com.vaadin.addon.audio.client.webaudio.Context;
+import com.vaadin.addon.audio.client.webaudio.GainNode;
 import elemental.html.AudioBuffer;
 import elemental.html.AudioContext;
 
@@ -32,8 +35,6 @@ public class BufferPlayer {
 	private State state = State.STOPPED;
 	private AudioBuffer unmodifiedBuffer = null;
 	private double playbackSpeed = 1;
-
-	private PitchShiftNode pitchShiftNode;
 	
 
 	public BufferPlayer() {
@@ -48,11 +49,9 @@ public class BufferPlayer {
 			unmodifiedBuffer = buffer.getAudioBuffer();
 			source.setNativeBuffer(buffer.getAudioBuffer());
 		}
-		pitchShiftNode = new PitchShiftNode(context.getNativeContext());
 		// create output audio node
 		output = context.createGainNode();
-		output.connect(pitchShiftNode.getInput());
-		pitchShiftNode.connect(context.getDestination());
+		output.connect(context.getDestination());
 	}
 	
 	public AudioNode getSourceNode() {
@@ -143,40 +142,6 @@ public class BufferPlayer {
 	 * play at the speed requested.
 	 * @param playbackSpeed value greater than 0
 	 */
-//	public void setPlaybackSpeed(double playbackSpeed) {
-//		logger.log(Level.SEVERE, "set speed scale " + playbackSpeed);
-//		if (this.playbackSpeed == playbackSpeed) {
-//			// don't do anything if we aren't changing the scale
-//			logger.log(Level.SEVERE, "playback speed did not change");
-//			return;
-//		}
-//		// you can only set a BufferSourceNode's buffer once, so lets reset the node and re-set the buffer
-//		source.disconnect();
-//		source.resetNode();
-//		source.setPlaybackRate(playbackSpeed);
-//		// generate warped buffer if playback speed is other than 1
-//		if (unmodifiedBuffer != null) {
-//			AudioBuffer buffer;
-//			if (playbackSpeed != 1) {
-//				logger.log(Level.SEVERE, "stretching audio chunk to fit playback speed of " + playbackSpeed);
-//				double stretchFactor = 1d / playbackSpeed;
-//				AudioContext context = Context.get().getNativeContext();
-//				int numChannels = unmodifiedBuffer.getNumberOfChannels();
-//				buffer = AudioBufferUtils.timeStrechAudioBuffer(stretchFactor, unmodifiedBuffer, context, numChannels, false);
-//				logger.log(Level.SEVERE, "stretching complete");
-//			} else {
-//				buffer = unmodifiedBuffer;
-//			}
-//			// apply our buffer ot the source BufferSourceNode
-//			if (buffer != null) {
-//				logger.log(Level.SEVERE, "Setting buffer");
-//				source.setNativeBuffer(buffer);
-//			}
-//		} else {
-//			logger.log(Level.SEVERE, "unmodifiedBuffer is NULL");
-//		}
-//	}
-
 	public void setPlaybackSpeed(double playbackSpeed) {
 		logger.log(Level.SEVERE, "set speed scale " + playbackSpeed);
 		if (this.playbackSpeed == playbackSpeed) {
@@ -184,9 +149,31 @@ public class BufferPlayer {
 			logger.log(Level.SEVERE, "playback speed did not change");
 			return;
 		}
-		this.playbackSpeed = playbackSpeed;
+		// you can only set a BufferSourceNode's buffer once, so lets reset the node and re-set the buffer
+		source.disconnect();
+		source.resetNode();
 		source.setPlaybackRate(playbackSpeed);
-		pitchShiftNode.normalizePitchBasedOnPlaybackSpeed(playbackSpeed);
+		// generate warped buffer if playback speed is other than 1
+		if (unmodifiedBuffer != null) {
+			AudioBuffer buffer;
+			if (playbackSpeed != 1) {
+				logger.log(Level.SEVERE, "stretching audio chunk to fit playback speed of " + playbackSpeed);
+				double stretchFactor = 1d / playbackSpeed;
+				AudioContext context = Context.get().getNativeContext();
+				int numChannels = unmodifiedBuffer.getNumberOfChannels();
+				buffer = AudioBufferUtils.timeStrechAudioBuffer(stretchFactor, unmodifiedBuffer, context, numChannels, false);
+				logger.log(Level.SEVERE, "stretching complete");
+			} else {
+				buffer = unmodifiedBuffer;
+			}
+			// apply our buffer ot the source BufferSourceNode
+			if (buffer != null) {
+				logger.log(Level.SEVERE, "Setting buffer");
+				source.setNativeBuffer(buffer);
+			}
+		} else {
+			logger.log(Level.SEVERE, "unmodifiedBuffer is NULL");
+		}
 	}
 	
 	public double getPlaybackSpeed() {
