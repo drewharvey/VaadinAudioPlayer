@@ -15,8 +15,6 @@ public abstract class AudioScheduledSourceNode extends AudioNode {
 	}
 	
 	private static final native void start(elemental.html.AudioNode node, double delay, double offset) /*-{
-		console.error("start("+delay+", "+offset+")");
-		console.error(node);
 		node.start(delay, offset);
 	}-*/;
 	

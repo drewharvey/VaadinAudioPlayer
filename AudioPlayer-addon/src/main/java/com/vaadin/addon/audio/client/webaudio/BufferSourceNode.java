@@ -109,6 +109,8 @@ public class BufferSourceNode extends AudioScheduledSourceNode {
 			rate = 0.01;
 		}
 		playbackRate = rate;
+
+		// comment this out if you're stretching the buffer instead
 		setPlaybackRate(getNativeNode(), rate);
 	}
 	

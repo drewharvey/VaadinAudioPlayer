@@ -1,5 +1,10 @@
 package com.vaadin.addon.audio.client;
 
+import com.google.gwt.user.client.Timer;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  * Class used to keep track of multiple BufferPlayer objects. Each BufferPlayer
  * is in charge of playing a single chunk of the entire audio buffer. This class
@@ -7,6 +12,8 @@ package com.vaadin.addon.audio.client;
  * them.
  */
 public class BufferPlayerManager {
+
+    private static final Logger logger = Logger.getLogger("BufferPlayerManager");
 
     private static int MAX_PLAYERS_DEFAULT = 2;
 

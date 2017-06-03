@@ -2,69 +2,99 @@ package com.vaadin.addon.audio.client.utils;
 
 
 import com.google.gwt.core.client.Duration;
-import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.Scheduler;
 import com.vaadin.addon.audio.client.BufferPlayer;
-import com.vaadin.addon.audio.client.JavaScriptPublicAPI;
 import elemental.html.AudioBuffer;
 import elemental.html.AudioContext;
 
 public class AudioBufferUtils {
 
     /**
-     * Takes AudioBuffer and returns a new AudioBuffer with the pitch change applied.
-     * The total length of the buffer will not be affected (length of the audio).
-     * @param pitchChange   pitch shift factor (above 1 up, below 1 is down).
-     * @param buffer        AudioBuffer input
-     * @param context       AudioContext used to create objects
-     * @return              AudioBuffer with pitch change applied.
+     * Takes an audio buffer and time warps the buffer by the factor provided.
+     * A factor of 1 will leave the audio unchanged. A lower factor will make the
+     * audio shorter in duration, while a higher factor will make the audio longer.
+     * @param stretchFactor
+     * @param buffer
+     * @param context
+     * @param numChannels
+     * @param quickSeek increases performance but may produce lower quality stretching
+     * @return AudioBuffer with stretch applied
      */
-    public static AudioBuffer applyPitchShiftToBuffer(double pitchChange, AudioBuffer buffer, AudioContext context) {
-        JavaScriptObject pitchShiftObj = getPitchShiftObject(JavaScriptPublicAPI.NAMESPACE, context);
-        return applyPitchShiftToBuffer(pitchChange, buffer, context, pitchShiftObj);
-    }
-
-    private static native AudioBuffer applyPitchShiftToBuffer(double pitchChange, AudioBuffer buffer, AudioContext context, JavaScriptObject shifter) /*-{
-
-        var benchmark = "";
-        var total = new Date();
-        var t;
-
-        var outputBuffer = context.createBuffer(buffer.numberOfChannels, buffer.length, buffer.sampleRate);
-
-        // need to process each channel in the audio buffer
-        for (var i = 0; i < buffer.numberOfChannels; i++) {
-            // process input data
-            var inputData = buffer.getChannelData(i);
-            var outputData = outputBuffer.getChannelData(i);
-            t = new Date();
-            shifter.process(pitchChange, inputData.length, 4, inputData, outputData);
-            benchmark += "shifter.process("+i+"): " + (new Date() - t) + "\n\r";
-            // write modified data into output buffer channel
-//            var outputData = outputBuffer.getChannelData(i);
-//            t = new Date();
-//            for (var byteIndex = 0; byteIndex < outputData.length; byteIndex++) {
-//                outputData[byteIndex] = shifter.outdata[byteIndex];
+//    public static native AudioBuffer timeStrechAudioBuffer(double stretchFactor, AudioBuffer buffer, AudioContext context,
+//                                                           int numChannels, boolean quickSeek) /*-{
+//        var channelData = [];
+//        for (var i = 0; i < numChannels; i++) {
+//            var inputData = buffer.getChannelData(i);
+//
+//            var numInputFrames = inputData.length / numChannels;
+//            var bufsize = 4096 * numChannels;
+//
+//            // Create a Kali instance and initialize it
+//            var kali = new $wnd.Kali(numChannels);
+//            kali.setup(context.sampleRate, stretchFactor, quickSeek);
+//
+//            // Create an array for the stretched output
+//            var completed = new Float32Array(Math.floor((numInputFrames / stretchFactor) * numChannels + 1));
+//
+//            var inputOffset = 0;
+//            var completedOffset = 0;
+//            var loopCount = 0;
+//            var flushed = false;
+//
+//            while (completedOffset < completed.length) {
+//                if (loopCount % 100 == 0) {
+//                    console.log("Stretching", completedOffset / completed.length);
+//                }
+//
+//                // Read stretched samples into our output array
+//                completedOffset += kali.output(completed.subarray(completedOffset, Math.min(completedOffset + bufsize, completed.length)));
+//
+//                if (inputOffset < inputData.length) { // If we have more data to write, write it
+//                    var dataToInput = inputData.subarray(inputOffset, Math.min(inputOffset + bufsize, inputData.length));
+//                    inputOffset += dataToInput.length;
+//
+//                    // Feed Kali samples
+//                    kali.input(dataToInput);
+//                    kali.process();
+//                } else if (!flushed) { // Flush if we haven't already
+//                    kali.flush();
+//                    flushed = true;
+//                }
+//
+//                loopCount++;
 //            }
-//            benchmark += "write output("+i+"): " + (new Date() - t) + "\n\r";
-        }
+//
+//            channelData.push(completed);
+//        }
+//
+//        // create new audio buffer with warped audio
+//        var outputAudioBuffer = context.createBuffer(numChannels, channelData[0].length, context.sampleRate);
+//        for (var i = 0; i < channelData.length; i++) {
+//            outputAudioBuffer.getChannelData(i).set(channelData[i]);
+//        }
+//        return outputAudioBuffer;
+//     }-*/;
 
-        benchmark += "Total: " + (new Date() - total);
 
-        console.error(benchmark);
+    // using buffered-pv.js
+//    public static native AudioBuffer timeStrechAudioBuffer(double stretchFactor, AudioBuffer buffer, AudioContext context,
+//                                                           int numChannels, boolean quickSeek) /*-{
+//
+//        var warpedBuffer = context.createBuffer(numChannels, buffer.length, buffer.sampleRate);
+//
+//        var bufferedPv = new $wnd.BufferedPV();
+//        bufferedPv.set_audio_buffer(buffer);
+//        bufferedPv.alpha = stretchFactor;
+//        console.log(bufferedPv);
+//
+//        bufferedPv.process(warpedBuffer);
+//        console.log(warpedBuffer);
+//        return warpedBuffer;
+//    }-*/;
 
-        return outputBuffer;
-    }-*/;
-
-    private static native JavaScriptObject getPitchShiftObject(String namespace, AudioContext context) /*-{
-        var t = new Date();
-        // make sure namespace obj is initialized
-        $wnd[namespace] = $wnd[namespace] || {};
-        // get existing obj or create new one if needed
-        $wnd[namespace].pitchShifter = $wnd[namespace].pitchShifter || new $wnd.Pitchshift(2048, context.sampleRate, 'FFT');
-        console.error("init Pitchshift: " + (new Date() - t));
-        return $wnd[namespace].pitchShifter;
-    }-*/;
+    public interface CrossFadeCallback {
+        public void onCrossFadeComplete();
+    }
 
     /**
      * Uses a equal power crossfade curve to blend two BufferPlayer audios together.
@@ -77,7 +107,8 @@ public class AudioBufferUtils {
      * @param fadeTime      Total time the fade should take
      */
     public static void crossFadePlayers(final BufferPlayer currentPlayer, final BufferPlayer prevPlayer,
-                                  final int currentPlayerPlayOffset, final double targetGain, final int fadeTime) {
+                                  final int currentPlayerPlayOffset, final double targetGain, final int fadeTime,
+                                        final CrossFadeCallback cb) {
 
         // if we have a prev player then we fade it out and fade our new player in
         Scheduler.get().scheduleDeferred(new Scheduler.ScheduledCommand() {
@@ -113,6 +144,10 @@ public class AudioBufferUtils {
                 }
                 if (prevPlayer != null) {
                     prevPlayer.setVolume(0);
+                    prevPlayer.stop();
+                }
+                if (cb != null) {
+                    cb.onCrossFadeComplete();
                 }
             }
         });

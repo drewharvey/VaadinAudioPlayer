@@ -33,6 +33,11 @@ public abstract class AudioNode {
 	public void connect(AudioNode other) {
 		connect(this.wa_node,other.wa_node,0,0);
 	}
+
+	// TODO: this method is only here to allow the PitchShiftNode class to connect, take this away when its been refactored
+	public void connect(elemental.html.AudioNode other) {
+		connect(this.wa_node, other, 0, 0);
+	}
 	
 	// See https://developer.mozilla.org/en-US/docs/Web/API/AudioNode/connect
 	private static final native void connect(

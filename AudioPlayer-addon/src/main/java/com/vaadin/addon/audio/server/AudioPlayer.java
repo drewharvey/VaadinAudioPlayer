@@ -16,10 +16,7 @@ import com.vaadin.ui.UI;
 // This is the server-side UI component that provides public API 
 // for AudioPlayer
 @SuppressWarnings("serial")
-@JavaScript({
-		"pako_inflate.min.js",
-		"dsp.js",
-		"PitchShift.js" })
+@JavaScript({ "pako_inflate.min.js", "jungle.js" })
 public class AudioPlayer extends AbstractExtension {
 
 	// TODO: use an actual event system
