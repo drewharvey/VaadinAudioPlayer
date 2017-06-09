@@ -3,23 +3,29 @@ package com.vaadin.addon.audio.client.utils;
 
 import com.google.gwt.core.client.Duration;
 import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.user.client.Timer;
 import com.vaadin.addon.audio.client.BufferPlayer;
-import elemental.html.AudioBuffer;
-import elemental.html.AudioContext;
+import com.vaadin.client.BrowserInfo;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class AudioBufferUtils {
 
-    /**
-     * Takes an audio buffer and time warps the buffer by the factor provided.
-     * A factor of 1 will leave the audio unchanged. A lower factor will make the
-     * audio shorter in duration, while a higher factor will make the audio longer.
-     * @param stretchFactor
-     * @param buffer
-     * @param context
-     * @param numChannels
-     * @param quickSeek increases performance but may produce lower quality stretching
-     * @return AudioBuffer with stretch applied
-     */
+    private static final Logger logger = Logger.getLogger("AudioBufferUtils");
+
+    // using Kali library
+//    /**
+//     * Takes an audio buffer and time warps the buffer by the factor provided.
+//     * A factor of 1 will leave the audio unchanged. A lower factor will make the
+//     * audio shorter in duration, while a higher factor will make the audio longer.
+//     * @param stretchFactor
+//     * @param buffer
+//     * @param context
+//     * @param numChannels
+//     * @param quickSeek increases performance but may produce lower quality stretching
+//     * @return AudioBuffer with stretch applied
+//     */
 //    public static native AudioBuffer timeStrechAudioBuffer(double stretchFactor, AudioBuffer buffer, AudioContext context,
 //                                                           int numChannels, boolean quickSeek) /*-{
 //        var channelData = [];
@@ -92,9 +98,6 @@ public class AudioBufferUtils {
 //        return warpedBuffer;
 //    }-*/;
 
-    public interface CrossFadeCallback {
-        public void onCrossFadeComplete();
-    }
 
     /**
      * Uses a equal power crossfade curve to blend two BufferPlayer audios together.
@@ -107,27 +110,68 @@ public class AudioBufferUtils {
      * @param fadeTime      Total time the fade should take
      */
     public static void crossFadePlayers(final BufferPlayer currentPlayer, final BufferPlayer prevPlayer,
-                                  final int currentPlayerPlayOffset, final double targetGain, final int fadeTime,
-                                        final CrossFadeCallback cb) {
+                                        final int currentPlayerPlayOffset, final double targetGain, final int fadeTime) {
+        // Different browsers handle the different crossfade implementations differently.
+        // - Chrome works well with either
+        // - Firefox will stall with the loop version, and basically will not crossfade
+        // - Safari works with both, but the async version causes a wobble effect when used with PitchShiftNode (class)
+        // - Edge/IE works with both, but the async version causes a wobble effect when used with PitchShiftNode (class)
+        if (BrowserInfo.get().isChrome() || BrowserInfo.get().isFirefox()) {
+            logger.log(Level.SEVERE, "using crossfade for CHROME OR FIREFOX");
+            crossFadePlayersAsync(currentPlayer, prevPlayer, currentPlayerPlayOffset, targetGain, fadeTime);
+        } else {
+            logger.log(Level.SEVERE, "using crossfade for SAFARI OR IE");
+            crossFadePlayersLoop(currentPlayer, prevPlayer, currentPlayerPlayOffset, targetGain, fadeTime);
+        }
+    }
+
+    /**
+     * Asynch implementation of the equal power crossfade between two BufferPlayer objects.
+     * Uses a repeating timer (setInterval in JS) to run updates to gain levels.
+     *
+     * Recommended for Chrome and Firefox.
+     */
+    private static void crossFadePlayersAsync(final BufferPlayer currentPlayer, final BufferPlayer prevPlayer,
+                                        final int currentPlayerPlayOffset, final double targetGain, final int fadeTime) {
 
         // if we have a prev player then we fade it out and fade our new player in
         Scheduler.get().scheduleDeferred(new Scheduler.ScheduledCommand() {
             @Override
             public void execute() {
+                // setup the incoming player
                 if (currentPlayer != null) {
                     currentPlayer.setVolume(0);
                     currentPlayer.play(currentPlayerPlayOffset);
                 }
-
-                double increment = 1d / fadeTime;
-                int lastTime = 0;
-                Duration duration = new Duration();
-
-                for (double t = 0; t < 1; ) {
-                    // only update gain if at least a millisecond has passed
-                    if (lastTime != duration.elapsedMillis()) {
-                        lastTime = duration.elapsedMillis();
-                        double[] gains = getCrossFadeValues(t);
+                // t value is used by crossfade calculation (t will increase from 0 to 1)
+                final double[] t = new double[1];
+                t[0] = 0;
+                // set repeat options and calculate variables
+                final int repeatTime = 5;
+                final double changePerMs = 1d / fadeTime;
+                // track amount of time that passes each loop to incriment the t value
+                final Duration duration = new Duration();
+                final int[] lastTime = new int[1];
+                lastTime[0] = 0;
+                // create repeating function
+                final Timer crossfadeLoop = new Timer() {
+                    @Override
+                    public void run() {
+                        double[] gains = getCrossFadeValues(t[0]);
+                        // max and min volumes and terminate the loop
+                        if (duration.elapsedMillis() >= fadeTime) {
+                            Logger.getLogger("AudioBufferUtils").log(Level.SEVERE, "total time: " + duration.elapsedMillis());
+                            if (currentPlayer != null) {
+                                currentPlayer.setVolume(targetGain);
+                            }
+                            if (prevPlayer != null) {
+                                prevPlayer.setVolume(0);
+                                prevPlayer.stop();
+                            }
+                            cancel();
+                            return;
+                        }
+                        // update player volumes with crossfade values
                         if (prevPlayer != null) {
                             prevPlayer.setVolume(gains[0] * targetGain);
                         }
@@ -135,23 +179,73 @@ public class AudioBufferUtils {
                             currentPlayer.setVolume(gains[1] * targetGain);
                         }
                         // increment crossfade index value
-                        t += increment;
+                        t[0] += (changePerMs * (duration.elapsedMillis() - lastTime[0]));
+                        lastTime[0] = duration.elapsedMillis();
                     }
-                }
-                // make sure we are at max/min volumes by the end
-                if (currentPlayer != null) {
-                    currentPlayer.setVolume(targetGain);
-                }
-                if (prevPlayer != null) {
-                    prevPlayer.setVolume(0);
-                    prevPlayer.stop();
-                }
-                if (cb != null) {
-                    cb.onCrossFadeComplete();
-                }
+                };
+                crossfadeLoop.scheduleRepeating(repeatTime);
             }
         });
     }
+
+    /**
+     * Loop (blocking) implementation of the equal power crossfade between two BufferPlayer objects.
+     * Uses a standard for loop with elapsed time checking to set gain levels.
+     *
+     * Recommended for Safari and Edge/IE.
+     */
+    private static void crossFadePlayersLoop(final BufferPlayer currentPlayer, final BufferPlayer prevPlayer,
+                                            final int currentPlayerPlayOffset, final double targetGain, final int fadeTime) {
+
+        // if we have a prev player then we fade it out and fade our new player in
+        Scheduler.get().scheduleDeferred(new Scheduler.ScheduledCommand() {
+             @Override
+             public void execute() {
+                 if (currentPlayer != null) {
+                     currentPlayer.setVolume(0);
+                     currentPlayer.play(currentPlayerPlayOffset);
+                 }
+
+                 double increment = 1d / fadeTime;
+                 int lastTime = 0;
+                 Duration duration = new Duration();
+
+                 for (double t = 0; t < 1; ) {
+                     // only update gain if at least a millisecond has passed
+                     if (lastTime != duration.elapsedMillis()) {
+                         lastTime = duration.elapsedMillis();
+                         double[] gains = getCrossFadeValues(t);
+                         if (prevPlayer != null) {
+                             prevPlayer.setVolume(gains[0] * targetGain);
+                         }
+                         if (currentPlayer != null) {
+                             currentPlayer.setVolume(gains[1] * targetGain);
+                         }
+                         // increment crossfade index value
+                         t += increment;
+                     }
+                 }
+                 // make sure we are at max/min volumes by the end
+                 if (currentPlayer != null) {
+                     currentPlayer.setVolume(targetGain);
+                 }
+                 if (prevPlayer != null) {
+                     prevPlayer.setVolume(0);
+                     prevPlayer.stop();
+                 }
+                 // TODO: figure out why wobbling happens with PitchShiftNode and fix it instead of this hack
+                 // need to reset the playback speed to stop the wobbling effect for some browsers (Safari, Edge/IE)
+                 Timer t = new Timer() {
+                     @Override
+                     public void run() {
+                         currentPlayer.setPlaybackSpeed(currentPlayer.getPlaybackSpeed());
+                     }
+                 };
+                 t.schedule(10);
+             }
+         });
+    }
+
 
     /**
      * Takes a time value (between 0 and 1) and calculates

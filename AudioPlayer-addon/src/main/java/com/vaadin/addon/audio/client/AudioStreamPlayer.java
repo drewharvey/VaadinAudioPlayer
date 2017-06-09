@@ -82,29 +82,7 @@ public class AudioStreamPlayer {
 			// use cross fade to blend prev and current audio together
 			int overlapTime = ((int) (chunkOverlapTime / playbackSpeed));
 			AudioBufferUtils.crossFadePlayers(playerManager.getCurrentPlayer(), playerManager.getPrevPlayer(),
-					chunkPosition, volume, overlapTime, new AudioBufferUtils.CrossFadeCallback() {
-						@Override
-						public void onCrossFadeComplete() {
-							for (BufferPlayer p : AudioStreamPlayer.this.playerManager.getPlayers()) {
-								if (p != null) {
-									if (p != AudioStreamPlayer.this.playerManager.getCurrentPlayer()) {
-										p.stop();
-									}
-									//p.setPlaybackSpeed(AudioStreamPlayer.this.playbackSpeed);
-								}
-							}
-							Timer t = new Timer() {
-								@Override
-								public void run() {
-									logger.log(Level.SEVERE, "Re doing playbackspeed");
-									//AudioStreamPlayer.this.setPlaybackSpeed(AudioStreamPlayer.this.playbackSpeed);
-									BufferPlayer currentPlayer = AudioStreamPlayer.this.playerManager.getCurrentPlayer();
-									currentPlayer.setPlaybackSpeed(currentPlayer.getPlaybackSpeed());
-								}
-							};
-							t.schedule(1);
-						}
-					});
+					chunkPosition, volume, overlapTime);
 		} else {
 			// simply play the audio
 			playerManager.getCurrentPlayer().play(chunkPosition);

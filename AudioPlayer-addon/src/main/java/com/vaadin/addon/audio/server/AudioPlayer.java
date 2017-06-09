@@ -67,9 +67,11 @@ public class AudioPlayer extends AbstractExtension {
 			@Override
 			public void reportPlaybackPosition(int position_millis) {
 				// Log.message(AudioPlayer.this,"received position report: " + position_millis);
-				currentPosition = position_millis;
-				for(StateChangeCallback cb : stateCallbacks) {
-					cb.playbackPositionChanged(position_millis);
+				if (position_millis != currentPosition) {
+					currentPosition = position_millis;
+					for (StateChangeCallback cb : stateCallbacks) {
+						cb.playbackPositionChanged(position_millis);
+					}
 				}
 			}
 

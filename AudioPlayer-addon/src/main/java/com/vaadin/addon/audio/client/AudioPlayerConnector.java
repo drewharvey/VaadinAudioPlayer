@@ -1,6 +1,5 @@
 package com.vaadin.addon.audio.client;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
@@ -17,7 +16,6 @@ import com.vaadin.addon.audio.server.AudioPlayer;
 import com.vaadin.addon.audio.shared.*;
 import com.vaadin.addon.audio.shared.SharedEffect.EffectName;
 import com.vaadin.addon.audio.shared.util.Log;
-import com.vaadin.annotations.JavaScript;
 import com.vaadin.client.ServerConnector;
 import com.vaadin.client.annotations.OnStateChange;
 import com.vaadin.client.communication.RpcProxy;
@@ -36,7 +34,8 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 	// For now, we're going with a simple singleton
 	private static AudioContext context;
 	
-	private static int REPORT_POSITION_REPEAT_TIME = 500;
+	private final static int REPORT_POSITION_REPEAT_TIME = 500;
+	private static int lastPlaybackPosition = 0;
 	
 	private AudioStreamPlayer player;
 	private ClientStream stream;
@@ -251,7 +250,10 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
     	Timer reportPositionTimer = new Timer() {
 			@Override
 			public void run() {
-				getServerRPC().reportPlaybackPosition(player.getPosition());
+				if (lastPlaybackPosition != player.getPosition()) {
+					lastPlaybackPosition = player.getPosition();
+					getServerRPC().reportPlaybackPosition(lastPlaybackPosition);
+				}
 			}
     	};
     	reportPositionTimer.scheduleRepeating(REPORT_POSITION_REPEAT_TIME);

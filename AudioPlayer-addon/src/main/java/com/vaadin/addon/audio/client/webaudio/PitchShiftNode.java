@@ -19,7 +19,6 @@ public class PitchShiftNode {
 
     private static final native JavaScriptObject createJungleObject(elemental.html.AudioContext ctx) /*-{
         var j = new $wnd.Jungle(ctx);
-        // j.setPitchOffset(0);
         return j;
     }-*/;
 
