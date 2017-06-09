@@ -3,6 +3,9 @@ package com.vaadin.addon.audio.server;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.vaadin.addon.audio.server.util.StringFormatter;
+import com.vaadin.addon.audio.server.state.PlaybackState;
+import com.vaadin.addon.audio.server.state.StateChangeCallback;
 import com.vaadin.addon.audio.shared.AudioPlayerClientRpc;
 import com.vaadin.addon.audio.shared.AudioPlayerServerRpc;
 import com.vaadin.addon.audio.shared.AudioPlayerState;
@@ -19,21 +22,6 @@ import com.vaadin.ui.UI;
 @SuppressWarnings("serial")
 @JavaScript({ "pako_inflate.min.js", "jungle.js" })
 public class AudioPlayer extends AbstractExtension {
-
-	// TODO: use an actual event system
-	public static interface StateChangeCallback {
-		
-		void playbackPositionChanged(int new_position_millis);
-		
-		void playbackStateChanged(PlaybackState new_state);
-		
-	}
-
-	public static enum PlaybackState {
-		PLAYING,
-		PAUSED,
-		STOPPED
-	}
 	
 	private UI ui = null;
 	private Stream stream = null;
@@ -126,7 +114,11 @@ public class AudioPlayer extends AbstractExtension {
     	ui.removeExtension(this);
     }
 
-    public Stream getStream() {
+	/**
+	 * Gets Stream object that supplies audio data to this AudioPlayer.
+	 * @return Stream
+	 */
+	public Stream getStream() {
     	return stream;
     }
     
@@ -140,8 +132,12 @@ public class AudioPlayer extends AbstractExtension {
 		getState().chunkTimeMillis = stream.getChunkLength();
     	return stream;
     }
-    
-    public int getDuration() {
+
+	/**
+	 * Gets current audio files total duration in milliseconds.
+	 * @return int milliseconds
+	 */
+	public int getDuration() {
     	return stream.getDuration();
     }
     
@@ -158,43 +154,64 @@ public class AudioPlayer extends AbstractExtension {
     	getClientRPC().setPlaybackPosition(millis);
     	Log.message(AudioPlayer.this,"set playback position: " + millis);
     }
-    
-    public void skip(int millis) {
+
+	/**
+	 * Moves play position by milliseconds.
+	 * @param millis number of milliseconds to move
+	 */
+	public void skip(int millis) {
     	getClientRPC().skipPosition(millis);
     	Log.message(AudioPlayer.this,"skip " + millis + " milliseconds");
     }
-    
-    public void play() {
+
+	/**
+	 * Starts playing audio from the beginning of the audio file.
+	 */
+	public void play() {
     	getClientRPC().startPlayback();
     	Log.message(AudioPlayer.this,"start or restart playback");
     }
-    
-    public void play(int offset_millis) {
+
+	/**
+	 * Starts playing audio from the specified position (milliseconds).
+	 * NOT IMPLEMENTED.
+	 * @param offset_millis start position in milliseconds
+	 */
+	public void play(int offset_millis) {
     	// TODO: re-enable
     	//getClientRPC().setPlaybackPosition(offset_millis);
     	getClientRPC().startPlayback();
     	Log.message(AudioPlayer.this,"start playback at time offset");
     }
-    
-    public void pause() {
+
+	/**
+	 * Pauses the current audio.
+	 */
+	public void pause() {
     	getClientRPC().pausePlayback();
     	Log.message(AudioPlayer.this,"pause playback");
     }
-    
-    public void resume() {
+
+	/**
+	 * Plays audio from last known position (usually used to play while paused).
+	 */
+	public void resume() {
     	getClientRPC().resumePlayback();
     	Log.message(AudioPlayer.this,"resume playback");
     }
-    
-    public void stop() {
+
+	/**
+	 * Stops playing the audio and resets the position to 0 (beginning of audio file).
+	 */
+	public void stop() {
     	getClientRPC().stopPlayback();
     	Log.message(AudioPlayer.this,"stop playback");
     }
-    
-    public boolean isPlaying() {
+
+	public boolean isPlaying() {
 		return playbackState == PlaybackState.PLAYING;
     }
-    
+
 	public boolean isPaused() {
 		return playbackState == PlaybackState.PAUSED;
 	}
@@ -202,17 +219,33 @@ public class AudioPlayer extends AbstractExtension {
 	public boolean isStopped() {
 		return playbackState == PlaybackState.STOPPED;
 	}
-	
+
+	/**
+	 * Sets the volume of the audio player. 1 is 100% volume (default), 2 is 200% volume, etc.
+	 * @param volume volume level
+	 */
 	public void setVolume(double volume) {
 		getClientRPC().setVolume(volume);
 		Log.message(AudioPlayer.this,"setting volume to " + volume);
 	}
-	
+
+	/**
+	 * Sets the speed at which the audio is played.  Changing this will not change
+	 * the pitch of the audio.  1 is 100% speed (default), 2 is 200%, etc.
+	 * @param playbackSpeed speed ratio
+	 */
 	public void setPlaybackSpeed(double playbackSpeed) {
 		getClientRPC().setPlaybackSpeed(playbackSpeed);
 		Log.message(AudioPlayer.this,"setting playback speed to " + playbackSpeed);
 	}
-	
+
+	/**
+	 * Sets the spread of total gain (volume) between the left and right channels.
+	 * -1 is to only play left channel.
+	 * 0 is to play equally left and right channels (default).
+	 * 1 is to only play right channel.
+	 * @param balance
+	 */
 	public void setBalance(double balance) {
 		getClientRPC().setBalance(balance);
 	}
@@ -232,12 +265,45 @@ public class AudioPlayer extends AbstractExtension {
 	public int getNumberChunksToPreload() {
 		return getState().numChunksPreload;
 	}
-	
+
+	protected ChunkDescriptor getChunkDescriptor(int chunkId) {
+		// TODO: return chunk descriptor
+		return null;
+	}
+
+	/**
+	 * Gets String representing current player time position.
+	 * @return String
+	 */
+	public String getPositionString() {
+		return StringFormatter.msToPlayerTimeStamp(getPosition());
+	}
+
+	/**
+	 * Gets String representing current player's total time duration.
+	 * @return String
+	 */
+	public String getDurationString() {
+		return StringFormatter.msToPlayerTimeStamp(getDuration());
+	}
+
+	//=========================================================================
+	//=== Effects =============================================================
+	//=========================================================================
+
+	/**
+	 * Add effect immediately to the audio player.
+	 * @param effect Effect to add
+	 */
 	public void addEffect(Effect effect) {
 		// TODO: update effect if it already exists
 		getState().effects.add(effect.getSharedEffectObject());
 	}
-	
+
+	/**
+	 * Removes effect immediately from audio player.
+	 * @param effect Effect to remove
+	 */
 	public void removeEffect(Effect effect) {
 		// TODO: optimize removing effects so we don't have to loop
 		for (SharedEffect e : getState().effects) {
@@ -247,10 +313,10 @@ public class AudioPlayer extends AbstractExtension {
 			}
 		}
 	}
-	
+
 	/**
 	 * Updates properties of the effect and passes the changes to the client side.
-	 * @param effect
+	 * @param effect Effect to update
 	 */
 	public void updateEffect(Effect effect) {
 		for (SharedEffect e : getState().effects) {
@@ -258,37 +324,6 @@ public class AudioPlayer extends AbstractExtension {
 				Log.message(AudioPlayer.this,"updating effect: " + e.getName().name());
 				e.setProperties(effect.getSharedEffectObject().getProperties());
 			}
-		}
-	}
-
-	protected ChunkDescriptor getChunkDescriptor(int chunkId) {
-		// TODO: return chunk descriptor
-		return null;
-	}
-	
-	public String getPositionString() {
-		long second = (getPosition() / 1000) % 60;
-		long minute = (getPosition() / (1000 * 60)) % 60;
-		long hour = (getPosition() / (1000 * 60 * 60)) % 24;
-		
-		long durationHours = (getDuration() / (1000 * 60 * 60)) % 24;
-		
-		if (durationHours > 0) {
-			return String.format("%02d:%02d:%02d", hour, minute, second);
-		} else {
-			return String.format("%02d:%02d", minute, second);
-		}
-	}
-	
-	public String getDurationString() {
-		long second = (getDuration() / 1000) % 60;
-		long minute = (getDuration() / (1000 * 60)) % 60;
-		long hour = (getDuration() / (1000 * 60 * 60)) % 24;
-		
-		if (hour > 0) {
-			return String.format("%02d:%02d:%02d", hour, minute, second);
-		} else {
-			return String.format("%02d:%02d", minute, second);
 		}
 	}
 	

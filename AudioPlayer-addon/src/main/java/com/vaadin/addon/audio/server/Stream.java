@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 
+import com.vaadin.addon.audio.server.state.StreamState;
+import com.vaadin.addon.audio.server.state.StreamStateCallback;
 import com.vaadin.addon.audio.shared.ChunkDescriptor;
 import com.vaadin.addon.audio.shared.PCMFormat;
 
@@ -19,15 +21,6 @@ public class Stream {
 
 	public static interface Callback {
 		public void onComplete(String encodedData);
-	}
-
-	public static enum StreamState {
-		IDLE, READING, ENCODING, COMPRESSING, SERIALIZING
-	}
-
-	// TODO: use proper event system
-	public static interface StreamStateCallback {
-		public void onStateChanged(StreamState newState);
 	}
 
 	private static class ChunkRequest {
