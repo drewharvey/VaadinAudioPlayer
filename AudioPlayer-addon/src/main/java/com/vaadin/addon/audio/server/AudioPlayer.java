@@ -13,8 +13,9 @@ import com.vaadin.annotations.JavaScript;
 import com.vaadin.server.AbstractExtension;
 import com.vaadin.ui.UI;
 
-// This is the server-side UI component that provides public API 
-// for AudioPlayer
+// This is the server-side UI component that provides public API for AudioPlayer
+// pako_inflate.min.js is used for compression
+// jungle.js is to supply audio node that can pitch shift
 @SuppressWarnings("serial")
 @JavaScript({ "pako_inflate.min.js", "jungle.js" })
 public class AudioPlayer extends AbstractExtension {
@@ -112,8 +113,7 @@ public class AudioPlayer extends AbstractExtension {
     }
     
     // TODO: use a proper event system
-    private List<StateChangeCallback> stateCallbacks = new
-    		ArrayList<>();
+    private List<StateChangeCallback> stateCallbacks = new ArrayList<>();
     public void addStateChangeListener(StateChangeCallback cb) {
     	stateCallbacks.add(cb);
     }
