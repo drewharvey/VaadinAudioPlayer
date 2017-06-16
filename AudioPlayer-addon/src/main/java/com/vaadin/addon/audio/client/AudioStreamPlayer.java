@@ -255,6 +255,11 @@ public class AudioStreamPlayer {
 		player.setVolume(volume);
 		player.setPlaybackSpeed(playbackSpeed);
 		player.setBalance(balance);
+		// TODO: refactor this
+		// set gain per channel
+		for (int i = 0; i < player.getNumberOfChannels(); i++) {
+			player.setVolume(player.getVolume(i), i);
+		}
 		connectBufferPlayerToEffectChain(player, effects);
 	}
 
@@ -320,7 +325,7 @@ public class AudioStreamPlayer {
 		// TODO: some reason wasn't working when I used getCurrentPlayer().setVolume(volume);
 		for (BufferPlayer p : playerManager.getPlayers()) {
 			if (p != null) {
-				p.setVolume(volume);
+				p.setVolume(volume, channels);
 			}
 		}
 	}

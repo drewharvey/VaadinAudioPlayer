@@ -196,7 +196,7 @@ public class DemoUI extends UI {
 			leftChannelGain.setValue(80d);
 			leftChannelGain.setWidth("150px");
 			leftChannelGain.addValueChangeListener(e -> {
-				final double volume = volumeSlider.getValue() / 100d;
+				final double volume = leftChannelGain.getValue() / 100d;
 				player.setVolume(volume, 0);
 			});
 
@@ -207,7 +207,7 @@ public class DemoUI extends UI {
 			rightChannelGain.setValue(80d);
 			rightChannelGain.setWidth("150px");
 			rightChannelGain.addValueChangeListener(e -> {
-				final double volume = volumeSlider.getValue() / 100d;
+				final double volume = rightChannelGain.getValue() / 100d;
 				player.setVolume(volume, 1);
 			});
 

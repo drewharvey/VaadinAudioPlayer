@@ -25,6 +25,7 @@ public class MultiChannelGainNode {
 
     public MultiChannelGainNode(Context context) {
         this.context = context;
+        outputNode = context.createGainNode();
     }
 
     /**
@@ -38,10 +39,16 @@ public class MultiChannelGainNode {
             return;
         }
         inputNode = sourceNode;
-        outputNode = context.createGainNode();
-        splitterNode = context.createChannelSplitter(buffer.getNumberOfChannels());
-        mergerNode = context.createChannelMerger(buffer.getNumberOfChannels());
-        gainNodes = createChannelGainNodes(buffer.getNumberOfChannels());
+        // create nodes
+        if (splitterNode == null || splitterNode.getNumberOfOutputs() != buffer.getNumberOfChannels()) {
+            splitterNode = context.createChannelSplitter(buffer.getNumberOfChannels());
+        }
+        if (mergerNode == null || mergerNode.getNumberOfInputs() != buffer.getNumberOfChannels()) {
+            mergerNode = context.createChannelMerger(buffer.getNumberOfChannels());
+        }
+        if (gainNodes == null || gainNodes.length != buffer.getNumberOfChannels()) {
+            gainNodes = createChannelGainNodes(buffer.getNumberOfChannels());
+        }
         // run source node into the spliter
         inputNode.connect(splitterNode);
         // connect gain nodes to each channel in our splitter
@@ -52,15 +59,35 @@ public class MultiChannelGainNode {
         mergerNode.connect(outputNode);
     }
 
+    public double getGain(int channelIndex) {
+        double gain = 0;
+        if (channelIndex < gainNodes.length) {
+            gain = gainNodes[channelIndex].getGain();
+        }
+        return gain;
+    }
+
+    public void setGain(double gain, int channelIndex) {
+        if (channelIndex < gainNodes.length) {
+            gainNodes[channelIndex].setGain(gain);
+        }
+    }
+
+    public void setGainOnAllChannels(double gain) {
+        for (GainNode node : gainNodes) {
+            node.setGain(gain);
+        }
+    }
+
     public AudioNode getOutputNode() {
         return mergerNode;
     }
 
-    public GainNode getGainNode(int channelIndex) {
-        if (channelIndex >= gainNodes.length) {
-            return null;
+    public int getNumberOfChannels() {
+        if (gainNodes != null) {
+            return gainNodes.length;
         }
-        return gainNodes[channelIndex];
+        return 0;
     }
 
     private GainNode[] createChannelGainNodes(int numberOfChannels) {

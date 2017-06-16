@@ -29,11 +29,11 @@ public class BufferPlayer {
 	
 	private BufferSourceNode source;
 	private GainNode output;
-	private MultiChannelGainNode multiChannelGainNode;
 	private State state = State.STOPPED;
 	private double playbackSpeed = 1;
 
 	private PitchShiftNode pitchShiftNode;
+	private MultiChannelGainNode multiChannelGainNode;
 	
 
 	public BufferPlayer() {
@@ -130,9 +130,23 @@ public class BufferPlayer {
 		// logger.log(Level.SEVERE, "set volume to " + volume);
 		output.setGain(volume);
 	}
+
+	public void setVolume(double volume, int... channels) {
+		for (int i = 0; i < channels.length; i++) {
+			multiChannelGainNode.setGain(volume, i);
+		}
+	}
 	
 	public double getVolume() {
 		return output.getGain();
+	}
+
+	public double getVolume(int channelIndex) {
+		return multiChannelGainNode.getGain(channelIndex);
+	}
+
+	public int getNumberOfChannels() {
+		return multiChannelGainNode.getNumberOfChannels();
 	}
 
 //	/**
