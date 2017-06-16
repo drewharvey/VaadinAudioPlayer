@@ -310,6 +310,20 @@ public class AudioStreamPlayer {
 			}
 		}
 	}
+
+	public void setVolume(double volume, int... channels) {
+		this.volume = volume;
+		if(playerManager.getCurrentPlayer() == null) {
+			logger.log(Level.SEVERE, "CURRENT PLAYER IS NULL");
+			return;
+		}
+		// TODO: some reason wasn't working when I used getCurrentPlayer().setVolume(volume);
+		for (BufferPlayer p : playerManager.getPlayers()) {
+			if (p != null) {
+				p.setVolume(volume);
+			}
+		}
+	}
 	
 	public double getVolume() {
 		return volume;

@@ -75,6 +75,9 @@ public class DemoUI extends UI {
 		private Slider balanceSlider;
 		private Slider speedSlider;
 
+		private Slider leftChannelGain;
+		private Slider rightChannelGain;
+
 		private ComboBox preloadSelect;
 
 		private Button rewButton;
@@ -184,6 +187,28 @@ public class DemoUI extends UI {
 			volumeSlider.addValueChangeListener(e -> {
 				final double volume = volumeSlider.getValue() / 100d;
 				player.setVolume(volume);
+			});
+
+			sliderLayout.addComponent(leftChannelGain = new Slider("L"));
+			leftChannelGain.setImmediate(true);
+			leftChannelGain.setMin(0);
+			leftChannelGain.setMax(100);
+			leftChannelGain.setValue(80d);
+			leftChannelGain.setWidth("150px");
+			leftChannelGain.addValueChangeListener(e -> {
+				final double volume = volumeSlider.getValue() / 100d;
+				player.setVolume(volume, 0);
+			});
+
+			sliderLayout.addComponent(rightChannelGain = new Slider("R"));
+			rightChannelGain.setImmediate(true);
+			rightChannelGain.setMin(0);
+			rightChannelGain.setMax(100);
+			rightChannelGain.setValue(80d);
+			rightChannelGain.setWidth("150px");
+			rightChannelGain.addValueChangeListener(e -> {
+				final double volume = volumeSlider.getValue() / 100d;
+				player.setVolume(volume, 1);
 			});
 
 			sliderLayout.addComponent(balanceSlider = new Slider("Balance"));

@@ -229,6 +229,11 @@ public class AudioPlayer extends AbstractExtension {
 		Log.message(AudioPlayer.this,"setting volume to " + volume);
 	}
 
+	public void setVolume(double volume, int... channels) {
+		getClientRPC().setVolume(volume, channels);
+		Log.message(AudioPlayer.this, "setting volume to " + volume + " on channel " + channels);
+	}
+
 	/**
 	 * Sets the speed at which the audio is played.  Changing this will not change
 	 * the pitch of the audio.  1 is 100% speed (default), 2 is 200%, etc.
