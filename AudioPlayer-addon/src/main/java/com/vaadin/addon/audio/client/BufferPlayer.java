@@ -29,8 +29,8 @@ public class BufferPlayer {
 	
 	private BufferSourceNode source;
 	private GainNode output;
+	private MultiChannelGainNode multiChannelGainNode;
 	private State state = State.STOPPED;
-	private AudioBuffer unmodifiedBuffer = null;
 	private double playbackSpeed = 1;
 
 	private PitchShiftNode pitchShiftNode;
@@ -45,8 +45,9 @@ public class BufferPlayer {
 		Context context = Context.get();
 		source = context.createBufferSourceNode();
 		if (buffer != null) {
-			unmodifiedBuffer = buffer.getAudioBuffer();
 			source.setNativeBuffer(buffer.getAudioBuffer());
+			multiChannelGainNode = new MultiChannelGainNode(context);
+			multiChannelGainNode.connect(source);
 		}
 		pitchShiftNode = new PitchShiftNode(context.getNativeContext());
 		// create output audio node
@@ -99,6 +100,8 @@ public class BufferPlayer {
 		source.resetNode();
 		if (buffer != null) {
 			source.setNativeBuffer(buffer.getAudioBuffer());
+			multiChannelGainNode = new MultiChannelGainNode(Context.get());
+			multiChannelGainNode.connect(source);
 		}
 	}
 	
@@ -110,9 +113,8 @@ public class BufferPlayer {
 		source.setBuffer(buffer, new BufferSourceNode.BufferReadyListener() {
 			@Override
 			public void onBufferReady(Buffer b) {
-				// since we may time stretch the buffer, we need to keep
-				// a clean copy of the buffer in case setPlaybackSpeed gets called
-				setUnmodifiedBuffer(b.getAudioBuffer());
+				multiChannelGainNode = new MultiChannelGainNode(Context.get());
+				multiChannelGainNode.connect(source);
 				if (cb != null) {
 					cb.onBufferReady(b);
 				}
@@ -122,10 +124,6 @@ public class BufferPlayer {
 	
 	public Buffer getBuffer() {
 		return source.getBuffer();
-	}
-
-	private void setUnmodifiedBuffer(AudioBuffer buffer) {
-		unmodifiedBuffer = buffer;
 	}
 	
 	public void setVolume(double volume) {
@@ -137,12 +135,12 @@ public class BufferPlayer {
 		return output.getGain();
 	}
 
-	/**
-	 * Changes the speed at which the BufferPlayer plays the audio without changing
-	 * the pitch of the audio. The audio buffer will need to be reprocessed in order to
-	 * play at the speed requested.
-	 * @param playbackSpeed value greater than 0
-	 */
+//	/**
+//	 * Changes the speed at which the BufferPlayer plays the audio without changing
+//	 * the pitch of the audio. The audio buffer will need to be reprocessed in order to
+//	 * play at the speed requested.
+//	 * @param playbackSpeed value greater than 0
+//	 */
 //	public void setPlaybackSpeed(double playbackSpeed) {
 //		logger.log(Level.SEVERE, "set speed scale " + playbackSpeed);
 //		if (this.playbackSpeed == playbackSpeed) {
@@ -177,6 +175,11 @@ public class BufferPlayer {
 //		}
 //	}
 
+	/**
+	 * Changes the speed at which the BufferPlayer plays the audio without changing
+	 * the pitch of the audio.
+	 * @param playbackSpeed value greater than 0
+	 */
 	public void setPlaybackSpeed(double playbackSpeed) {
 		logger.log(Level.SEVERE, "set speed scale " + playbackSpeed);
 		this.playbackSpeed = playbackSpeed;
@@ -186,18 +189,34 @@ public class BufferPlayer {
 				pitchShiftNode.disconnect();
 				pitchShiftNode = null;
 			}
-			// connect output directly to dest
-			output.disconnect();
-			output.connect(context.getDestination());
 		} else {
 			// add pitch shift node to end of chain
 			pitchShiftNode = new PitchShiftNode(context.getNativeContext());
 			pitchShiftNode.normalizePitchBasedOnPlaybackSpeed(playbackSpeed);
-			output.disconnect();
-			output.connect(pitchShiftNode.getInput());
-			pitchShiftNode.connect(context.getDestination());
 		}
+		configAudioNodeChain();
 		source.setPlaybackRate(playbackSpeed);
+	}
+
+	private void configAudioNodeChain() {
+		// example of full chain:
+		// source -> multi-channel gain node -> output -> pitch shift node -> destination
+		if (source == null) {
+			return;
+		}
+		// connect source node to individual channel gain nodes
+		multiChannelGainNode = new MultiChannelGainNode(Context.get());
+		multiChannelGainNode.connect(source);
+		// connect multi channel gain nodes to output node
+		multiChannelGainNode.getOutputNode().connect(output);
+		// connect output node to pitch shift node if needed then to destination
+		output.disconnect();
+		if (pitchShiftNode != null) {
+			output.connect(pitchShiftNode.getInput());
+			pitchShiftNode.connect(Context.get().getDestination());
+		} else {
+			output.connect(Context.get().getDestination());
+		}
 	}
 	
 	public double getPlaybackSpeed() {

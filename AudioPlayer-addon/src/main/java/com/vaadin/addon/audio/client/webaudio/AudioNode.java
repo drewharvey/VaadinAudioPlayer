@@ -34,6 +34,16 @@ public abstract class AudioNode {
 		connect(this.wa_node,other.wa_node,0,0);
 	}
 
+	/**
+	 * Connect another AudioNode to this AudioNode using specified channels
+	 * @param other another AudioNode
+	 * @param inputIndex channel of the node being connected to
+	 * @param outputIndex channel of the node connecting
+	 */
+	public void connect(AudioNode other, int outputIndex, int inputIndex) {
+		connect(this.wa_node, other.wa_node, outputIndex, inputIndex);
+	}
+
 	// TODO: this method is only here to allow the PitchShiftNode class to connect, take this away when its been refactored
 	public void connect(elemental.html.AudioNode other) {
 		connect(this.wa_node, other, 0, 0);

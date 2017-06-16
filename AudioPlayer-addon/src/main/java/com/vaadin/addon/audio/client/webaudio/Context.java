@@ -98,6 +98,14 @@ public class Context {
 	public BiquadFilterNode createBiquadFilter() {
 		return new BiquadFilterNode(ctx);
 	}
+
+	public ChannelSplitterNode createChannelSplitter(int numChannels) {
+		return new ChannelSplitterNode(ctx, numChannels);
+	}
+
+	public ChannelMergerNode createChannelMerger(int numChannels) {
+		return new ChannelMergerNode(ctx, numChannels);
+	}
 	
 	// TODO: add more node types as you need them
 	

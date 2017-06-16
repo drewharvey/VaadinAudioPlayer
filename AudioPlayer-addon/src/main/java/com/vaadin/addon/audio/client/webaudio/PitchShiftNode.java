@@ -7,6 +7,7 @@ import elemental.html.AudioContext;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+// TODO: move to effects (this is not an actual Web Audio API object)
 public class PitchShiftNode {
 
     private static final Logger logger = Logger.getLogger("PitchShiftNode");

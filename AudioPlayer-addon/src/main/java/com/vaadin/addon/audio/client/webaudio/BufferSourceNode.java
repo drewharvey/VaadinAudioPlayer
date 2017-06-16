@@ -69,6 +69,8 @@ public class BufferSourceNode extends AudioScheduledSourceNode {
 	
 	public void setNativeBuffer(AudioBuffer buffer) {
 		setBuffer(getNativeNode(), buffer);
+		logger.log(Level.SEVERE, "numberOfChannels: " + buffer.getNumberOfChannels());
+		logger.log(Level.SEVERE, "ins/outs: " + this.getNumberOfInputs() + "/" + this.getNumberOfOutputs());
 	}
 	
 	private static final native void setBuffer(elemental.html.AudioNode node, AudioBuffer buffer) /*-{
