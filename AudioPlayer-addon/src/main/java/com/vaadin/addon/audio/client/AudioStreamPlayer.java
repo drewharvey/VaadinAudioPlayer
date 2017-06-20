@@ -343,6 +343,10 @@ public class AudioStreamPlayer {
 	public double getVolume() {
 		return volume;
 	}
+
+	public HashMap<Integer, Double> getChannelVolumes() {
+		return channelVolumes;
+	}
 	
 	public void setPlaybackSpeed(double playbackSpeed) {
 		// stop from any division by 0 errors

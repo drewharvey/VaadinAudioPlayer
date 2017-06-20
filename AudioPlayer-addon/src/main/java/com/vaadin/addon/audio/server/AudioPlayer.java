@@ -1,8 +1,10 @@
 package com.vaadin.addon.audio.server;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
+import com.vaadin.addon.audio.server.state.ValueChangeCallback;
 import com.vaadin.addon.audio.server.util.StringFormatter;
 import com.vaadin.addon.audio.server.state.PlaybackState;
 import com.vaadin.addon.audio.server.state.StateChangeCallback;
@@ -27,13 +29,19 @@ public class AudioPlayer extends AbstractExtension {
 	private Stream stream = null;
 	private PlaybackState playbackState = PlaybackState.STOPPED;
 	private int currentPosition = 0;
+	private double volume = 1;
+	private HashMap<Integer, Double> channelVolumes = new HashMap<>();
+
+	// TODO: use a proper event system
+	private List<StateChangeCallback> stateCallbacks = new ArrayList<>();
+	private List<ValueChangeCallback> valueCallbacks = new ArrayList<>();
 	
     public AudioPlayer(Stream stream) {
     	
     	registerRpc(new AudioPlayerServerRpc() {
 			@Override
 			public void requestChunk(final int chunkID) {
-				// Log.message(AudioPlayer.this,"received request for chunk " + chunkID);
+				Log.message(AudioPlayer.this,"received request for chunk " + chunkID);
 				
 				final UI ui = UI.getCurrent();
 				final AudioPlayer player = AudioPlayer.this;
@@ -45,7 +53,7 @@ public class AudioPlayer extends AbstractExtension {
 							@Override
 							public void run() {
 								player.getClientRPC().sendData(chunkID, stream.isCompressionEnabled(), encodedData);
-								// Log.message(AudioPlayer.this, "sent chunk " + chunkID);
+								Log.message(AudioPlayer.this, "sent chunk " + chunkID);
 							}
 						});
 					}
@@ -90,6 +98,13 @@ public class AudioPlayer extends AbstractExtension {
 					cb.playbackStateChanged(playbackState);
 				}
 			}
+
+			@Override
+			public void reportVolumeChange(double volume, HashMap<Integer, Double> channelVolumes) {
+				AudioPlayer.this.volume = volume;
+				AudioPlayer.this.channelVolumes.clear();
+				AudioPlayer.this.channelVolumes.putAll(channelVolumes);
+			}
 		}, AudioPlayerServerRpc.class);
 
     	// Register stream, set up chunk table in state
@@ -98,16 +113,6 @@ public class AudioPlayer extends AbstractExtension {
     	// Extend current UI
     	ui = UI.getCurrent();
     	extend(ui);
-    }
-    
-    // TODO: use a proper event system
-    private List<StateChangeCallback> stateCallbacks = new ArrayList<>();
-    public void addStateChangeListener(StateChangeCallback cb) {
-    	stateCallbacks.add(cb);
-    }
-    
-    public void removeStateChangeListener(StateChangeCallback cb) {
-    	stateCallbacks.remove(cb);
     }
     
     public void destroy() {
@@ -232,6 +237,22 @@ public class AudioPlayer extends AbstractExtension {
 	public void setVolumeOnChannel(double volume, int channel) {
 		getClientRPC().setVolumeOnChannel(volume, channel);
 		Log.message(AudioPlayer.this, "setting volume to " + volume + " on channel " + channel);
+
+	}
+
+	public double getVolume() {
+		return volume;
+	}
+
+	public double getVolumeOnChannel(int channel) {
+		if (channelVolumes.containsKey(channel)) {
+			return channelVolumes.get(channel);
+		}
+		return -1;
+	}
+
+	public double getNumberOfChannels() {
+		return channelVolumes.size();
 	}
 
 	/**
@@ -331,7 +352,27 @@ public class AudioPlayer extends AbstractExtension {
 			}
 		}
 	}
-	
+
+	//=========================================================================
+	//=== Listeners ===========================================================
+	//=========================================================================
+
+	public void addStateChangeListener(StateChangeCallback cb) {
+		stateCallbacks.add(cb);
+	}
+
+	public void removeStateChangeListener(StateChangeCallback cb) {
+		stateCallbacks.remove(cb);
+	}
+
+	public void addValueChangeListener(ValueChangeCallback cb) {
+		valueCallbacks.add(cb);
+	}
+
+	public void removeValueChangeListener(ValueChangeCallback cb) {
+		valueCallbacks.remove(cb);
+	}
+
 	//=========================================================================
 	//=========================================================================
 	//=========================================================================
