@@ -5,9 +5,9 @@ import com.google.gwt.core.client.Duration;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.user.client.Timer;
 import com.vaadin.addon.audio.client.BufferPlayer;
+import com.vaadin.addon.audio.shared.util.LogUtils;
 import com.vaadin.client.BrowserInfo;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class AudioBufferUtils {
@@ -117,10 +117,10 @@ public class AudioBufferUtils {
         // - Safari works with both, but the async version causes a wobble effect when used with PitchShiftNode (class)
         // - Edge/IE works with both, but the async version causes a wobble effect when used with PitchShiftNode (class)
         if (BrowserInfo.get().isChrome() || BrowserInfo.get().isFirefox()) {
-            logger.info("using crossfade for CHROME OR FIREFOX");
+            logger.info(LogUtils.prefix("using crossfade for CHROME OR FIREFOX"));
             crossFadePlayersAsync(currentPlayer, prevPlayer, currentPlayerPlayOffset, targetGain, fadeTime);
         } else {
-            logger.info("using crossfade for SAFARI OR IE");
+            logger.info(LogUtils.prefix("using crossfade for SAFARI OR IE"));
             crossFadePlayersLoop(currentPlayer, prevPlayer, currentPlayerPlayOffset, targetGain, fadeTime);
         }
     }
@@ -160,7 +160,7 @@ public class AudioBufferUtils {
                         double[] gains = getCrossFadeValues(t[0]);
                         // max and min volumes and terminate the loop
                         if (duration.elapsedMillis() >= fadeTime) {
-                            Logger.getLogger("AudioBufferUtils").info("total time: " + duration.elapsedMillis());
+                            Logger.getLogger("AudioBufferUtils").info(LogUtils.prefix("total time: " + duration.elapsedMillis()));
                             if (currentPlayer != null) {
                                 currentPlayer.setVolume(targetGain);
                             }

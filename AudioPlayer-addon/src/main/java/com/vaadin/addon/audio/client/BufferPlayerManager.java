@@ -2,7 +2,7 @@ package com.vaadin.addon.audio.client;
 
 import com.google.gwt.user.client.Timer;
 
-import java.util.logging.Level;
+
 import java.util.logging.Logger;
 
 /**

@@ -1,7 +1,7 @@
 package com.vaadin.addon.audio.client.webaudio;
 
 
-import java.util.logging.Level;
+
 import java.util.logging.Logger;
 
 import elemental.html.AudioContext;

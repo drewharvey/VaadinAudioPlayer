@@ -1,17 +1,15 @@
 package com.vaadin.addon.audio.client.effects;
 
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.vaadin.addon.audio.client.Effect;
+import com.vaadin.addon.audio.shared.util.LogUtils;
 import com.vaadin.addon.audio.client.webaudio.BiquadFilterNode;
 import com.vaadin.addon.audio.client.webaudio.Context;
 import com.vaadin.addon.audio.shared.SharedEffectProperty;
 import com.vaadin.addon.audio.shared.SharedEffectProperty.PropertyName;
 import com.vaadin.addon.audio.shared.util.Log;
-
-import elemental.html.AudioContext;
 
 
 public class FilterEffect extends Effect {
@@ -88,7 +86,7 @@ public class FilterEffect extends Effect {
 	}
 	
 	public void setType(String type) {
-		Logger.getLogger("FilterEffect").info("setType: " + type);
+		Logger.getLogger("FilterEffect").info(LogUtils.prefix("setType: " + type));
 		// TODO: check if type is valid before setting
 		setType(BiquadFilterNode.Type.valueOf(type.toUpperCase()));
 	}

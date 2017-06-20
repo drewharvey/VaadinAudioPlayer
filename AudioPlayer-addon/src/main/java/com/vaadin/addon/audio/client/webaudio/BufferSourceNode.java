@@ -1,10 +1,11 @@
 package com.vaadin.addon.audio.client.webaudio;
 
-import java.util.logging.Level;
+
 import java.util.logging.Logger;
 
 import com.google.gwt.user.client.Timer;
 
+import com.vaadin.addon.audio.shared.util.LogUtils;
 import elemental.html.AudioBuffer;
 import elemental.html.AudioContext;
 
@@ -55,7 +56,7 @@ public class BufferSourceNode extends AudioScheduledSourceNode {
 				if(!b.isReady()) {
 					bufferTimer.schedule(20);
 				} else {
-					logger.info(" === AUDIO BUFFER IS READY ==== ");
+					logger.info(LogUtils.prefix(" === AUDIO BUFFER IS READY ==== "));
 					setNativeBuffer(b.getAudioBuffer());
 					if (cb != null) {
 						cb.onBufferReady(b);
@@ -69,8 +70,8 @@ public class BufferSourceNode extends AudioScheduledSourceNode {
 	
 	public void setNativeBuffer(AudioBuffer buffer) {
 		setBuffer(getNativeNode(), buffer);
-		logger.info("numberOfChannels: " + buffer.getNumberOfChannels());
-		logger.info("ins/outs: " + this.getNumberOfInputs() + "/" + this.getNumberOfOutputs());
+		logger.info(LogUtils.prefix("numberOfChannels: " + buffer.getNumberOfChannels()));
+		logger.info(LogUtils.prefix("ins/outs: " + this.getNumberOfInputs() + "/" + this.getNumberOfOutputs()));
 	}
 	
 	private static final native void setBuffer(elemental.html.AudioNode node, AudioBuffer buffer) /*-{

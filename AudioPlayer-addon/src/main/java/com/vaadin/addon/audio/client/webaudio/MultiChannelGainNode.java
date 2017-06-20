@@ -1,9 +1,10 @@
 package com.vaadin.addon.audio.client.webaudio;
 
 
+import com.vaadin.addon.audio.shared.util.LogUtils;
 import elemental.html.AudioBuffer;
 
-import java.util.logging.Level;
+
 import java.util.logging.Logger;
 
 // TODO: move to effects (this is not an actual Web Audio API object)
@@ -42,17 +43,17 @@ public class MultiChannelGainNode {
         }
         // create nodes
         if (splitterNode == null || splitterNode.getNumberOfOutputs() != buffer.getNumberOfChannels()) {
-            logger.info("CREATING NEW SPLITTER NODE with " + buffer.getNumberOfChannels() + " channels");
+            logger.info(LogUtils.prefix("CREATING NEW SPLITTER NODE with " + buffer.getNumberOfChannels() + " channels"));
             splitterNode = context.createChannelSplitter(buffer.getNumberOfChannels());
         }
         if (mergerNode == null || mergerNode.getNumberOfInputs() != buffer.getNumberOfChannels()) {
-            logger.info("CREATING NEW MERGER NODE");
+            logger.info(LogUtils.prefix("CREATING NEW MERGER NODE"));
             mergerNode = context.createChannelMerger(buffer.getNumberOfChannels());
         }
         if (gainNodes == null || gainNodes.length != buffer.getNumberOfChannels()) {
-            logger.info("CREATING NEW GAIN NODES");
+            logger.info(LogUtils.prefix("CREATING NEW GAIN NODES"));
             gainNodes = createChannelGainNodes(buffer.getNumberOfChannels());
-            logger.info("NUMBER OF GAIN NODES CREATED: " + gainNodes.length);
+            logger.info(LogUtils.prefix("NUMBER OF GAIN NODES CREATED: " + gainNodes.length));
         }
         // run source node into the spliter
         sourceNode.disconnect();
@@ -76,7 +77,7 @@ public class MultiChannelGainNode {
     }
 
     public void setGain(double gain, int channelIndex) {
-        logger.info("setting channel " + channelIndex + " gain to " + gain);
+        logger.info(LogUtils.prefix("setting channel " + channelIndex + " gain to " + gain));
         if (channelIndex < gainNodes.length) {
             gainNodes[channelIndex].setGain(gain);
         } else {
@@ -102,7 +103,7 @@ public class MultiChannelGainNode {
     }
 
     private GainNode[] createChannelGainNodes(int numberOfChannels) {
-        logger.info("Creating " + numberOfChannels + " gain nodes");
+        logger.info(LogUtils.prefix("Creating " + numberOfChannels + " gain nodes"));
         GainNode[] nodes = new GainNode[numberOfChannels];
         for (int i = 0; i < numberOfChannels; i++) {
             nodes[i] = context.createGainNode();

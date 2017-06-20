@@ -7,8 +7,6 @@ import com.vaadin.addon.audio.client.webaudio.Context;
 import com.vaadin.addon.audio.shared.SharedEffectProperty;
 import com.vaadin.addon.audio.shared.util.Log;
 
-import elemental.html.AudioContext;
-
 public class PitchEffect extends Effect {
 	
 	@Override

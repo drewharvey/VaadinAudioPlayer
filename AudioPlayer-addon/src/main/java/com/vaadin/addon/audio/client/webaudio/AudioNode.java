@@ -1,8 +1,9 @@
 package com.vaadin.addon.audio.client.webaudio;
 
+import com.vaadin.addon.audio.shared.util.LogUtils;
 import elemental.html.AudioContext;
 
-import java.util.logging.Level;
+
 import java.util.logging.Logger;
 
 public abstract class AudioNode {
@@ -34,7 +35,7 @@ public abstract class AudioNode {
 	 * @param other another AudioNode
 	 */
 	public void connect(AudioNode other) {
-		Logger.getLogger("AudioNode").info("CONNECTING " + this.toString() + " to " + other.toString());
+		Logger.getLogger("AudioNode").info(LogUtils.prefix("CONNECTING " + this.toString() + " to " + other.toString()));
 		connect(this.wa_node,other.wa_node,0,0);
 	}
 
@@ -52,7 +53,7 @@ public abstract class AudioNode {
 
 	// TODO: this method is only here to allow the PitchShiftNode class to connect, take this away when its been refactored
 	public void connect(elemental.html.AudioNode other) {
-		Logger.getLogger("AudioNode").info("CONNECTING " + this.toString() + " to pitch shift node");
+		Logger.getLogger("AudioNode").info(LogUtils.prefix("CONNECTING " + this.toString() + " to pitch shift node"));
 		connect(this.wa_node, other, 0, 0);
 	}
 	
@@ -70,7 +71,7 @@ public abstract class AudioNode {
 	 * Disconnect this AudioNode from all outputs.
 	 */
 	public void disconnect() {
-		Logger.getLogger("AudioNode").info("DISCONNECTING FROM ALL");
+		Logger.getLogger("AudioNode").info(LogUtils.prefix("DISCONNECTING FROM ALL"));
 		if (getNumberOfOutputs() > 0) {
 			disconnect(this.wa_node);
 		}
@@ -86,7 +87,7 @@ public abstract class AudioNode {
 	 * @param other another AudioNode
 	 */
 	public void disconnect(AudioNode other) {
-		Logger.getLogger("AudioNode").info("DISCONNECTING " + this.toString() + " FROM " + other.toString());
+		Logger.getLogger("AudioNode").info(LogUtils.prefix("DISCONNECTING " + this.toString() + " FROM " + other.toString()));
 		disconnect(this.wa_node,other.wa_node,0,0);
 	}
 	

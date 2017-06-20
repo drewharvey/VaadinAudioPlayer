@@ -1,13 +1,10 @@
 package com.vaadin.addon.audio.client;
 
-import java.util.logging.Level;
+
 import java.util.logging.Logger;
 
-import com.google.gwt.core.client.JavaScriptObject;
-import com.vaadin.addon.audio.client.utils.AudioBufferUtils;
+import com.vaadin.addon.audio.shared.util.LogUtils;
 import com.vaadin.addon.audio.client.webaudio.*;
-import elemental.html.AudioBuffer;
-import elemental.html.AudioContext;
 
 /**
  * Actual player component, plays a single Buffer.
@@ -41,7 +38,7 @@ public class BufferPlayer {
 	}
 	
 	public BufferPlayer(Buffer buffer) {
-		//logger.info("create");
+		//logger.info(LogUtils.prefix("create"));
 		Context context = Context.get();
 		source = context.createBufferSourceNode();
 		if (buffer != null) {
@@ -69,7 +66,7 @@ public class BufferPlayer {
 	}
 	
 	public void play(int offset_millis) {
-		logger.info("start playback at " + offset_millis);
+		logger.info(LogUtils.prefix("start playback at " + offset_millis));
 		if (state == State.PLAYING) {
 			stop();
 		}
@@ -79,7 +76,7 @@ public class BufferPlayer {
 	}
 	
 	public void stop() {
-		logger.info("stop playback");
+		logger.info(LogUtils.prefix("stop playback"));
 		if (state == State.STOPPED) {
 			return;
 		}
@@ -125,7 +122,7 @@ public class BufferPlayer {
 	}
 	
 	public void setVolume(double volume) {
-		// logger.info("set volume to " + volume);
+		// logger.info(LogUtils.prefix("set volume to " + volume));
 		output.setGain(volume);
 	}
 
@@ -152,10 +149,10 @@ public class BufferPlayer {
 //	 * @param playbackSpeed value greater than 0
 //	 */
 //	public void setPlaybackSpeed(double playbackSpeed) {
-//		logger.info("set speed scale " + playbackSpeed);
+//		logger.info(LogUtils.prefix("set speed scale " + playbackSpeed));
 //		if (this.playbackSpeed == playbackSpeed) {
 //			// don't do anything if we aren't changing the scale
-//			logger.info("playback speed did not change");
+//			logger.info(LogUtils.prefix("playback speed did not change"));
 //			return;
 //		}
 //		// you can only set a BufferSourceNode's buffer once, so lets reset the node and re-set the buffer
@@ -166,18 +163,18 @@ public class BufferPlayer {
 //		if (unmodifiedBuffer != null) {
 //			AudioBuffer buffer;
 //			if (playbackSpeed != 1) {
-//				logger.info("stretching audio chunk to fit playback speed of " + playbackSpeed);
+//				logger.info(LogUtils.prefix("stretching audio chunk to fit playback speed of " + playbackSpeed));
 //				double stretchFactor = 1d / playbackSpeed;
 //				AudioContext context = Context.get().getNativeContext();
 //				int numChannels = unmodifiedBuffer.getNumberOfChannels();
 //				buffer = AudioBufferUtils.timeStrechAudioBuffer(stretchFactor, unmodifiedBuffer, context, numChannels, false);
-//				logger.info("stretching complete");
+//				logger.info(LogUtils.prefix("stretching complete"));
 //			} else {
 //				buffer = unmodifiedBuffer;
 //			}
 //			// apply our buffer ot the source BufferSourceNode
 //			if (buffer != null) {
-//				logger.info("Setting buffer");
+//				logger.info(LogUtils.prefix("Setting buffer"));
 //				source.setNativeBuffer(buffer);
 //			}
 //		} else {
@@ -191,7 +188,7 @@ public class BufferPlayer {
 	 * @param playbackSpeed value greater than 0
 	 */
 	public void setPlaybackSpeed(double playbackSpeed) {
-		logger.info("set speed scale " + playbackSpeed);
+		logger.info(LogUtils.prefix("set speed scale " + playbackSpeed));
 		this.playbackSpeed = playbackSpeed;
 		Context context = Context.get();
 		if (playbackSpeed == 1) {

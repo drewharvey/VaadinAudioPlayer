@@ -2,10 +2,10 @@ package com.vaadin.addon.audio.client;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
+
 import java.util.logging.Logger;
 
-import com.google.gwt.user.client.Timer;
+import com.vaadin.addon.audio.shared.util.LogUtils;
 
 /**
  * Class that contains public JavaScript functions that can be accessed
@@ -70,7 +70,7 @@ public class JavaScriptPublicAPI {
 	 * 		Returns -1 if no valid audio player is found.
 	 */
 	private static int getPosition(int playerIndex) {
-		Logger.getLogger("JavaScriptPublicAPI").info("PLAYER INDEX: " + playerIndex);
+		Logger.getLogger("JavaScriptPublicAPI").info(LogUtils.prefix("PLAYER INDEX: " + playerIndex));
 		AudioStreamPlayer player = getAudioPlayer(playerIndex);
 		if (player != null) {
 			return player.getPosition();

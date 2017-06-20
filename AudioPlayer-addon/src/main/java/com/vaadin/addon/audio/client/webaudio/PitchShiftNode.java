@@ -4,7 +4,7 @@ package com.vaadin.addon.audio.client.webaudio;
 import com.google.gwt.core.client.JavaScriptObject;
 import elemental.html.AudioContext;
 
-import java.util.logging.Level;
+
 import java.util.logging.Logger;
 
 // TODO: move to effects (this is not an actual Web Audio API object)

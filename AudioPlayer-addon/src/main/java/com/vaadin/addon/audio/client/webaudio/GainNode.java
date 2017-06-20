@@ -1,8 +1,9 @@
 package com.vaadin.addon.audio.client.webaudio;
 
-import java.util.logging.Level;
+
 import java.util.logging.Logger;
 
+import com.vaadin.addon.audio.shared.util.LogUtils;
 import elemental.html.AudioContext;
 
 public class GainNode extends AudioNode {
@@ -43,7 +44,7 @@ public class GainNode extends AudioNode {
 	}-*/;
 	
 	public void exponentialRampToValueAtTime(double value, double time) {
-		Logger.getLogger("GainNode").info("exponentialRampToValueAtTime(" + value + ", " + time + ") now=" + Context.get().getCurrentTime());
+		Logger.getLogger("GainNode").info(LogUtils.prefix("exponentialRampToValueAtTime(" + value + ", " + time + ") now=" + Context.get().getCurrentTime()));
 		exponentialRampToValueAtTime(getNativeNode(), value, time, Context.get().getCurrentTime());
 	}
 	

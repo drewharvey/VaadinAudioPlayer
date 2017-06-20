@@ -2,7 +2,6 @@ package com.vaadin.addon.audio.client;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.gwt.user.client.Timer;
@@ -10,6 +9,7 @@ import com.vaadin.addon.audio.client.effects.BalanceEffect;
 import com.vaadin.addon.audio.client.effects.FilterEffect;
 import com.vaadin.addon.audio.client.effects.PitchEffect;
 import com.vaadin.addon.audio.client.effects.VolumeEffect;
+import com.vaadin.addon.audio.shared.util.LogUtils;
 import com.vaadin.addon.audio.client.webaudio.Buffer;
 import com.vaadin.addon.audio.client.webaudio.Context;
 import com.vaadin.addon.audio.server.AudioPlayer;
@@ -208,13 +208,13 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 			@Override
 			public void setVolume(double volume) {
 				Log.message(AudioPlayerConnector.this, "set volume to " + volume);
-				Logger.getLogger("AudioPlayerConnector").info("Setting volume to " + volume);
+				Logger.getLogger("AudioPlayerConnector").info(LogUtils.prefix(LogUtils.prefix("Setting volume to " + volume)));
 				player.setVolume(volume);
 			}
 
 			@Override
 			public void setVolumeOnChannel(double volume, int channel) {
-				Logger.getLogger("AudioPlayerConnector").info("Setting volume to " + volume + " on channel " + channel);
+				Logger.getLogger("AudioPlayerConnector").info(LogUtils.prefix(LogUtils.prefix("Setting volume to " + volume + " on channel " + channel)));
 				player.setVolume(volume, channel);
 			}
 			

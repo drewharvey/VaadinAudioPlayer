@@ -2,13 +2,13 @@ package com.vaadin.addon.audio.client;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.gwt.core.client.Duration;
 import com.google.gwt.user.client.Timer;
 import com.vaadin.addon.audio.client.ClientStream.DataCallback;
 import com.vaadin.addon.audio.client.utils.AudioBufferUtils;
+import com.vaadin.addon.audio.shared.util.LogUtils;
 import com.vaadin.addon.audio.client.webaudio.AudioNode;
 import com.vaadin.addon.audio.client.webaudio.Buffer;
 import com.vaadin.addon.audio.client.webaudio.BufferSourceNode;
@@ -68,7 +68,7 @@ public class AudioStreamPlayer {
 	}
 	
 	private void play(int timeOffset, boolean useCrossFade) {
-		logger.info("PLAY");
+		logger.info(LogUtils.prefix("PLAY"));
 		if (playerManager.getCurrentPlayer() == null) {
 			Log.error(this, "current player is null");
 			return;
@@ -97,7 +97,7 @@ public class AudioStreamPlayer {
 	}
 	
 	public void pause() {
-		logger.info("PAUSE");	
+		logger.info(LogUtils.prefix("PAUSE"));
 		if (playerManager.getCurrentPlayer() == null) {
 			Log.error(this, "current player is null");
 			return;
@@ -109,7 +109,7 @@ public class AudioStreamPlayer {
 	}
 	
 	public void resume() {
-		logger.info("resume");
+		logger.info(LogUtils.prefix("resume"));
 		if (playerManager.getCurrentPlayer() == null) {
 			Log.error(this, "current player is null");
 			return;
@@ -123,7 +123,7 @@ public class AudioStreamPlayer {
 	}
 	
 	public void stop() {
-		logger.info("stop");
+		logger.info(LogUtils.prefix("stop"));
 		if (playerManager.getCurrentPlayer() == null) {
 			Log.error(this, "current player is null");
 			return;
@@ -204,7 +204,7 @@ public class AudioStreamPlayer {
 		double chunkOffset = chunkPosition / playbackSpeed;
 		double overlapDuration = chunkOverlapTime / playbackSpeed;
 		if (position < chunkDuration) {
-			logger.info("FIRST SCHEDULE");
+			logger.info(LogUtils.prefix("FIRST SCHEDULE"));
 			// for some reason the first chunk is fading out 500ms early (or the second chunk is 500ms late)
 			// TODO: first chunk should work the same way as others
 			// truncating after decimal doesn't matter since we are already in milliseconds
@@ -214,7 +214,7 @@ public class AudioStreamPlayer {
 			}
 			playNextChunkTimer.schedule(time);
 		} else {
-			logger.info("LATER SCHEDULE");
+			logger.info(LogUtils.prefix("LATER SCHEDULE"));
 			int time = ((int) (chunkDuration - chunkOffset));
 			if (time < 0) {
 				time = 0;
@@ -266,7 +266,7 @@ public class AudioStreamPlayer {
 	}
 
 	public void setNumChunksPreload(int numChunksPreload) {
-		logger.info("numChunksPreload updated");
+		logger.info(LogUtils.prefix("numChunksPreload updated"));
 		this.numChunksPreload = numChunksPreload;
 	}
 	
@@ -275,7 +275,7 @@ public class AudioStreamPlayer {
 	}
 	
 	public void setPosition(final int millis) {
-		logger.info("set position to " + millis);
+		logger.info(LogUtils.prefix("set position to " + millis));
 		final boolean isPlaying = playerManager.getCurrentPlayer().isPlaying();
 		if (isPlaying) {
 			playerManager.getCurrentPlayer().stop();
@@ -379,7 +379,7 @@ public class AudioStreamPlayer {
 	}
 	
 	public void addEffect(Effect effect) {
-		logger.info("AudioStreamPlayer add effect " + effect.getID());
+		logger.info(LogUtils.prefix("AudioStreamPlayer add effect " + effect.getID()));
 		effects.add(effect);
 		connectEffectNodes(effects);
 		BufferPlayer currentPlayer = playerManager.getCurrentPlayer();
@@ -389,7 +389,7 @@ public class AudioStreamPlayer {
 	}
 	
 	public void removeEffect(Effect effect) {
-		logger.info("AudioStreamPlayer removing effect " + effect.getID());
+		logger.info(LogUtils.prefix("AudioStreamPlayer removing effect " + effect.getID()));
 		effects.remove(effect);
 		connectEffectNodes(effects);
 		BufferPlayer currentPlayer = playerManager.getCurrentPlayer();
@@ -399,7 +399,7 @@ public class AudioStreamPlayer {
 	}
 	
 	public void setEffects(List<Effect> effects) {
-		logger.info("AudioStreamPlayer adding effects");
+		logger.info(LogUtils.prefix("AudioStreamPlayer adding effects"));
 		this.effects.clear();
 		if (effects != null) {
 			this.effects.addAll(effects);
@@ -435,11 +435,11 @@ public class AudioStreamPlayer {
 //		if (effects.size() > 0) {
 //			AudioNode firstEffect = effects.get(0).getAudioNode();
 //			AudioNode lastEffect = effects.get(effects.size()-1).getAudioNode();
-//			logger.info("connecting source -> first effect: " + firstEffect.toString());
+//			logger.info(LogUtils.prefix("connecting source -> first effect: " + firstEffect.toString()));
 //			source.connect(firstEffect);
 //			lastEffect.connect(output);
 //		} else {
-//			logger.info("connecting source -> output");
+//			logger.info(LogUtils.prefix("connecting source -> output"));
 //			source.connect(output);
 //		}
 	}
