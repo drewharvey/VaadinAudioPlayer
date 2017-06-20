@@ -43,17 +43,13 @@ public class MultiChannelGainNode {
         }
         // create nodes
         if (splitterNode == null || splitterNode.getNumberOfOutputs() != buffer.getNumberOfChannels()) {
-            logger.info(LogUtils.prefix("CREATING NEW SPLITTER NODE with " + buffer.getNumberOfChannels() + " channels"));
             splitterNode = context.createChannelSplitter(buffer.getNumberOfChannels());
         }
         if (mergerNode == null || mergerNode.getNumberOfInputs() != buffer.getNumberOfChannels()) {
-            logger.info(LogUtils.prefix("CREATING NEW MERGER NODE"));
             mergerNode = context.createChannelMerger(buffer.getNumberOfChannels());
         }
         if (gainNodes == null || gainNodes.length != buffer.getNumberOfChannels()) {
-            logger.info(LogUtils.prefix("CREATING NEW GAIN NODES"));
             gainNodes = createChannelGainNodes(buffer.getNumberOfChannels());
-            logger.info(LogUtils.prefix("NUMBER OF GAIN NODES CREATED: " + gainNodes.length));
         }
         // run source node into the spliter
         sourceNode.disconnect();
@@ -62,6 +58,7 @@ public class MultiChannelGainNode {
         splitterNode.disconnect();
         for (int i = 0; i < gainNodes.length; i++) {
             splitterNode.connect(gainNodes[i], i, 0);
+            gainNodes[i].disconnect();
             gainNodes[i].connect(mergerNode, 0, i);
         }
         mergerNode.disconnect();

@@ -1,6 +1,7 @@
 package com.vaadin.addon.audio.client;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -34,6 +35,7 @@ public class AudioStreamPlayer {
 	private int chunkPosition = 0;					// position within the current chunk (ms)
 	
 	private double volume = 1;
+	private HashMap<Integer, Double> channelVolumes = new HashMap<>();
 	private double playbackSpeed = 1;
 	private double balance = 0;
 
@@ -258,8 +260,14 @@ public class AudioStreamPlayer {
 		player.setPlaybackSpeed(playbackSpeed);
 		player.setBalance(balance);
 		// set gain per channel
+		double gain;
 		for (int i = 0; i < player.getNumberOfChannels(); i++) {
-			player.setVolume(player.getVolume(i), i);
+			if (channelVolumes.containsKey(i)) {
+				gain = channelVolumes.get(i);
+			} else {
+				gain = 1;
+			}
+			player.setVolume(gain, i);
 		}
 		// connect to fx chain
 		connectBufferPlayerToEffectChain(player, effects);
@@ -323,6 +331,7 @@ public class AudioStreamPlayer {
 			logger.severe("CURRENT PLAYER IS NULL");
 			return;
 		}
+		channelVolumes.put(channel, volume);
 		// TODO: some reason wasn't working when I used getCurrentPlayer().setVolume(volume);
 		for (BufferPlayer p : playerManager.getPlayers()) {
 			if (p != null) {

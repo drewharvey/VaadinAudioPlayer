@@ -41,9 +41,9 @@ public class BufferPlayer {
 		//logger.info(LogUtils.prefix("create"));
 		Context context = Context.get();
 		source = context.createBufferSourceNode();
+		multiChannelGainNode = new MultiChannelGainNode(context);
 		if (buffer != null) {
 			source.setNativeBuffer(buffer.getAudioBuffer());
-			multiChannelGainNode = new MultiChannelGainNode(context);
 			multiChannelGainNode.connect(source);
 		}
 		pitchShiftNode = new PitchShiftNode(context.getNativeContext());
@@ -213,23 +213,19 @@ public class BufferPlayer {
 			return;
 		}
 		// connect source node to individual channel gain nodes
-		multiChannelGainNode = new MultiChannelGainNode(Context.get());
 		multiChannelGainNode.connect(source);
 		// connect multi channel gain nodes to output node
+		multiChannelGainNode.getOutputNode().disconnect();
 		multiChannelGainNode.getOutputNode().connect(output);
 		// connect output node to pitch shift node if needed then to destination
 		output.disconnect();
-//		if (pitchShiftNode != null) {
-//			output.connect(pitchShiftNode.getInput());
-//			pitchShiftNode.connect(Context.get().getDestination());
-//		} else {
-//			output.connect(Context.get().getDestination());
-//		}
-		output.connect(Context.get().getDestination());
-//
-//		source.printToConsole();
-//		multiChannelGainNode.printToConsole();
-
+		if (pitchShiftNode != null) {
+			output.connect(pitchShiftNode.getInput());
+			pitchShiftNode.disconnect();
+			pitchShiftNode.connect(Context.get().getDestination());
+		} else {
+			output.connect(Context.get().getDestination());
+		}
 	}
 	
 	public double getPlaybackSpeed() {
@@ -243,17 +239,6 @@ public class BufferPlayer {
 	public double getBalance() {
 		//return balanceEffect.getBalance();
 		return 0;
-	}
-
-	public void destroy() {
-		source.disconnect();
-		source = null;
-		output.disconnect();
-		output = null;
-		if (pitchShiftNode != null) {
-			pitchShiftNode.disconnect();
-			pitchShiftNode = null;
-		}
 	}
 	
 	public String toString() {
