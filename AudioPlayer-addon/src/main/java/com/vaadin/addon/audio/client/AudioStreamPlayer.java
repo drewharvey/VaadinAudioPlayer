@@ -68,7 +68,7 @@ public class AudioStreamPlayer {
 	}
 	
 	private void play(int timeOffset, boolean useCrossFade) {
-		logError("PLAY");
+		logger.info("PLAY");
 		if (playerManager.getCurrentPlayer() == null) {
 			Log.error(this, "current player is null");
 			return;
@@ -97,7 +97,7 @@ public class AudioStreamPlayer {
 	}
 	
 	public void pause() {
-		logError("PAUSE");	
+		logger.info("PAUSE");	
 		if (playerManager.getCurrentPlayer() == null) {
 			Log.error(this, "current player is null");
 			return;
@@ -109,7 +109,7 @@ public class AudioStreamPlayer {
 	}
 	
 	public void resume() {
-		logError("resume");
+		logger.info("resume");
 		if (playerManager.getCurrentPlayer() == null) {
 			Log.error(this, "current player is null");
 			return;
@@ -123,7 +123,7 @@ public class AudioStreamPlayer {
 	}
 	
 	public void stop() {
-		logError("stop");
+		logger.info("stop");
 		if (playerManager.getCurrentPlayer() == null) {
 			Log.error(this, "current player is null");
 			return;
@@ -204,7 +204,7 @@ public class AudioStreamPlayer {
 		double chunkOffset = chunkPosition / playbackSpeed;
 		double overlapDuration = chunkOverlapTime / playbackSpeed;
 		if (position < chunkDuration) {
-			logger.log(Level.SEVERE, "FIRST SCHEDULE");
+			logger.info("FIRST SCHEDULE");
 			// for some reason the first chunk is fading out 500ms early (or the second chunk is 500ms late)
 			// TODO: first chunk should work the same way as others
 			// truncating after decimal doesn't matter since we are already in milliseconds
@@ -214,7 +214,7 @@ public class AudioStreamPlayer {
 			}
 			playNextChunkTimer.schedule(time);
 		} else {
-			logger.log(Level.SEVERE, "LATER SCHEDULE");
+			logger.info("LATER SCHEDULE");
 			int time = ((int) (chunkDuration - chunkOffset));
 			if (time < 0) {
 				time = 0;
@@ -266,7 +266,7 @@ public class AudioStreamPlayer {
 	}
 
 	public void setNumChunksPreload(int numChunksPreload) {
-		logger.log(Level.SEVERE, "numChunksPreload updated");
+		logger.info("numChunksPreload updated");
 		this.numChunksPreload = numChunksPreload;
 	}
 	
@@ -275,7 +275,7 @@ public class AudioStreamPlayer {
 	}
 	
 	public void setPosition(final int millis) {
-		logError("set position to " + millis);
+		logger.info("set position to " + millis);
 		final boolean isPlaying = playerManager.getCurrentPlayer().isPlaying();
 		if (isPlaying) {
 			playerManager.getCurrentPlayer().stop();
@@ -307,7 +307,7 @@ public class AudioStreamPlayer {
 	public void setVolume(double volume) {
 		this.volume = volume;
 		if(playerManager.getCurrentPlayer() == null) {
-			logger.log(Level.SEVERE, "CURRENT PLAYER IS NULL");
+			logger.severe("CURRENT PLAYER IS NULL");
 			return;
 		}
 		// TODO: some reason wasn't working when I used getCurrentPlayer().setVolume(volume);
@@ -320,7 +320,7 @@ public class AudioStreamPlayer {
 
 	public void setVolume(double volume, int channel) {
 		if(playerManager.getCurrentPlayer() == null) {
-			logger.log(Level.SEVERE, "CURRENT PLAYER IS NULL");
+			logger.severe("CURRENT PLAYER IS NULL");
 			return;
 		}
 		// TODO: some reason wasn't working when I used getCurrentPlayer().setVolume(volume);
@@ -338,7 +338,7 @@ public class AudioStreamPlayer {
 	public void setPlaybackSpeed(double playbackSpeed) {
 		// stop from any division by 0 errors
 		if (playbackSpeed <= 0) {
-			logError("playback speed must be greater than 0");
+			logger.severe("playback speed must be greater than 0");
 			return;
 		}
 		boolean isPlaying = playerManager.getCurrentPlayer().isPlaying();
@@ -368,7 +368,7 @@ public class AudioStreamPlayer {
 	public void setBalance(double balance) {
 		this.balance = balance;
 		if(playerManager.getCurrentPlayer() == null) {
-			logError("current player is null");
+			logger.severe("current player is null");
 			return;
 		}
 		playerManager.getCurrentPlayer().setBalance(balance);
@@ -379,7 +379,7 @@ public class AudioStreamPlayer {
 	}
 	
 	public void addEffect(Effect effect) {
-		logError("AudioStreamPlayer add effect " + effect.getID());
+		logger.info("AudioStreamPlayer add effect " + effect.getID());
 		effects.add(effect);
 		connectEffectNodes(effects);
 		BufferPlayer currentPlayer = playerManager.getCurrentPlayer();
@@ -389,7 +389,7 @@ public class AudioStreamPlayer {
 	}
 	
 	public void removeEffect(Effect effect) {
-		logError("AudioStreamPlayer removing effect " + effect.getID());
+		logger.info("AudioStreamPlayer removing effect " + effect.getID());
 		effects.remove(effect);
 		connectEffectNodes(effects);
 		BufferPlayer currentPlayer = playerManager.getCurrentPlayer();
@@ -399,7 +399,7 @@ public class AudioStreamPlayer {
 	}
 	
 	public void setEffects(List<Effect> effects) {
-		logError("AudioStreamPlayer adding effects");
+		logger.info("AudioStreamPlayer adding effects");
 		this.effects.clear();
 		if (effects != null) {
 			this.effects.addAll(effects);
@@ -435,11 +435,11 @@ public class AudioStreamPlayer {
 //		if (effects.size() > 0) {
 //			AudioNode firstEffect = effects.get(0).getAudioNode();
 //			AudioNode lastEffect = effects.get(effects.size()-1).getAudioNode();
-//			logger.log(Level.SEVERE, "connecting source -> first effect: " + firstEffect.toString());
+//			logger.info("connecting source -> first effect: " + firstEffect.toString());
 //			source.connect(firstEffect);
 //			lastEffect.connect(output);
 //		} else {
-//			logger.log(Level.SEVERE, "connecting source -> output");
+//			logger.info("connecting source -> output");
 //			source.connect(output);
 //		}
 	}
@@ -481,10 +481,6 @@ public class AudioStreamPlayer {
 				}
 			}
 		}
-	}
-
-	private static void logError(String msg) {
-		logger.log(Level.SEVERE, msg);
 	}
 	
 	public String toString() {

@@ -117,10 +117,10 @@ public class AudioBufferUtils {
         // - Safari works with both, but the async version causes a wobble effect when used with PitchShiftNode (class)
         // - Edge/IE works with both, but the async version causes a wobble effect when used with PitchShiftNode (class)
         if (BrowserInfo.get().isChrome() || BrowserInfo.get().isFirefox()) {
-            logger.log(Level.SEVERE, "using crossfade for CHROME OR FIREFOX");
+            logger.info("using crossfade for CHROME OR FIREFOX");
             crossFadePlayersAsync(currentPlayer, prevPlayer, currentPlayerPlayOffset, targetGain, fadeTime);
         } else {
-            logger.log(Level.SEVERE, "using crossfade for SAFARI OR IE");
+            logger.info("using crossfade for SAFARI OR IE");
             crossFadePlayersLoop(currentPlayer, prevPlayer, currentPlayerPlayOffset, targetGain, fadeTime);
         }
     }
@@ -160,7 +160,7 @@ public class AudioBufferUtils {
                         double[] gains = getCrossFadeValues(t[0]);
                         // max and min volumes and terminate the loop
                         if (duration.elapsedMillis() >= fadeTime) {
-                            Logger.getLogger("AudioBufferUtils").log(Level.SEVERE, "total time: " + duration.elapsedMillis());
+                            Logger.getLogger("AudioBufferUtils").info("total time: " + duration.elapsedMillis());
                             if (currentPlayer != null) {
                                 currentPlayer.setVolume(targetGain);
                             }

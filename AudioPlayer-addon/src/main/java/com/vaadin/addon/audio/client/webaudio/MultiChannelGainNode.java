@@ -37,22 +37,22 @@ public class MultiChannelGainNode {
     public void connect(BufferSourceNode sourceNode) {
         AudioBuffer buffer = sourceNode.getNativeBuffer();
         if (buffer == null) {
-            logger.log(Level.SEVERE, "Failed to connect because audio buffer is null");
+            logger.severe("Failed to connect because audio buffer is null");
             return;
         }
         // create nodes
         if (splitterNode == null || splitterNode.getNumberOfOutputs() != buffer.getNumberOfChannels()) {
-            logger.log(Level.SEVERE, "CREATING NEW SPLITTER NODE with " + buffer.getNumberOfChannels() + " channels");
+            logger.info("CREATING NEW SPLITTER NODE with " + buffer.getNumberOfChannels() + " channels");
             splitterNode = context.createChannelSplitter(buffer.getNumberOfChannels());
         }
         if (mergerNode == null || mergerNode.getNumberOfInputs() != buffer.getNumberOfChannels()) {
-            logger.log(Level.SEVERE, "CREATING NEW MERGER NODE");
+            logger.info("CREATING NEW MERGER NODE");
             mergerNode = context.createChannelMerger(buffer.getNumberOfChannels());
         }
         if (gainNodes == null || gainNodes.length != buffer.getNumberOfChannels()) {
-            logger.log(Level.SEVERE, "CREATING NEW GAIN NODES");
+            logger.info("CREATING NEW GAIN NODES");
             gainNodes = createChannelGainNodes(buffer.getNumberOfChannels());
-            logger.log(Level.SEVERE, "NUMBER OF GAIN NODES CREATED: " + gainNodes.length);
+            logger.info("NUMBER OF GAIN NODES CREATED: " + gainNodes.length);
         }
         // run source node into the spliter
         sourceNode.disconnect();
@@ -76,11 +76,11 @@ public class MultiChannelGainNode {
     }
 
     public void setGain(double gain, int channelIndex) {
-        logger.log(Level.SEVERE, "setting channel " + channelIndex + " gain to " + gain);
+        logger.info("setting channel " + channelIndex + " gain to " + gain);
         if (channelIndex < gainNodes.length) {
             gainNodes[channelIndex].setGain(gain);
         } else {
-            logger.log(Level.SEVERE, "channel " + channelIndex + " does not exist");
+            logger.severe("channel " + channelIndex + " does not exist");
         }
     }
 
@@ -102,7 +102,7 @@ public class MultiChannelGainNode {
     }
 
     private GainNode[] createChannelGainNodes(int numberOfChannels) {
-        logger.log(Level.SEVERE, "Creating " + numberOfChannels + " gain nodes");
+        logger.info("Creating " + numberOfChannels + " gain nodes");
         GainNode[] nodes = new GainNode[numberOfChannels];
         for (int i = 0; i < numberOfChannels; i++) {
             nodes[i] = context.createGainNode();

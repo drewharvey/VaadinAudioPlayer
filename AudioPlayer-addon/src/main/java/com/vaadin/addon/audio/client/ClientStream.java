@@ -108,7 +108,7 @@ public class ClientStream {
 		}
 
 		// TODO: fail gracefully
-		Logger.getLogger("ClientStream").log(Level.SEVERE, "FAILED TO FIND CHUNK FOR " + position_millis + "ms");
+		Logger.getLogger("ClientStream").severe("FAILED TO FIND CHUNK FOR " + position_millis + "ms");
 		return chunks.get(0);
 	}
 	

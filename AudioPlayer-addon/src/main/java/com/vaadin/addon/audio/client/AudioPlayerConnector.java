@@ -208,13 +208,13 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 			@Override
 			public void setVolume(double volume) {
 				Log.message(AudioPlayerConnector.this, "set volume to " + volume);
-				Logger.getLogger("AudioPlayerConnector").log(Level.SEVERE, "Setting volume to " + volume);
+				Logger.getLogger("AudioPlayerConnector").info("Setting volume to " + volume);
 				player.setVolume(volume);
 			}
 
 			@Override
 			public void setVolumeOnChannel(double volume, int channel) {
-				Logger.getLogger("AudioPlayerConnector").log(Level.SEVERE, "Setting volume to " + volume + " on channel " + channel);
+				Logger.getLogger("AudioPlayerConnector").info("Setting volume to " + volume + " on channel " + channel);
 				player.setVolume(volume, channel);
 			}
 			

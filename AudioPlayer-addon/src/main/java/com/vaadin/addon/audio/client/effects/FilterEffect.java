@@ -88,7 +88,7 @@ public class FilterEffect extends Effect {
 	}
 	
 	public void setType(String type) {
-		Logger.getLogger("FilterEffect").log(Level.SEVERE, "setType: " + type);
+		Logger.getLogger("FilterEffect").info("setType: " + type);
 		// TODO: check if type is valid before setting
 		setType(BiquadFilterNode.Type.valueOf(type.toUpperCase()));
 	}

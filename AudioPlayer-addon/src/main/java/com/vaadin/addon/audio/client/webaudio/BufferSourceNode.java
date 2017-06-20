@@ -55,7 +55,7 @@ public class BufferSourceNode extends AudioScheduledSourceNode {
 				if(!b.isReady()) {
 					bufferTimer.schedule(20);
 				} else {
-					logger.log(Level.SEVERE, " === AUDIO BUFFER IS READY ==== ");
+					logger.info(" === AUDIO BUFFER IS READY ==== ");
 					setNativeBuffer(b.getAudioBuffer());
 					if (cb != null) {
 						cb.onBufferReady(b);
@@ -69,8 +69,8 @@ public class BufferSourceNode extends AudioScheduledSourceNode {
 	
 	public void setNativeBuffer(AudioBuffer buffer) {
 		setBuffer(getNativeNode(), buffer);
-		logger.log(Level.SEVERE, "numberOfChannels: " + buffer.getNumberOfChannels());
-		logger.log(Level.SEVERE, "ins/outs: " + this.getNumberOfInputs() + "/" + this.getNumberOfOutputs());
+		logger.info("numberOfChannels: " + buffer.getNumberOfChannels());
+		logger.info("ins/outs: " + this.getNumberOfInputs() + "/" + this.getNumberOfOutputs());
 	}
 	
 	private static final native void setBuffer(elemental.html.AudioNode node, AudioBuffer buffer) /*-{

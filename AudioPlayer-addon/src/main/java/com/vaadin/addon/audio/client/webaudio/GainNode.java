@@ -43,7 +43,7 @@ public class GainNode extends AudioNode {
 	}-*/;
 	
 	public void exponentialRampToValueAtTime(double value, double time) {
-		Logger.getLogger("GainNode").log(Level.SEVERE, "exponentialRampToValueAtTime(" + value + ", " + time + ") now=" + Context.get().getCurrentTime());
+		Logger.getLogger("GainNode").info("exponentialRampToValueAtTime(" + value + ", " + time + ") now=" + Context.get().getCurrentTime());
 		exponentialRampToValueAtTime(getNativeNode(), value, time, Context.get().getCurrentTime());
 	}
 	

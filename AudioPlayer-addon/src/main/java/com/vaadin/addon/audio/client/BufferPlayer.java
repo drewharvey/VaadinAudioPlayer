@@ -41,7 +41,7 @@ public class BufferPlayer {
 	}
 	
 	public BufferPlayer(Buffer buffer) {
-		//logger.log(Level.SEVERE, "create");
+		//logger.info("create");
 		Context context = Context.get();
 		source = context.createBufferSourceNode();
 		if (buffer != null) {
@@ -69,7 +69,7 @@ public class BufferPlayer {
 	}
 	
 	public void play(int offset_millis) {
-		logger.log(Level.SEVERE, "start playback at " + offset_millis);
+		logger.info("start playback at " + offset_millis);
 		if (state == State.PLAYING) {
 			stop();
 		}
@@ -79,7 +79,7 @@ public class BufferPlayer {
 	}
 	
 	public void stop() {
-		logger.log(Level.SEVERE, "stop playback");
+		logger.info("stop playback");
 		if (state == State.STOPPED) {
 			return;
 		}
@@ -125,7 +125,7 @@ public class BufferPlayer {
 	}
 	
 	public void setVolume(double volume) {
-		// logger.log(Level.SEVERE, "set volume to " + volume);
+		// logger.info("set volume to " + volume);
 		output.setGain(volume);
 	}
 
@@ -152,10 +152,10 @@ public class BufferPlayer {
 //	 * @param playbackSpeed value greater than 0
 //	 */
 //	public void setPlaybackSpeed(double playbackSpeed) {
-//		logger.log(Level.SEVERE, "set speed scale " + playbackSpeed);
+//		logger.info("set speed scale " + playbackSpeed);
 //		if (this.playbackSpeed == playbackSpeed) {
 //			// don't do anything if we aren't changing the scale
-//			logger.log(Level.SEVERE, "playback speed did not change");
+//			logger.info("playback speed did not change");
 //			return;
 //		}
 //		// you can only set a BufferSourceNode's buffer once, so lets reset the node and re-set the buffer
@@ -166,22 +166,22 @@ public class BufferPlayer {
 //		if (unmodifiedBuffer != null) {
 //			AudioBuffer buffer;
 //			if (playbackSpeed != 1) {
-//				logger.log(Level.SEVERE, "stretching audio chunk to fit playback speed of " + playbackSpeed);
+//				logger.info("stretching audio chunk to fit playback speed of " + playbackSpeed);
 //				double stretchFactor = 1d / playbackSpeed;
 //				AudioContext context = Context.get().getNativeContext();
 //				int numChannels = unmodifiedBuffer.getNumberOfChannels();
 //				buffer = AudioBufferUtils.timeStrechAudioBuffer(stretchFactor, unmodifiedBuffer, context, numChannels, false);
-//				logger.log(Level.SEVERE, "stretching complete");
+//				logger.info("stretching complete");
 //			} else {
 //				buffer = unmodifiedBuffer;
 //			}
 //			// apply our buffer ot the source BufferSourceNode
 //			if (buffer != null) {
-//				logger.log(Level.SEVERE, "Setting buffer");
+//				logger.info("Setting buffer");
 //				source.setNativeBuffer(buffer);
 //			}
 //		} else {
-//			logger.log(Level.SEVERE, "unmodifiedBuffer is NULL");
+//			logger.severe("unmodifiedBuffer is NULL");
 //		}
 //	}
 
@@ -191,7 +191,7 @@ public class BufferPlayer {
 	 * @param playbackSpeed value greater than 0
 	 */
 	public void setPlaybackSpeed(double playbackSpeed) {
-		logger.log(Level.SEVERE, "set speed scale " + playbackSpeed);
+		logger.info("set speed scale " + playbackSpeed);
 		this.playbackSpeed = playbackSpeed;
 		Context context = Context.get();
 		if (playbackSpeed == 1) {
@@ -212,7 +212,7 @@ public class BufferPlayer {
 		// example of full chain:
 		// source -> multi-channel gain node -> output -> pitch shift node -> destination
 		if (source == null) {
-			logger.log(Level.SEVERE, "SOURCE IS NULL");
+			logger.severe("SOURCE IS NULL");
 			return;
 		}
 		// connect source node to individual channel gain nodes
