@@ -37,8 +37,7 @@ public interface AudioPlayerClientRpc extends ClientRpc {
 	
 	void setVolume(double volume);
 
-	// TODO: merge setVolumes into single method
-	void setVolume(double volume, int... channels);
+	void setVolumeOnChannel(double volume, int channel);
 	
 	void setBalance(double balance);
 	

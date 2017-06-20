@@ -229,9 +229,9 @@ public class AudioPlayer extends AbstractExtension {
 		Log.message(AudioPlayer.this,"setting volume to " + volume);
 	}
 
-	public void setVolume(double volume, int... channels) {
-		getClientRPC().setVolume(volume, channels);
-		Log.message(AudioPlayer.this, "setting volume to " + volume + " on channel " + channels);
+	public void setVolumeOnChannel(double volume, int channel) {
+		getClientRPC().setVolumeOnChannel(volume, channel);
+		Log.message(AudioPlayer.this, "setting volume to " + volume + " on channel " + channel);
 	}
 
 	/**

@@ -100,8 +100,7 @@ public class BufferPlayer {
 		source.resetNode();
 		if (buffer != null) {
 			source.setNativeBuffer(buffer.getAudioBuffer());
-			multiChannelGainNode = new MultiChannelGainNode(Context.get());
-			multiChannelGainNode.connect(source);
+			configAudioNodeChain();
 		}
 	}
 	
@@ -113,8 +112,7 @@ public class BufferPlayer {
 		source.setBuffer(buffer, new BufferSourceNode.BufferReadyListener() {
 			@Override
 			public void onBufferReady(Buffer b) {
-				multiChannelGainNode = new MultiChannelGainNode(Context.get());
-				multiChannelGainNode.connect(source);
+				configAudioNodeChain();
 				if (cb != null) {
 					cb.onBufferReady(b);
 				}
@@ -131,10 +129,8 @@ public class BufferPlayer {
 		output.setGain(volume);
 	}
 
-	public void setVolume(double volume, int... channels) {
-		for (int i = 0; i < channels.length; i++) {
-			multiChannelGainNode.setGain(volume, i);
-		}
+	public void setVolume(double volume, int channel) {
+		multiChannelGainNode.setGain(volume, channel);
 	}
 	
 	public double getVolume() {
@@ -212,10 +208,11 @@ public class BufferPlayer {
 		source.setPlaybackRate(playbackSpeed);
 	}
 
-	private void configAudioNodeChain() {
+	public void configAudioNodeChain() {
 		// example of full chain:
 		// source -> multi-channel gain node -> output -> pitch shift node -> destination
 		if (source == null) {
+			logger.log(Level.SEVERE, "SOURCE IS NULL");
 			return;
 		}
 		// connect source node to individual channel gain nodes
@@ -225,12 +222,17 @@ public class BufferPlayer {
 		multiChannelGainNode.getOutputNode().connect(output);
 		// connect output node to pitch shift node if needed then to destination
 		output.disconnect();
-		if (pitchShiftNode != null) {
-			output.connect(pitchShiftNode.getInput());
-			pitchShiftNode.connect(Context.get().getDestination());
-		} else {
-			output.connect(Context.get().getDestination());
-		}
+//		if (pitchShiftNode != null) {
+//			output.connect(pitchShiftNode.getInput());
+//			pitchShiftNode.connect(Context.get().getDestination());
+//		} else {
+//			output.connect(Context.get().getDestination());
+//		}
+		output.connect(Context.get().getDestination());
+//
+//		source.printToConsole();
+//		multiChannelGainNode.printToConsole();
+
 	}
 	
 	public double getPlaybackSpeed() {

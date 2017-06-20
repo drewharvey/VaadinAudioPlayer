@@ -251,15 +251,17 @@ public class AudioStreamPlayer {
 			Log.error(this, "Cannot copy player options to null BufferPlayer");
 			return;
 		}
+		// make sure player has a working audio node chain
+		player.configAudioNodeChain();
 		// copy persisting settings to next audio node
 		player.setVolume(volume);
 		player.setPlaybackSpeed(playbackSpeed);
 		player.setBalance(balance);
-		// TODO: refactor this
 		// set gain per channel
 		for (int i = 0; i < player.getNumberOfChannels(); i++) {
 			player.setVolume(player.getVolume(i), i);
 		}
+		// connect to fx chain
 		connectBufferPlayerToEffectChain(player, effects);
 	}
 
@@ -316,8 +318,7 @@ public class AudioStreamPlayer {
 		}
 	}
 
-	public void setVolume(double volume, int... channels) {
-		this.volume = volume;
+	public void setVolume(double volume, int channel) {
 		if(playerManager.getCurrentPlayer() == null) {
 			logger.log(Level.SEVERE, "CURRENT PLAYER IS NULL");
 			return;
@@ -325,7 +326,7 @@ public class AudioStreamPlayer {
 		// TODO: some reason wasn't working when I used getCurrentPlayer().setVolume(volume);
 		for (BufferPlayer p : playerManager.getPlayers()) {
 			if (p != null) {
-				p.setVolume(volume, channels);
+				p.setVolume(volume, channel);
 			}
 		}
 	}
@@ -426,22 +427,21 @@ public class AudioStreamPlayer {
 	 * @param effects
 	 */
 	private void connectBufferPlayerToEffectChain(BufferPlayer player, List<Effect> effects) {
-		AudioNode source = player.getSourceNode();
-		AudioNode output = player.getOutput();
-		source.disconnect();
-		source.connect(output);
-		if (1 == 1) return;
-		// TODO: re-enable (is causing clicks in audio)
-		if (effects.size() > 0) {
-			AudioNode firstEffect = effects.get(0).getAudioNode();
-			AudioNode lastEffect = effects.get(effects.size()-1).getAudioNode();
-			logger.log(Level.SEVERE, "connecting source -> first effect: " + firstEffect.toString());
-			source.connect(firstEffect);
-			lastEffect.connect(output);
-		} else {
-			logger.log(Level.SEVERE, "connecting source -> output");
-			source.connect(output);
-		}
+		// TODO: BufferPlayer already has its own node chain, so we need to somehow inject our effects chain into it
+//		AudioNode source = player.getSourceNode();
+//		AudioNode output = player.getOutput();
+//		source.disconnect();
+//		source.connect(output);
+//		if (effects.size() > 0) {
+//			AudioNode firstEffect = effects.get(0).getAudioNode();
+//			AudioNode lastEffect = effects.get(effects.size()-1).getAudioNode();
+//			logger.log(Level.SEVERE, "connecting source -> first effect: " + firstEffect.toString());
+//			source.connect(firstEffect);
+//			lastEffect.connect(output);
+//		} else {
+//			logger.log(Level.SEVERE, "connecting source -> output");
+//			source.connect(output);
+//		}
 	}
 
 	private void disconnectEffectChain(BufferPlayer player, List<Effect> effects) {
