@@ -5,10 +5,7 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import javax.servlet.annotation.WebServlet;
 import javax.sound.sampled.AudioFormat;
@@ -19,10 +16,7 @@ import com.vaadin.addon.audio.server.AudioPlayer;
 import com.vaadin.addon.audio.server.Encoder;
 import com.vaadin.addon.audio.server.effects.FilterEffect;
 import com.vaadin.addon.audio.server.Stream;
-import com.vaadin.addon.audio.server.state.PlaybackState;
-import com.vaadin.addon.audio.server.state.StateChangeCallback;
-import com.vaadin.addon.audio.server.state.StreamState;
-import com.vaadin.addon.audio.server.state.StreamStateCallback;
+import com.vaadin.addon.audio.server.state.*;
 import com.vaadin.addon.audio.server.encoders.MP3Encoder;
 import com.vaadin.addon.audio.server.encoders.WaveEncoder;
 import com.vaadin.addon.audio.server.encoders.OGGEncoder;
@@ -189,6 +183,10 @@ public class DemoUI extends UI {
 				player.setVolume(volume);
 			});
 
+			//=========================================================================
+			//=== Individual Channel Gain Example =====================================
+			//=========================================================================
+
 			sliderLayout.addComponent(leftChannelGain = new Slider("L"));
 			leftChannelGain.setImmediate(true);
 			leftChannelGain.setMin(0);
@@ -210,6 +208,48 @@ public class DemoUI extends UI {
 				final double volume = rightChannelGain.getValue() / 100d;
 				player.setVolumeOnChannel(volume, 1);
 			});
+
+			//=========================================================================
+			//=== Auto Adjusting Channel Gain Example =================================
+			//=========================================================================
+
+//			final HorizontalLayout channelGainSliders = new HorizontalLayout();
+//			sliderLayout.addComponent(channelGainSliders);
+//
+//			player.addValueChangeListener(new VolumeChangeCallback() {
+//				@Override
+//				public void onVolumeChange(double volume, double[] channelVolumes) {
+//					Log.message(this, "onVolumeChange callback fired");
+//					int numChannels = channelVolumes.length;
+//					int numSliders = channelGainSliders.getComponentCount();
+//					int numSlidersToAdd = numChannels - numSliders;
+//					Log.message(this, "Sliders: " + numChannels + ", " + numSliders + ", " + numSlidersToAdd);
+//					// remove extra sliders if needed
+//					for (int i = numSlidersToAdd; i < 0; i++) {
+//						Log.message(this, "Removing channel slider");
+//						int sliderIndex = numSliders + i;
+//						channelGainSliders.removeComponent(channelGainSliders.getComponent(sliderIndex));
+//					}
+//					// create additional sliders if needed
+//					for (int i = 0; i < numSlidersToAdd; i++) {
+//						Log.message(this, "Adding channel slider");
+//						int sliderIndex = numSliders + i;
+//						final Slider channelGain = new Slider("Channel " + sliderIndex + " Volume");
+//						channelGain.setImmediate(true);
+//						channelGain.setMin(0);
+//						channelGain.setMax(100);
+//						channelGain.setValue(channelVolumes[i]);
+//						channelGain.setWidth("150px");
+//						// assign listener so this slider controls the corresponding channel's gain
+//						channelGain.addValueChangeListener(e -> {
+//							final double gain = channelGain.getValue() / 100d;
+//							player.setVolumeOnChannel(gain, sliderIndex);
+//						});
+//						// add channel gain slider to our group of sliders
+//						channelGainSliders.addComponent(channelGain);
+//					}
+//				}
+//			});
 
 			sliderLayout.addComponent(balanceSlider = new Slider("Balance"));
 			balanceSlider.setImmediate(true);

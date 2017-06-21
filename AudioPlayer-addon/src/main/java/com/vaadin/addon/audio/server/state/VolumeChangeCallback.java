@@ -9,6 +9,6 @@ import java.util.HashMap;
  *
  * General interface used to handle changes on all AudioPlayer values.
  */
-public interface ValueChangeCallback {
-    void onVolumeChange(double volume, HashMap<Integer, Double> channelVolumes);
+public interface VolumeChangeCallback {
+    void onVolumeChange(double volume, double[] channelVolumes);
 }

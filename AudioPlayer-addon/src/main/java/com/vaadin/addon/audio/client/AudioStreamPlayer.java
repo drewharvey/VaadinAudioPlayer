@@ -262,12 +262,11 @@ public class AudioStreamPlayer {
 		// set gain per channel
 		double gain;
 		for (int i = 0; i < player.getNumberOfChannels(); i++) {
-			if (channelVolumes.containsKey(i)) {
-				gain = channelVolumes.get(i);
-			} else {
-				gain = 1;
+			// if we have channels without volume values, assume volume is 1
+			if (!channelVolumes.containsKey(i)) {
+				channelVolumes.put(i, 1d);
 			}
-			player.setVolume(gain, i);
+			player.setVolume(channelVolumes.get(i), i);
 		}
 		// connect to fx chain
 		connectBufferPlayerToEffectChain(player, effects);

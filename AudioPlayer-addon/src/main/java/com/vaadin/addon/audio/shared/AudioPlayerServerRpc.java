@@ -39,6 +39,6 @@ public interface AudioPlayerServerRpc extends ServerRpc {
 	 * @param volume
 	 * @param channelVolumes
 	 */
-	void reportVolumeChange(double volume, HashMap<Integer, Double> channelVolumes);
+	void reportVolumeChange(double volume, double[] channelVolumes);
 	
 }

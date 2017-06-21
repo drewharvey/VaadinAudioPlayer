@@ -1,10 +1,9 @@
 package com.vaadin.addon.audio.server;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
-import com.vaadin.addon.audio.server.state.ValueChangeCallback;
+import com.vaadin.addon.audio.server.state.VolumeChangeCallback;
 import com.vaadin.addon.audio.server.util.StringFormatter;
 import com.vaadin.addon.audio.server.state.PlaybackState;
 import com.vaadin.addon.audio.server.state.StateChangeCallback;
@@ -30,11 +29,11 @@ public class AudioPlayer extends AbstractExtension {
 	private PlaybackState playbackState = PlaybackState.STOPPED;
 	private int currentPosition = 0;
 	private double volume = 1;
-	private HashMap<Integer, Double> channelVolumes = new HashMap<>();
+	private double[] channelVolumes = new double[0];
 
 	// TODO: use a proper event system
 	private List<StateChangeCallback> stateCallbacks = new ArrayList<>();
-	private List<ValueChangeCallback> valueCallbacks = new ArrayList<>();
+	private List<VolumeChangeCallback> volumeCallbacks = new ArrayList<>();
 	
     public AudioPlayer(Stream stream) {
     	
@@ -100,10 +99,13 @@ public class AudioPlayer extends AbstractExtension {
 			}
 
 			@Override
-			public void reportVolumeChange(double volume, HashMap<Integer, Double> channelVolumes) {
+			public void reportVolumeChange(double volume, double[] channelVolumes) {
+				Log.message(AudioPlayer.this, "volume change reported from client");
 				AudioPlayer.this.volume = volume;
-				AudioPlayer.this.channelVolumes.clear();
-				AudioPlayer.this.channelVolumes.putAll(channelVolumes);
+				AudioPlayer.this.channelVolumes = channelVolumes;
+				for (VolumeChangeCallback cb : volumeCallbacks) {
+					cb.onVolumeChange(volume, channelVolumes);
+				}
 			}
 		}, AudioPlayerServerRpc.class);
 
@@ -245,14 +247,14 @@ public class AudioPlayer extends AbstractExtension {
 	}
 
 	public double getVolumeOnChannel(int channel) {
-		if (channelVolumes.containsKey(channel)) {
-			return channelVolumes.get(channel);
+		if (channelVolumes.length > channel) {
+			return channelVolumes[channel];
 		}
 		return -1;
 	}
 
 	public double getNumberOfChannels() {
-		return channelVolumes.size();
+		return channelVolumes.length;
 	}
 
 	/**
@@ -365,12 +367,12 @@ public class AudioPlayer extends AbstractExtension {
 		stateCallbacks.remove(cb);
 	}
 
-	public void addValueChangeListener(ValueChangeCallback cb) {
-		valueCallbacks.add(cb);
+	public void addValueChangeListener(VolumeChangeCallback cb) {
+		volumeCallbacks.add(cb);
 	}
 
-	public void removeValueChangeListener(ValueChangeCallback cb) {
-		valueCallbacks.remove(cb);
+	public void removeValueChangeListener(VolumeChangeCallback cb) {
+		volumeCallbacks.remove(cb);
 	}
 
 	//=========================================================================

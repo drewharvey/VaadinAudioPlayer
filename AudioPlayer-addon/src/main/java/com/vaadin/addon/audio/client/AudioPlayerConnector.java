@@ -9,13 +9,13 @@ import com.vaadin.addon.audio.client.effects.BalanceEffect;
 import com.vaadin.addon.audio.client.effects.FilterEffect;
 import com.vaadin.addon.audio.client.effects.PitchEffect;
 import com.vaadin.addon.audio.client.effects.VolumeEffect;
-import com.vaadin.addon.audio.shared.util.LogUtils;
 import com.vaadin.addon.audio.client.webaudio.Buffer;
 import com.vaadin.addon.audio.client.webaudio.Context;
 import com.vaadin.addon.audio.server.AudioPlayer;
 import com.vaadin.addon.audio.shared.*;
 import com.vaadin.addon.audio.shared.SharedEffect.EffectName;
 import com.vaadin.addon.audio.shared.util.Log;
+import com.vaadin.addon.audio.shared.util.LogUtils;
 import com.vaadin.client.ServerConnector;
 import com.vaadin.client.annotations.OnStateChange;
 import com.vaadin.client.communication.RpcProxy;
@@ -136,13 +136,11 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 
 			@Override
 			public void sendData(int chunkId, boolean compressed, String data) {
-				Log.message(AudioPlayerConnector.this, "data available for chunk " + chunkId);
 				stream.notifyChunkLoaded(chunkId, new Buffer(data, compressed));
 			}
 
 			@Override
 			public void requestAndCacheAudioChunks(int startTime, int endTime) {
-				Log.message(AudioPlayerConnector.this, "preloading audio chunks from time " + startTime + " - " + endTime);
 				// get time per chunk
 				int timePerChunk = getState().chunkTimeMillis;
 				// loop thru and request whatever chunks needed within time frame
@@ -158,7 +156,6 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 
 			@Override
 			public void setPlaybackPosition(int position_millis) {
-				Log.message(AudioPlayerConnector.this, "set playback position to " + position_millis);
 				position_millis = (position_millis < 0) ? 0 : position_millis;
 				player.setPosition(position_millis);
 				getServerRPC().reportPlaybackPosition(position_millis);
@@ -166,13 +163,11 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 			
 			@Override
 			public void skipPosition(int delta_millis) {
-				Log.message(AudioPlayerConnector.this, "skip by " + delta_millis);
 				setPlaybackPosition(player.getPosition() + delta_millis);
 			}
 
 			@Override
 			public void startPlayback() {
-				Log.message(AudioPlayerConnector.this, "start playback");
 				player.play();
 				getServerRPC().reportPlaybackStarted();
 				getServerRPC().reportPlaybackPosition(player.getPosition());
@@ -180,48 +175,41 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 
 			@Override
 			public void pausePlayback() {
-				Log.message(AudioPlayerConnector.this, "pause playback");
 				player.pause();
 				getServerRPC().reportPlaybackPaused();
 			}
 
 			@Override
 			public void resumePlayback() {
-				Log.message(AudioPlayerConnector.this, "resume playback");
 				player.resume();
 				getServerRPC().reportPlaybackStarted();
 			}
 
 			@Override
 			public void stopPlayback() {
-				Log.message(AudioPlayerConnector.this, "stop playback");
 				player.stop();
 				getServerRPC().reportPlaybackStopped();
 			}
 
 			@Override
 			public void setPlaybackSpeed(double speed_multiplier) {
-				Log.message(AudioPlayerConnector.this, "set playback speed to " + speed_multiplier);
 				player.setPlaybackSpeed(speed_multiplier);
 			}
 			
 			@Override
 			public void setVolume(double volume) {
-				Log.message(AudioPlayerConnector.this, "set volume to " + volume);
 				player.setVolume(volume);
-				getServerRPC().reportVolumeChange(player.getVolume(), player.getChannelVolumes());
+				getServerRPC().reportVolumeChange(player.getVolume(), channelVolumesAsArray(player.getChannelVolumes()));
 			}
 
 			@Override
 			public void setVolumeOnChannel(double volume, int channel) {
-				Log.message(AudioPlayerConnector.this, "set channel " + channel + " volume to " + volume);
 				player.setVolume(volume, channel);
-				getServerRPC().reportVolumeChange(player.getVolume(), player.getChannelVolumes());
+				getServerRPC().reportVolumeChange(player.getVolume(), channelVolumesAsArray(player.getChannelVolumes()));
 			}
 			
 			@Override
 			public void setBalance(double balance) {
-				Log.message(AudioPlayerConnector.this, "set balance to " + balance);
 				player.setBalance(balance);
 			}
 			
@@ -272,6 +260,19 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 			// TODO: test this once delete stream is implemented
 			JavaScriptPublicAPI.removeAudioPlayerInstance(player);
 		}
+	}
+
+	private double[] channelVolumesAsArray(HashMap<Integer, Double> channelVolumes) {
+		double[] channelVolumesArray = new double[channelVolumes.size()];
+		for (int i = 0; i < channelVolumesArray.length; i++) {
+			if (channelVolumes.containsKey(i)) {
+				channelVolumesArray[i] = channelVolumes.get(i);
+			} else {
+				// should never happen
+				channelVolumesArray[i] = 0;
+			}
+		}
+		return channelVolumesArray;
 	}
 	
 	public String toString() {
