@@ -45,7 +45,6 @@ public class WaveEncoder extends Encoder {
 		out.position(0);
 		out.put(WaveUtil.generateHeader(outfmt, length));
 		in.position(byteOffset);
-		Log.message(this, "in pos = "+in.position()+" out pos = "+out.position()+" l = "+dataLength+" dataStart = "+dataStartOffset);
 		in.get(out.array(), out.position(), dataLength);
 
 		return out.array();
