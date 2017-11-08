@@ -39,13 +39,14 @@ public class WaveEncoder extends Encoder {
 		Log.message(this, "data length is " + dataLength);
 		
 		ByteBuffer in = getInputBuffer();
-		ByteBuffer out = ByteBuffer.allocate(dataLength + WaveUtil.getDataStartOffset(getInputBuffer()));
+		int dataStartOffset = 44;  // this is NOT WaveUtil.getDataStartOffset(getInputBuffer());
+		ByteBuffer out = ByteBuffer.allocate(dataLength + dataStartOffset);
 		
-		in.position(0);
 		out.position(0);
 		out.put(WaveUtil.generateHeader(outfmt, length));
-		out.put(in.array(), byteOffset, dataLength);
-		
+		in.position(byteOffset);
+		in.get(out.array(), out.position(), dataLength);
+
 		return out.array();
 		
 	}
