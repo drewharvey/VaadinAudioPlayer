@@ -144,7 +144,7 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 				// get time per chunk
 				int timePerChunk = getState().chunkTimeMillis;
 				// loop thru and request whatever chunks needed within time frame
-				for (int i = startTime; i < endTime; i += timePerChunk) {
+				for (int i = startTime; i <= endTime; i += timePerChunk) {
 					stream.requestChunkByTimestamp(i, new ClientStream.DataCallback() {
 						@Override
 						public void onDataReceived(ChunkDescriptor chunk) {
