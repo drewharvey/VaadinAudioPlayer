@@ -188,7 +188,7 @@ public class AudioStreamPlayer {
 		});
 		// preload additional chunks if needed
 		if (numChunksToPreload > 1) {
-			for (int i = 1; i <= numChunksToPreload; i++) {
+			for (int i = 1; i < numChunksToPreload; i++) {
 				final int time = i * timePerChunk;
 				stream.requestChunkByTimestamp(time, new DataCallback() {
 					@Override
