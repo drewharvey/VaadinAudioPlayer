@@ -238,7 +238,6 @@ public class AudioStreamPlayer {
 	}
 	
 	private void playNextChunk() {
-		position += timePerChunk;
 		// stop the audio if we've reached the end
 		if (getPosition() >= getDuration()) {
 			stop();
@@ -246,6 +245,7 @@ public class AudioStreamPlayer {
 			playerManager.moveToNextPlayer();
 			play(true);
 		}
+		position += timePerChunk;
 	}
 	
 	private void setPersistingPlayerOptions(BufferPlayer player) {
