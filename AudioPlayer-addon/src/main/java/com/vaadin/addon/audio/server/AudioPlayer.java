@@ -185,8 +185,7 @@ public class AudioPlayer extends AbstractExtension {
 	 * @param offset_millis start position in milliseconds
 	 */
 	public void play(int offset_millis) {
-    	// TODO: re-enable
-    	//getClientRPC().setPlaybackPosition(offset_millis);
+    	getClientRPC().setPlaybackPosition(offset_millis);
     	getClientRPC().startPlayback();
     	Log.message(AudioPlayer.this,"start playback at time offset");
     }
@@ -203,7 +202,7 @@ public class AudioPlayer extends AbstractExtension {
 	 * Plays audio from last known position (usually used to play while paused).
 	 */
 	public void resume() {
-    	getClientRPC().resumePlayback();
+		play(getPosition());
     	Log.message(AudioPlayer.this,"resume playback");
     }
 
