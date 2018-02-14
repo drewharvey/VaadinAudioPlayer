@@ -239,13 +239,14 @@ public class AudioStreamPlayer {
 	
 	private void playNextChunk() {
 		// stop the audio if we've reached the end
-		if (getPosition() >= getDuration()) {
+		int oldPosition = position;
+		position += timePerChunk;
+		if (oldPosition+getChunkPosition() >= getDuration()) {
 			stop();
 		} else {
 			playerManager.moveToNextPlayer();
 			play(true);
 		}
-		position += timePerChunk;
 	}
 	
 	private void setPersistingPlayerOptions(BufferPlayer player) {
