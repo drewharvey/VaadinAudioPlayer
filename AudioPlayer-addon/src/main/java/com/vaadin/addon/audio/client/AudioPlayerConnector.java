@@ -248,6 +248,8 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 				if (lastPlaybackPosition != player.getPosition()) {
 					lastPlaybackPosition = player.getPosition();
 					getServerRPC().reportPlaybackPosition(lastPlaybackPosition);
+				}else{
+					Log.message(this," last playback position" + lastPlaybackPosition);	
 				}
 			}
     	};

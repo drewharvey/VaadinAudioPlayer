@@ -62,7 +62,9 @@ public class AudioStreamPlayer {
 	}
 
 	public void play() {
-		play(true);
+		int currentPosition = getPosition();
+		int offset = currentPosition % timePerChunk;
+		play(offset,true);
 	}
 	
 	public void play(boolean useCrossFade) {
@@ -286,12 +288,7 @@ public class AudioStreamPlayer {
 	public void setPosition(final int millis) {
 		logger.info(LogUtils.prefix("set position to " + millis));
 		
-		if (playerManager.getCurrentPlayer() == null) {
-			Log.error(this, "current player is null");
-			return;
-		}
-		//final boolean isPlaying = playerManager.getCurrentPlayer() != null ? playerManager.getCurrentPlayer().isPlaying() : false;
-		final boolean isPlaying = playerManager.getCurrentPlayer().isPlaying() ;
+		final boolean isPlaying = playerManager.getCurrentPlayer() != null ? playerManager.getCurrentPlayer().isPlaying() : false;
 		if (isPlaying) {
 			playerManager.getCurrentPlayer().stop();
 		}
