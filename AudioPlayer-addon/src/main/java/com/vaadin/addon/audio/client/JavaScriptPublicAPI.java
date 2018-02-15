@@ -97,6 +97,15 @@ public class JavaScriptPublicAPI {
 		return -1;
 	}
 	
+	private static void setPosition(int millis, int playerIndex) {
+		Logger.getLogger("JavaScriptPublicAPI").info(LogUtils.prefix("PLAYER INDEX: " + playerIndex));
+		AudioStreamPlayer player = getAudioPlayer(playerIndex);
+		if (player != null) {
+			player.setPosition(millis);
+		}
+	}
+	
+	
 	private static native void createNamespace(String namespace) /*-{
 		$wnd[namespace] = {};
 	}-*/;
@@ -117,5 +126,10 @@ public class JavaScriptPublicAPI {
 			return @com.vaadin.addon.audio.client.JavaScriptPublicAPI::getAudioPlayers()();
 		}
 		
+		$wnd.vaadin_audioplayer.setPosition = function(millis, index) {
+			index = index || 0;
+			millis = millis || 0;
+			return @com.vaadin.addon.audio.client.JavaScriptPublicAPI::setPosition(II)(millis,index);
+		}
 	}-*/;
 }
