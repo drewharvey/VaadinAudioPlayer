@@ -9,12 +9,12 @@ import com.google.gwt.core.client.Duration;
 import com.google.gwt.user.client.Timer;
 import com.vaadin.addon.audio.client.ClientStream.DataCallback;
 import com.vaadin.addon.audio.client.utils.AudioBufferUtils;
-import com.vaadin.addon.audio.shared.util.LogUtils;
 import com.vaadin.addon.audio.client.webaudio.AudioNode;
 import com.vaadin.addon.audio.client.webaudio.Buffer;
 import com.vaadin.addon.audio.client.webaudio.BufferSourceNode;
 import com.vaadin.addon.audio.shared.ChunkDescriptor;
 import com.vaadin.addon.audio.shared.util.Log;
+import com.vaadin.addon.audio.shared.util.LogUtils;
 
 /**
  * Player controls for a stream.
@@ -241,6 +241,7 @@ public class AudioStreamPlayer {
 		// stop the audio if we've reached the end
 		int oldPosition = position;
 		position += timePerChunk;
+		logger.info(LogUtils.prefix("moving to position " + position));
 		if (oldPosition+getChunkPosition() >= getDuration()) {
 			stop();
 		} else {
@@ -284,14 +285,25 @@ public class AudioStreamPlayer {
 	
 	public void setPosition(final int millis) {
 		logger.info(LogUtils.prefix("set position to " + millis));
-		final boolean isPlaying = playerManager.getCurrentPlayer().isPlaying();
+		
+		if (playerManager.getCurrentPlayer() == null) {
+			Log.error(this, "current player is null");
+			return;
+		}
+		//final boolean isPlaying = playerManager.getCurrentPlayer() != null ? playerManager.getCurrentPlayer().isPlaying() : false;
+		final boolean isPlaying = playerManager.getCurrentPlayer().isPlaying() ;
 		if (isPlaying) {
 			playerManager.getCurrentPlayer().stop();
 		}
 		playNextChunkTimer.cancel();
 		// calculate the offset time within this audio chunk
 		final int offset = millis % timePerChunk;
-		position = millis - offset;
+		
+		if(isPlaying){
+			position = millis - offset;
+		}else{
+			position = millis;
+		}
 		// get audio chunk needed for this time position
 		fetchChunksForNextPlayer(millis, numChunksPreload, timePerChunk, null, new BufferSourceNode.BufferReadyListener() {
 			@Override
@@ -309,7 +321,8 @@ public class AudioStreamPlayer {
 	 * @return playtime position (milliseconds)
 	 */
 	public int getPosition() {
-		return position + getChunkPosition();
+		int currentPosition = position + getChunkPosition();
+		return Math.min(currentPosition, this.getDuration());
 	}
 	
 	public void setVolume(double volume) {
@@ -349,11 +362,15 @@ public class AudioStreamPlayer {
 	}
 	
 	public void setPlaybackSpeed(double playbackSpeed) {
+		if(playerManager.getCurrentPlayer() == null){
+			logger.severe("CURRENT PLAYER IS NULL");
+		}
 		// stop from any division by 0 errors
 		if (playbackSpeed <= 0) {
 			logger.severe("playback speed must be greater than 0");
 			return;
 		}
+		
 		boolean isPlaying = playerManager.getCurrentPlayer().isPlaying();
 		// calculate the position in the chunk based on elapsed time and current playback speed
 		if (isPlaying) {
