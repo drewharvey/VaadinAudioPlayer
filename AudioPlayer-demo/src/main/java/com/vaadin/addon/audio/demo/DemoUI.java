@@ -370,8 +370,11 @@ public class DemoUI extends UI {
 							// in millis and total duration of audio
 							int duration = getPlayer().getDuration();
 							int pos = getPlayer().getPosition();
-							if (pos > duration) {
-								// TODO: ?
+							if (pos >= duration) {
+								positionSlider.setValueSecretly(0d);
+								getPlayer().stop();
+								positionSlider.setCaption("00:00 / " + player.getDurationString());
+								stopButton.focus();
 								return;
 							}
 							positionSlider.setMax(duration);
