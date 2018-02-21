@@ -64,7 +64,7 @@ public class AudioStreamPlayer {
 	public void play() {
 		int currentPosition = getPosition();
 		int offset = currentPosition % timePerChunk;
-		play(offset,true);
+		play(offset,false);
 	}
 	
 	public void play(boolean useCrossFade) {
@@ -97,6 +97,7 @@ public class AudioStreamPlayer {
 		
 		// start loading next chunk
 		int nextChunkTime = position + timePerChunk + chunkOverlapTime;
+		nextChunkTime = Math.min(nextChunkTime, this.getDuration());
 		fetchChunksForNextPlayer(nextChunkTime, numChunksPreload, timePerChunk, null, null);
 	}
 	
@@ -292,7 +293,11 @@ public class AudioStreamPlayer {
 		if (isPlaying) {
 			playerManager.getCurrentPlayer().stop();
 		}
+		
+		chunkPositionClock = null;
+		chunkPosition=0;
 		playNextChunkTimer.cancel();
+		
 		// calculate the offset time within this audio chunk
 		final int offset = millis % timePerChunk;
 		
