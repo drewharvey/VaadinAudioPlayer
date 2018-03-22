@@ -5,7 +5,7 @@
 	<groupId>com.vaadin.addon.audio</groupId>
 	<artifactId>AudioPlayer</artifactId>
 	<packaging>jar</packaging>
-	<version>1.0-SNAPSHOT</version>
+	<version>1.0</version>
 	<name>AudioPlayer Add-on</name>
 
 	<prerequisites>
@@ -23,7 +23,7 @@
 		<Implementation-Version>${project.version}</Implementation-Version>
 		<!-- Must not change this because of the Directory -->
 		<Implementation-Title>${project.name}</Implementation-Title>
-		<Implementation-Vendor>${project.organization.name}</Implementation-Vendor>
+		<Implementation-Vendor>Drew Harvey</Implementation-Vendor>
 		<Vaadin-License-Title>Apache License 2.0</Vaadin-License-Title>
 		<Vaadin-Addon>${project.artifactId}-${project.version}.jar</Vaadin-Addon>
 		<maven.javadoc.skip>true</maven.javadoc.skip>
@@ -147,6 +147,7 @@
 							<Vaadin-Package-Version>1</Vaadin-Package-Version>
 							<Vaadin-License-Title>${Vaadin-License-Title}</Vaadin-License-Title>
 							<Vaadin-Widgetsets>com.vaadin.addon.audio.WidgetSet</Vaadin-Widgetsets>
+							<Implementation-Vendor>Drew Harvey</Implementation-Vendor>
 						</manifestEntries>
 					</archive>
 				</configuration>

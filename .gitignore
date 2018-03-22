@@ -11,4 +11,4 @@ AudioPlayer-demo/src/main/webapp/VAADIN/themes/demo/styles.scss.cache
 
 *.cache
 
-AudioPlayer-demo/src/main/resources/com/vaadin/addon/audio/wav/avoke-audio-sample.wav
+AudioPlayer-demo/src/main/resources/org/vaadin/addon/audio/wav/avoke-audio-sample.wav
