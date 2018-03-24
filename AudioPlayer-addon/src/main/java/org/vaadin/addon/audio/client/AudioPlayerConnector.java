@@ -31,7 +31,7 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 	// For now, we're going with a simple singleton
 	private static AudioContext context;
 	
-	private final static int REPORT_POSITION_REPEAT_TIME = 500;
+//	private final static int REPORT_POSITION_REPEAT_TIME = 500;
 	private static int lastPlaybackPosition = 0;
 	
 	private AudioStreamPlayer player;
@@ -248,7 +248,7 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 				}
 			}
     	};
-    	reportPositionTimer.scheduleRepeating(REPORT_POSITION_REPEAT_TIME);
+    	reportPositionTimer.scheduleRepeating(getState().reportPositionRepeatTime);
 	}
 
 	@Override
