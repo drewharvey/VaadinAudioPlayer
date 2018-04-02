@@ -222,7 +222,7 @@ public class AudioPlayer extends AbstractExtension {
 	 * Plays audio from last known position (usually used to play while paused).
 	 */
 	public void resume() {
-		play(getPosition());
+		getClientRPC().resumePlayback();;
     	Log.message(AudioPlayer.this,"resume playback");
     }
 

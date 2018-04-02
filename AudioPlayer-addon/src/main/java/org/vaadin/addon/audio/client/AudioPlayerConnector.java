@@ -154,38 +154,39 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 			@Override
 			public void setPlaybackPosition(int position_millis) {
 				position_millis = (position_millis < 0) ? 0 : position_millis;
-				player.setPosition(position_millis);
 				getServerRPC().reportPlaybackPosition(position_millis);
+				player.setPosition(position_millis);
 			}
 			
 			@Override
 			public void skipPosition(int delta_millis) {
-				setPlaybackPosition(player.getPosition() + delta_millis);
+				int position_millis = player.getPosition() + delta_millis;
+				setPlaybackPosition(position_millis);
 			}
 
 			@Override
 			public void startPlayback() {
-				player.play();
 				getServerRPC().reportPlaybackStarted();
 				getServerRPC().reportPlaybackPosition(player.getPosition());
+				player.play();
 			}
 
 			@Override
 			public void pausePlayback() {
-				player.pause();
 				getServerRPC().reportPlaybackPaused();
+				player.pause();
 			}
 
 			@Override
 			public void resumePlayback() {
-				player.resume();
 				getServerRPC().reportPlaybackStarted();
+				player.resume();
 			}
 
 			@Override
 			public void stopPlayback() {
-				player.stop();
 				getServerRPC().reportPlaybackStopped();
+				player.stop();
 			}
 
 			@Override
@@ -195,14 +196,14 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 			
 			@Override
 			public void setVolume(double volume) {
-				player.setVolume(volume);
 				getServerRPC().reportVolumeChange(player.getVolume(), channelVolumesAsArray(player.getChannelVolumes()));
+				player.setVolume(volume);
 			}
 
 			@Override
 			public void setVolumeOnChannel(double volume, int channel) {
-				player.setVolume(volume, channel);
 				getServerRPC().reportVolumeChange(player.getVolume(), channelVolumesAsArray(player.getChannelVolumes()));
+				player.setVolume(volume, channel);
 			}
 			
 			@Override
