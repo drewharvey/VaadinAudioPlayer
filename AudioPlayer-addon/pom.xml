@@ -2,10 +2,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.vaadin.addon.audio</groupId>
+	<groupId>org.vaadin.addon.audio</groupId>
 	<artifactId>AudioPlayer</artifactId>
 	<packaging>jar</packaging>
-	<version>1.0-SNAPSHOT</version>
+	<version>1.1</version>
 	<name>AudioPlayer Add-on</name>
 
 	<prerequisites>
@@ -146,7 +146,7 @@
 							<!-- Package format version - do not change -->
 							<Vaadin-Package-Version>1</Vaadin-Package-Version>
 							<Vaadin-License-Title>${Vaadin-License-Title}</Vaadin-License-Title>
-							<Vaadin-Widgetsets>com.vaadin.addon.audio.WidgetSet</Vaadin-Widgetsets>
+							<Vaadin-Widgetsets>org.vaadin.addon.audio.WidgetSet</Vaadin-Widgetsets>
 						</manifestEntries>
 					</archive>
 				</configuration>
