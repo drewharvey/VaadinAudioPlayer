@@ -291,7 +291,8 @@ public class AudioStreamPlayer {
 		playNextChunkTimer.cancel();
 		// calculate the offset time within this audio chunk
 		final int offset = millis % timePerChunk;
-		position = millis - offset;
+		position = millis; // - offset;
+		chunkPosition = offset;
 		// get audio chunk needed for this time position
 		fetchChunksForNextPlayer(millis, numChunksPreload, timePerChunk, null, new BufferSourceNode.BufferReadyListener() {
 			@Override
