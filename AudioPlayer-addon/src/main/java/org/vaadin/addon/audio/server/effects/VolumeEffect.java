@@ -6,8 +6,6 @@ import java.util.List;
 import org.vaadin.addon.audio.server.Effect;
 import org.vaadin.addon.audio.shared.SharedEffect;
 import org.vaadin.addon.audio.shared.SharedEffectProperty;
-import org.vaadin.addon.audio.shared.SharedEffect.EffectName;
-import org.vaadin.addon.audio.shared.SharedEffectProperty.PropertyName;
 
 public class VolumeEffect extends Effect {
 	
@@ -27,9 +25,9 @@ public class VolumeEffect extends Effect {
 
 	@Override
 	public SharedEffect getSharedEffectObject() {
-		SharedEffect shared = new SharedEffect(getID(), EffectName.VolumeEffect);
+		SharedEffect shared = new SharedEffect(getID(), SharedEffect.EffectName.VolumeEffect);
 		List<SharedEffectProperty> props = new ArrayList<SharedEffectProperty>();
-		props.add(new SharedEffectProperty(PropertyName.Gain, getGain() + ""));
+		props.add(new SharedEffectProperty(SharedEffectProperty.PropertyName.Gain, getGain() + ""));
 		shared.setProperties(props);
 		return shared;
 	}

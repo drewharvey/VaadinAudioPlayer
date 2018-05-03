@@ -18,6 +18,8 @@ public class AudioPlayerState extends AbstractComponentState {
 	
 	public int duration;
 	
+	public int reportPositionRepeatTime = 500;
+	
 	public final List<SharedEffect> effects = new ArrayList<SharedEffect>();
 	
 }

@@ -2,7 +2,6 @@ package org.vaadin.addon.audio.client;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Logger;
 
 import org.vaadin.addon.audio.client.effects.BalanceEffect;
 import org.vaadin.addon.audio.client.effects.FilterEffect;
@@ -11,10 +10,12 @@ import org.vaadin.addon.audio.client.effects.VolumeEffect;
 import org.vaadin.addon.audio.client.webaudio.Buffer;
 import org.vaadin.addon.audio.client.webaudio.Context;
 import org.vaadin.addon.audio.server.AudioPlayer;
-import org.vaadin.addon.audio.shared.*;
-import org.vaadin.addon.audio.shared.SharedEffect.EffectName;
+import org.vaadin.addon.audio.shared.AudioPlayerClientRpc;
+import org.vaadin.addon.audio.shared.AudioPlayerServerRpc;
+import org.vaadin.addon.audio.shared.AudioPlayerState;
+import org.vaadin.addon.audio.shared.ChunkDescriptor;
+import org.vaadin.addon.audio.shared.SharedEffect;
 import org.vaadin.addon.audio.shared.util.Log;
-import org.vaadin.addon.audio.shared.util.LogUtils;
 
 import com.google.gwt.user.client.Timer;
 import com.vaadin.client.ServerConnector;
@@ -35,7 +36,7 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 	// For now, we're going with a simple singleton
 	private static AudioContext context;
 	
-	private final static int REPORT_POSITION_REPEAT_TIME = 500;
+//     private final static int REPORT_POSITION_REPEAT_TIME = 500;
 	private static int lastPlaybackPosition = 0;
 	
 	private AudioStreamPlayer player;
@@ -90,21 +91,21 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
     
     private Effect getEffectFromSharedEffect(SharedEffect sharedEffect) {
     	// TODO: add properties to each effect
-    	if (sharedEffect.getName() == EffectName.BalanceEffect) {
+    	if (sharedEffect.getName() == SharedEffect.EffectName.BalanceEffect) {
     		BalanceEffect effect = new BalanceEffect();
     		effect.setID(sharedEffect.getID());
     		return effect;
-    	} else if (sharedEffect.getName() == EffectName.FilterEffect) {
+    	} else if (sharedEffect.getName() == SharedEffect.EffectName.FilterEffect) {
     		FilterEffect effect = new FilterEffect();
     		effect.init(Context.get());
     		effect.setID(sharedEffect.getID());
     		effect.setProperties(sharedEffect.getProperties());
     		return effect;
-    	} else if (sharedEffect.getName() == EffectName.PitchEffect) {
+    	} else if (sharedEffect.getName() == SharedEffect.EffectName.PitchEffect) {
     		PitchEffect effect = new PitchEffect();
     		effect.setID(sharedEffect.getID());
     		return effect;
-    	} else if (sharedEffect.getName() == EffectName.VolumeEffect) {
+    	} else if (sharedEffect.getName() == SharedEffect.EffectName.VolumeEffect) {
     		VolumeEffect effect = new VolumeEffect();
     		effect.setID(sharedEffect.getID());
     		return effect;
@@ -254,7 +255,7 @@ public class AudioPlayerConnector extends AbstractExtensionConnector {
 				}
 			}
     	};
-    	reportPositionTimer.scheduleRepeating(REPORT_POSITION_REPEAT_TIME);
+    	reportPositionTimer.scheduleRepeating(getState().reportPositionRepeatTime);
 	}
 
 	@Override
