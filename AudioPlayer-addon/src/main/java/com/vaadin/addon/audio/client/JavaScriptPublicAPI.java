@@ -70,7 +70,6 @@ public class JavaScriptPublicAPI {
 	 * 		Returns -1 if no valid audio player is found.
 	 */
 	private static int getPosition(int playerIndex) {
-		Logger.getLogger("JavaScriptPublicAPI").info(LogUtils.prefix("PLAYER INDEX: " + playerIndex));
 		AudioStreamPlayer player = getAudioPlayer(playerIndex);
 		if (player != null) {
 			return player.getPosition();
@@ -98,7 +97,6 @@ public class JavaScriptPublicAPI {
 	}
 	
 	private static void setPosition(int millis, int playerIndex) {
-		Logger.getLogger("JavaScriptPublicAPI").info(LogUtils.prefix("PLAYER INDEX: " + playerIndex));
 		AudioStreamPlayer player = getAudioPlayer(playerIndex);
 		if (player != null) {
 			player.setPosition(millis);
