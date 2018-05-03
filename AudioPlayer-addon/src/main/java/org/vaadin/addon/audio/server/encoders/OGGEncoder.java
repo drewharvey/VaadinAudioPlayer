@@ -1,7 +1,6 @@
 package org.vaadin.addon.audio.server.encoders;
 
 import org.vaadin.addon.audio.server.Encoder;
-import org.vaadin.addon.audio.server.encoders.MP3Encoder.MP3Format;
 
 /**
  * OGG encoder placeholder. We'll need to add a dependency to an

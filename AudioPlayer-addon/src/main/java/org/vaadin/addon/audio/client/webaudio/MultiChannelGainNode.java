@@ -1,12 +1,11 @@
 package org.vaadin.addon.audio.client.webaudio;
 
 
+import org.vaadin.addon.audio.shared.util.LogUtils;
 import elemental.html.AudioBuffer;
 
 
 import java.util.logging.Logger;
-
-import org.vaadin.addon.audio.shared.util.LogUtils;
 
 // TODO: move to effects (this is not an actual Web Audio API object)
 

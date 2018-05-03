@@ -4,12 +4,12 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.vaadin.addon.audio.client.Effect;
+import org.vaadin.addon.audio.shared.util.LogUtils;
 import org.vaadin.addon.audio.client.webaudio.BiquadFilterNode;
 import org.vaadin.addon.audio.client.webaudio.Context;
 import org.vaadin.addon.audio.shared.SharedEffectProperty;
 import org.vaadin.addon.audio.shared.SharedEffectProperty.PropertyName;
 import org.vaadin.addon.audio.shared.util.Log;
-import org.vaadin.addon.audio.shared.util.LogUtils;
 
 
 public class FilterEffect extends Effect {

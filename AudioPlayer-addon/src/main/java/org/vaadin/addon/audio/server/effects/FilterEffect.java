@@ -5,8 +5,8 @@ import java.util.List;
 
 import org.vaadin.addon.audio.server.Effect;
 import org.vaadin.addon.audio.shared.SharedEffect;
-import org.vaadin.addon.audio.shared.SharedEffectProperty;
 import org.vaadin.addon.audio.shared.SharedEffect.EffectName;
+import org.vaadin.addon.audio.shared.SharedEffectProperty;
 import org.vaadin.addon.audio.shared.SharedEffectProperty.PropertyName;
 
 public class FilterEffect extends Effect {

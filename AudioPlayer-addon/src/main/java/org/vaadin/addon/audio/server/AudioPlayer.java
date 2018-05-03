@@ -3,17 +3,16 @@ package org.vaadin.addon.audio.server;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.vaadin.addon.audio.server.state.PlaybackState;
-import org.vaadin.addon.audio.server.state.StateChangeCallback;
 import org.vaadin.addon.audio.server.state.VolumeChangeCallback;
 import org.vaadin.addon.audio.server.util.StringFormatter;
+import org.vaadin.addon.audio.server.state.PlaybackState;
+import org.vaadin.addon.audio.server.state.StateChangeCallback;
 import org.vaadin.addon.audio.shared.AudioPlayerClientRpc;
 import org.vaadin.addon.audio.shared.AudioPlayerServerRpc;
 import org.vaadin.addon.audio.shared.AudioPlayerState;
 import org.vaadin.addon.audio.shared.ChunkDescriptor;
 import org.vaadin.addon.audio.shared.SharedEffect;
 import org.vaadin.addon.audio.shared.util.Log;
-
 import com.vaadin.annotations.JavaScript;
 import com.vaadin.server.AbstractExtension;
 import com.vaadin.ui.UI;
@@ -35,8 +34,28 @@ public class AudioPlayer extends AbstractExtension {
 	// TODO: use a proper event system
 	private List<StateChangeCallback> stateCallbacks = new ArrayList<>();
 	private List<VolumeChangeCallback> volumeCallbacks = new ArrayList<>();
-	
+
+	/**
+	 * Create new AudioPlayer 
+	 * 
+	 * @param stream Stream to use
+	 */
     public AudioPlayer(Stream stream) {
+		setupAudioPlayer(stream);
+    }
+    
+    /**
+     * Create new AudioPlayer
+     * 
+     * @param stream Stream to use
+     * @param reportPositionRepeatTime Define the interval for position reporting, default 500ms
+     */
+	public AudioPlayer(Stream stream, int reportPositionRepeatTime) {
+		getState().reportPositionRepeatTime = reportPositionRepeatTime;
+		setupAudioPlayer(stream);
+	}
+	
+    private void setupAudioPlayer(Stream stream) {
     	
     	registerRpc(new AudioPlayerServerRpc() {
 			@Override
@@ -203,7 +222,7 @@ public class AudioPlayer extends AbstractExtension {
 	 * Plays audio from last known position (usually used to play while paused).
 	 */
 	public void resume() {
-		play(getPosition());
+		getClientRPC().resumePlayback();;
     	Log.message(AudioPlayer.this,"resume playback");
     }
 

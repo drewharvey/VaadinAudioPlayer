@@ -2,8 +2,6 @@ package org.vaadin.addon.audio.client.webaudio;
 
 
 
-import java.util.logging.Logger;
-
 import elemental.html.AudioContext;
 
 public class BiquadFilterNode extends AudioNode {

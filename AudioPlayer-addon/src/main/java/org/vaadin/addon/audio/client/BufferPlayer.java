@@ -3,8 +3,8 @@ package org.vaadin.addon.audio.client;
 
 import java.util.logging.Logger;
 
-import org.vaadin.addon.audio.client.webaudio.*;
 import org.vaadin.addon.audio.shared.util.LogUtils;
+import org.vaadin.addon.audio.client.webaudio.*;
 
 /**
  * Actual player component, plays a single Buffer.

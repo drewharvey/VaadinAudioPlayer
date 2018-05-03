@@ -7,8 +7,6 @@ import org.vaadin.addon.audio.client.webaudio.Context;
 import org.vaadin.addon.audio.shared.SharedEffectProperty;
 import org.vaadin.addon.audio.shared.util.Log;
 
-import elemental.html.AudioContext;
-import elemental.html.AudioNode;
 import elemental.html.AudioPannerNode;
 
 public class BalanceEffect extends Effect {

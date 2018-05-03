@@ -1,7 +1,5 @@
 package org.vaadin.addon.audio.client;
 
-import com.google.gwt.user.client.Timer;
-
 
 import java.util.logging.Logger;
 

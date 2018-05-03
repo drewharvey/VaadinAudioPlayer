@@ -2,9 +2,6 @@ package org.vaadin.addon.audio.client.webaudio;
 
 import elemental.html.AudioContext;
 
-
-import java.util.logging.Logger;
-
 /**
  * Created by drewharvey on 6/16/17.
  */

@@ -4,7 +4,6 @@ package org.vaadin.addon.audio.client.webaudio;
 import java.util.logging.Logger;
 
 import org.vaadin.addon.audio.shared.util.LogUtils;
-
 import elemental.html.AudioContext;
 
 public class GainNode extends AudioNode {

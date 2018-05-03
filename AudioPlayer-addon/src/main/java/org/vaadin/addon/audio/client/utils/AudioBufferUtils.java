@@ -4,12 +4,11 @@ package org.vaadin.addon.audio.client.utils;
 import com.google.gwt.core.client.Duration;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.user.client.Timer;
+import org.vaadin.addon.audio.client.BufferPlayer;
+import org.vaadin.addon.audio.shared.util.LogUtils;
 import com.vaadin.client.BrowserInfo;
 
 import java.util.logging.Logger;
-
-import org.vaadin.addon.audio.client.BufferPlayer;
-import org.vaadin.addon.audio.shared.util.LogUtils;
 
 public class AudioBufferUtils {
 

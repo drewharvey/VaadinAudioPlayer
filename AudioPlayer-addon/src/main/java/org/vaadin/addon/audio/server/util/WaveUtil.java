@@ -1,12 +1,6 @@
 package org.vaadin.addon.audio.server.util;
 
-import java.io.*;
 import java.nio.ByteBuffer;
-
-import javax.sound.sampled.AudioFileFormat;
-import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
 
 import org.vaadin.addon.audio.shared.PCMFormat;
 
