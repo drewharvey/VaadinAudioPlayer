@@ -7,7 +7,7 @@ AudioPlayer is an add-on for Vaadin that, when complete, uses WebAudio to allow 
 ## Building and running demo
 
 ~~~~
-git clone https://github.com/thinwire/VaadinAudioPlayer.git
+git clone https://github.com/drewharvey/VaadinAudioPlayer.git
 mvn clean install
 cd AudioPlayer-demo
 mvn jetty:run
