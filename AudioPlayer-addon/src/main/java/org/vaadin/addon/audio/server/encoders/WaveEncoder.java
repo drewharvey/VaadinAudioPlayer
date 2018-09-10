@@ -44,9 +44,11 @@ public class WaveEncoder extends Encoder {
 		
 		out.position(0);
 		out.put(WaveUtil.generateHeader(outfmt, length));
-		in.position(byteOffset);
-		in.get(out.array(), out.position(), dataLength);
-
+		if (byteOffset < in.limit()) {
+			in.position(byteOffset);
+			in.get(out.array(), out.position(), Math.min(in.remaining(),dataLength));
+		}
+		
 		return out.array();
 		
 	}
