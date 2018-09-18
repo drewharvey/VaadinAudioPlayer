@@ -1,3 +1,6 @@
+[![Published on Vaadin  Directory](https://img.shields.io/badge/Vaadin%20Directory-published-00b4f0.svg)](https://vaadin.com/directory/component/audioplayer-add-on)
+[![Stars on Vaadin Directory](https://img.shields.io/vaadin-directory/star/audioplayer-add-on.svg)](https://vaadin.com/directory/component/audioplayer-add-on)
+
 # AudioPlayer Add-on for Vaadin
 
 This is a work in progress.
