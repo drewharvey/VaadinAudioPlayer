@@ -11,6 +11,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.UnsupportedAudioFileException;
 
 import org.vaadin.addon.audio.server.AudioPlayer;
 import org.vaadin.addon.audio.server.Encoder;
@@ -35,6 +36,7 @@ import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinServlet;
+import com.vaadin.ui.AbstractOrderedLayout;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickListener;
@@ -42,6 +44,7 @@ import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.OptionGroup;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Slider;
@@ -295,7 +298,9 @@ public class DemoUI extends UI {
 				public void buttonClick(ClickEvent event) {
 					// TODO: actually delete the stream and this component...
 					Log.message(this, "delete stream");
-					Notification.show("Feature not implemented yet!", Notification.Type.ERROR_MESSAGE);
+					AbstractOrderedLayout layout = (AbstractOrderedLayout) Controls.this.getParent();
+					layout.removeComponent(Controls.this);
+//					Notification.show("Feature not implemented yet!", Notification.Type.ERROR_MESSAGE);
 				}
 			});
 			deleteButton.addStyleName("danger");
@@ -567,24 +572,27 @@ public class DemoUI extends UI {
 				// other formats easier
 				ByteBuffer fileBytes = decodeToPcm(itemName, TEST_FILE_PATH);
 
-				// TODO: use the following line when OGG and/or MP3 encoders have been implemented
-				//Stream stream = createWaveStream(fileBytes, encoder);
-				Stream stream = createWaveStream(fileBytes, new WaveEncoder());
+				if (fileBytes != null) {
+				
+					//TODO: use the following line when OGG and/or MP3 encoders have been implemented
+					//Stream stream = createWaveStream(fileBytes, encoder);
+					Stream stream = createWaveStream(fileBytes, new WaveEncoder());
 
-				// debugging
-				for(ChunkDescriptor d : stream.getChunks()) {
-					Log.message(this, d.toString());
+					// debugging
+					for(ChunkDescriptor d : stream.getChunks()) {
+						Log.message(this, d.toString());
+					}
+
+					Log.message(this, "Stream duration: " + stream.getDurationString());
+
+					if(encoder instanceof WaveEncoder) {
+						// TODO: enable the following line when client decompression library can be loaded
+						//stream.setCompression(true);
+					}
+					AudioPlayer audio = new AudioPlayer(stream);
+					Controls controls = new Controls(audio, itemName);
+					layout.addComponent(controls);
 				}
-
-				Log.message(this, "Stream duration: " + stream.getDurationString());
-
-				if(encoder instanceof WaveEncoder) {
-					// TODO: enable the following line when client decompression library can be loaded
-					//stream.setCompression(true);
-				}
-				AudioPlayer audio = new AudioPlayer(stream);
-				Controls controls = new Controls(audio, itemName);
-				layout.addComponent(controls);
 			}
 		});
 
@@ -617,6 +625,8 @@ public class DemoUI extends UI {
 				buffer = ByteBuffer.wrap(bytes);
 			}
 
+		} catch (UnsupportedAudioFileException e) {
+			Notification.show("Audio file is not of supported type", Type.ERROR_MESSAGE);
 		} catch (Exception e) {
 			Log.error(DemoUI.class, "File read failed");
 			e.printStackTrace();
