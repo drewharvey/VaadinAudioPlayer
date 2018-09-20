@@ -23,7 +23,7 @@ public final class Endian {
 
 		int value = 0;
 		int shift = 0;
-		for (int b = 0; b < bytes; ++b) {
+		if (buffer != null) for (int b = 0; b < bytes; ++b) {
 			value |= (buffer.get(offset + b) & 0xff) << shift;
 			shift += 8;
 		}
