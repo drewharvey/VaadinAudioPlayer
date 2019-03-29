@@ -31,7 +31,7 @@ public class AudioStreamPlayer {
 	private int chunkOverlapTime;					// duration of crossfade between chunks (ms)
 	private int numChunksPreload = 0;				// number of chunks to load ahead of time (set higher for slower connections)
 
-	private int position = 0;						// total position (ms)
+	private int position = 0;						// total position (ms) (in practice, chunk start position) @getPosition
 	private int chunkPosition = 0;					// position within the current chunk (ms)
 	
 	private double volume = 1;
@@ -292,25 +292,32 @@ public class AudioStreamPlayer {
 			playerManager.getCurrentPlayer().stop();
 		}
 		chunkPositionClock = null;
-		chunkPosition=0;
+		
 		playNextChunkTimer.cancel();
 		// calculate the offset time within this audio chunk
 		final int offset = millis % timePerChunk;
-		if(isPlaying){
-			position = millis - offset;
-		}else{
-			position = millis;
-		}
-		// get audio chunk needed for this time position
-		fetchChunksForNextPlayer(millis, numChunksPreload, timePerChunk, null, new BufferSourceNode.BufferReadyListener() {
-			@Override
-			public void onBufferReady(Buffer b) {
-				playerManager.moveToNextPlayer();
-				if (isPlaying) {
-					play(offset, false);
-				}
+		// new chunk start position
+		int newPosition = millis - offset; 
+		chunkPosition = offset;
+		if (newPosition == position) {  //within the same chunk, no need to get it again
+			if (isPlaying) {
+				play(offset, false);
 			}
-		});
+		} else {
+			position = newPosition;
+			// get audio chunk needed for this time position
+			// we need to add the overlap time, so that previous chunk won't pass the search criteria for fetching
+			fetchChunksForNextPlayer(position + chunkOverlapTime, numChunksPreload, timePerChunk, null,
+					new BufferSourceNode.BufferReadyListener() {
+						@Override
+						public void onBufferReady(Buffer b) {
+							playerManager.moveToNextPlayer();
+							if (isPlaying) {
+								play(offset, false);
+							}
+						}
+					});
+		}
 	}
 	
 	/**
