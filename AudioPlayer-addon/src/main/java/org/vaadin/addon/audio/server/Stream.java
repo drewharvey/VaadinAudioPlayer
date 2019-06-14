@@ -17,7 +17,7 @@ import org.vaadin.addon.audio.shared.PCMFormat;
 public class Stream {
 
 	private static final int CHUNK_LENGTH_MILLIS_DEFAULT = 5000;
-	private static final int CHUNK_OVERLAP_MILLIS = 500;
+	private static final int CHUNK_OVERLAP_MILLIS = 50;
 
 	public static interface Callback {
 		public void onComplete(String encodedData);
